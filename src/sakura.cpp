@@ -41,10 +41,9 @@
 #include <gtk/gtk.h>
 #include <pango/pango.h>
 #include <vte/vte.h>
-
-#define _(String) gettext(String)
-#define N_(String) (String)
-#define GETTEXT_PACKAGE "sakura"
+#include "gettext.h"
+#include "palettes.h"
+#include "sakura.h"
 
 #define SAY(format,...) do {\
 	if (strcmp("Debug", BUILDTYPE)==0) {\
@@ -56,181 +55,6 @@
 	}\
 } while (0)
 
-#define PALETTE_SIZE 16
-
-/* 16 color palettes in GdkRGBA format (red, green, blue, alpha)
- * Text displayed in the first 8 colors (0-7) is meek (uses thin strokes).
- * Text displayed in the second 8 colors (8-15) is bold (uses thick strokes). */
-
-const GdkRGBA gruvbox_palette[PALETTE_SIZE] = {
-        {0.156863, 0.156863, 0.156863, 1.000000},
-        {0.800000, 0.141176, 0.113725, 1.000000},
-        {0.596078, 0.592157, 0.101961, 1.000000},
-        {0.843137, 0.600000, 0.129412, 1.000000},
-        {0.270588, 0.521569, 0.533333, 1.000000},
-        {0.694118, 0.384314, 0.525490, 1.000000},
-        {0.407843, 0.615686, 0.415686, 1.000000},
-        {0.658824, 0.600000, 0.517647, 1.000000},
-        {0.572549, 0.513725, 0.454902, 1.000000},
-        {0.984314, 0.286275, 0.203922, 1.000000},
-        {0.721569, 0.733333, 0.149020, 1.000000},
-        {0.980392, 0.741176, 0.184314, 1.000000},
-        {0.513725, 0.647059, 0.596078, 1.000000},
-        {0.827451, 0.525490, 0.607843, 1.000000},
-        {0.556863, 0.752941, 0.486275, 1.000000},
-        {0.921569, 0.858824, 0.698039, 1.000000},
-};
-
-const GdkRGBA tango_palette[PALETTE_SIZE] = {
-	{0,        0,        0,        1},
-	{0.8,      0,        0,        1},
-	{0.305882, 0.603922, 0.023529, 1},
-	{0.768627, 0.627451, 0,        1},
-	{0.203922, 0.396078, 0.643137, 1},
-	{0.458824, 0.313725, 0.482353, 1},
-	{0.0235294,0.596078, 0.603922, 1},
-	{0.827451, 0.843137, 0.811765, 1},
-	{0.333333, 0.341176, 0.32549,  1},
-	{0.937255, 0.160784, 0.160784, 1},
-	{0.541176, 0.886275, 0.203922, 1},
-	{0.988235, 0.913725, 0.309804, 1},
-	{0.447059, 0.623529, 0.811765, 1},
-	{0.678431, 0.498039, 0.658824, 1},
-	{0.203922, 0.886275, 0.886275, 1},
-	{0.933333, 0.933333, 0.92549,  1}
-};
-
-const GdkRGBA linux_palette[PALETTE_SIZE] = {
-	{0,        0,        0,        1},
-	{0.666667, 0,        0,        1},
-	{0,        0.666667, 0,        1},
-	{0.666667, 0.333333, 0,        1},
-	{0,        0,        0.666667, 1},
-	{0.666667, 0,        0.666667, 1},
-	{0,        0.666667, 0.666667, 1},
-	{0.666667, 0.666667, 0.666667, 1},
-	{0.333333, 0.333333, 0.333333, 1},
-	{1,        0.333333, 0.333333, 1},
-	{0.333333, 1,        0.333333, 1},
-	{1,        1,        0.333333, 1},
-	{0.333333, 0.333333, 1,        1},
-	{1,        0.333333, 1,        1},
-	{0.333333, 1,        1,        1},
-	{1,        1,        1,        1}
-};
-
-const GdkRGBA solarized_dark_palette[PALETTE_SIZE] = {
-	{0.027451, 0.211765, 0.258824, 1},
-	{0.862745, 0.196078, 0.184314, 1},
-	{0.521569, 0.600000, 0.000000, 1},
-	{0.709804, 0.537255, 0.000000, 1},
-	{0.149020, 0.545098, 0.823529, 1},
-	{0.827451, 0.211765, 0.509804, 1},
-	{0.164706, 0.631373, 0.596078, 1},
-	{0.933333, 0.909804, 0.835294, 1},
-	{0.000000, 0.168627, 0.211765, 1},
-	{0.796078, 0.294118, 0.086275, 1},
-	{0.345098, 0.431373, 0.458824, 1},
-	{0.396078, 0.482353, 0.513725, 1},
-	{0.513725, 0.580392, 0.588235, 1},
-	{0.423529, 0.443137, 0.768627, 1},
-	{0.576471, 0.631373, 0.631373, 1},
-	{0.992157, 0.964706, 0.890196, 1}
-#if 0
-    { 0, 0x0707, 0x3636, 0x4242 }, // 0  base02 black (used as background color)
-    { 0, 0xdcdc, 0x3232, 0x2f2f }, // 1  red
-    { 0, 0x8585, 0x9999, 0x0000 }, // 2  green
-    { 0, 0xb5b5, 0x8989, 0x0000 }, // 3  yellow
-    { 0, 0x2626, 0x8b8b, 0xd2d2 }, // 4  blue
-    { 0, 0xd3d3, 0x3636, 0x8282 }, // 5  magenta
-    { 0, 0x2a2a, 0xa1a1, 0x9898 }, // 6  cyan
-    { 0, 0xeeee, 0xe8e8, 0xd5d5 }, // 7  base2 white (used as foreground color)
-    { 0, 0x0000, 0x2b2b, 0x3636 }, // 8  base3 bright black
-    { 0, 0xcbcb, 0x4b4B, 0x1616 }, // 9  orange
-    { 0, 0x5858, 0x6e6e, 0x7575 }, // 10 base01 bright green
-    { 0, 0x6565, 0x7b7b, 0x8383 }, // 11 base00 bright yellow
-    { 0, 0x8383, 0x9494, 0x9696 }, // 12 base0 brigth blue
-    { 0, 0x6c6c, 0x7171, 0xc4c4 }, // 13 violet
-    { 0, 0x9393, 0xa1a1, 0xa1a1 }, // 14 base1 cyan
-    { 0, 0xfdfd, 0xf6f6, 0xe3e3 }  // 15 base3 white
-#endif
-};
-
-const GdkRGBA solarized_light_palette[PALETTE_SIZE] = {
-	{0.933333, 0.909804, 0.835294, 1},
-	{0.862745, 0.196078, 0.184314, 1},
-	{0.521569, 0.600000, 0.000000, 1},
-	{0.709804, 0.537255, 0.000000, 1},
-	{0.149020, 0.545098, 0.823529, 1},
-	{0.827451, 0.211765, 0.509804, 1},
-	{0.164706, 0.631373, 0.596078, 1},
-	{0.027451, 0.211765, 0.258824, 1},
-	{0.992157, 0.964706, 0.890196, 1},
-	{0.796078, 0.294118, 0.086275, 1},
-	{0.576471, 0.631373, 0.631373, 1},
-	{0.513725, 0.580392, 0.588235, 1},
-	{0.396078, 0.482353, 0.513725, 1},
-	{0.423529, 0.443137, 0.768627, 1},
-	{0.345098, 0.431373, 0.458824, 1},
-	{0.000000, 0.168627, 0.211765, 1}
-#if 0
-	{ 0, 0xeeee, 0xe8e8, 0xd5d5 }, // 0 S_base2
-	{ 0, 0xdcdc, 0x3232, 0x2f2f }, // 1 S_red
-	{ 0, 0x8585, 0x9999, 0x0000 }, // 2 S_green
-	{ 0, 0xb5b5, 0x8989, 0x0000 }, // 3 S_yellow
-	{ 0, 0x2626, 0x8b8b, 0xd2d2 }, // 4 S_blue
-	{ 0, 0xd3d3, 0x3636, 0x8282 }, // 5 S_magenta
-	{ 0, 0x2a2a, 0xa1a1, 0x9898 }, // 6 S_cyan
-	{ 0, 0x0707, 0x3636, 0x4242 }, // 7 S_base02
-	{ 0, 0xfdfd, 0xf6f6, 0xe3e3 }, // 8 S_base3
-	{ 0, 0xcbcb, 0x4b4B, 0x1616 }, // 9 S_orange
-	{ 0, 0x9393, 0xa1a1, 0xa1a1 }, // 10 S_base1
-	{ 0, 0x8383, 0x9494, 0x9696 }, // 11 S_base0
-	{ 0, 0x6565, 0x7b7b, 0x8383 }, // 12 S_base00
-	{ 0, 0x6c6c, 0x7171, 0xc4c4 }, // 13 S_violet
-	{ 0, 0x5858, 0x6e6e, 0x7575 }, // 14 S_base01
-	{ 0, 0x0000, 0x2b2b, 0x3636 } // 15 S_base03
-#endif
-};
-
-
-const GdkRGBA xterm_palette[PALETTE_SIZE] = {
-    {0,        0,        0,        1},
-    {0.803922, 0,        0,        1},
-    {0,        0.803922, 0,        1},
-    {0.803922, 0.803922, 0,        1},
-    {0.117647, 0.564706, 1,        1},
-    {0.803922, 0,        0.803922, 1},
-    {0,        0.803922, 0.803922, 1},
-    {0.898039, 0.898039, 0.898039, 1},
-    {0.298039, 0.298039, 0.298039, 1},
-    {1,        0,        0,        1},
-    {0,        1,        0,        1},
-    {1,        1,        0,        1},
-    {0.27451,  0.509804, 0.705882, 1},
-    {1,        0,        1,        1},
-    {0,        1,        1,        1},
-    {1,        1,        1,        1}
-};
-
-const GdkRGBA rxvt_palette[PALETTE_SIZE] = {
-    {0,        0,        0,        1 },
-    {0.803921, 0,        0,        1 },
-    {0,        0.803921, 0,        1 },
-    {0.803921, 0.803921, 0,        1 },
-    {0,        0,        0.803921, 1 },
-    {0.803921, 0,        0.803921, 1 },
-    {0,        0.803921, 0.803921, 1 },
-    {0.980392, 0.921568, 0.843137, 1 },
-    {0.250980, 0.250980, 0.250980, 1 },
-    {1,        0,        0,        1 },
-    {0,        1,        0,        1 },
-    {1,        1,        0,        1 },
-    {0,        0,        1,        1 },
-    {1,        0,        1,        1 },
-    {0,        1,        1,        1 },
-    {1,        1,        1,        1 }
-};
 
 
 #define HIG_DIALOG_CSS "* {\n"\
@@ -464,10 +288,8 @@ static void     sakura_setname_entry_changed(GtkWidget *, void *);
 static void     sakura_error(const char *, ...);
 
 /* Functions */
-static void     sakura_init();
 static void     sakura_init_popup();
 static void     sakura_destroy();
-static void     sakura_add_tab();
 static void     sakura_del_tab(gint);
 static void     sakura_move_tab(gint);
 static gint     sakura_find_tab(VteTerminal *);
@@ -482,47 +304,6 @@ static void     sakura_set_colors (void);
 static guint    sakura_tokeycode(guint key);
 static void	sakura_fade_in(void);
 static void	sakura_fade_out(void);
-
-/* Globals for command line parameters */
-static const char *option_font;
-static const char *option_workdir;
-static const char *option_execute;
-static gchar **option_xterm_args;
-static gboolean option_xterm_execute=FALSE;
-static gboolean option_version=FALSE;
-static gint option_ntabs=1;
-static gint option_login = FALSE;
-static const char *option_title;
-static const char *option_icon;
-static int option_rows, option_columns;
-static gboolean option_hold=FALSE;
-static char *option_config_file;
-static gboolean option_fullscreen;
-static gboolean option_maximize;
-static gint option_colorset;
-
-static GOptionEntry entries[] = {
-	{ "version", 'v', 0, G_OPTION_ARG_NONE, &option_version, N_("Print version number"), NULL },
-	{ "font", 'f', 0, G_OPTION_ARG_STRING, &option_font, N_("Select initial terminal font"), NULL },
-	{ "ntabs", 'n', 0, G_OPTION_ARG_INT, &option_ntabs, N_("Select initial number of tabs"), NULL },
-	{ "working-directory", 'd', 0, G_OPTION_ARG_STRING, &option_workdir, N_("Set working directory"), NULL },
-	{ "execute", 'x', 0, G_OPTION_ARG_STRING, &option_execute, N_("Execute command"), NULL },
-	{ "xterm-execute", 'e', 0, G_OPTION_ARG_NONE, &option_xterm_execute, N_("Execute command (last option in the command line)"), NULL },
-	{ G_OPTION_REMAINING, 0, 0, G_OPTION_ARG_STRING_ARRAY, &option_xterm_args, NULL, NULL },
-	{ "login", 'l', 0, G_OPTION_ARG_NONE, &option_login, N_("Login shell"), NULL },
-	{ "title", 't', 0, G_OPTION_ARG_STRING, &option_title, N_("Set window title"), NULL },
-	{ "icon", 'i', 0, G_OPTION_ARG_STRING, &option_icon, N_("Set window icon"), NULL },
-	{ "xterm-title", 'T', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_STRING, &option_title, NULL, NULL },
-	{ "columns", 'c', 0, G_OPTION_ARG_INT, &option_columns, N_("Set columns number"), NULL },
-	{ "rows", 'r', 0, G_OPTION_ARG_INT, &option_rows, N_("Set rows number"), NULL },
-	{ "hold", 'h', 0, G_OPTION_ARG_NONE, &option_hold, N_("Hold window after execute command"), NULL },
-	{ "maximize", 'm', 0, G_OPTION_ARG_NONE, &option_maximize, N_("Maximize window"), NULL },
-	{ "fullscreen", 's', 0, G_OPTION_ARG_NONE, &option_fullscreen, N_("Fullscreen mode"), NULL },
-	{ "config-file", 0, 0, G_OPTION_ARG_FILENAME, &option_config_file, N_("Use alternate configuration file"), NULL },
-	{ "colorset", 0, 0, G_OPTION_ARG_INT, &option_colorset, N_("Select initial colorset"), NULL },
-	{ NULL }
-};
-
 
 static guint
 sakura_tokeycode (guint key)
@@ -2166,8 +1947,7 @@ sakura_use_fading(GtkWidget *widget, void *data)
 /******* Functions ********/
 
 
-static void
-sakura_init()
+void sakura_init()
 {
 	char* configdir = NULL;
 	int i;
@@ -3071,8 +2851,7 @@ sakura_spawn_callback (VteTerminal *vte, GPid pid, GError *error, gpointer user_
 }
 
 
-static void
-sakura_add_tab()
+void sakura_add_tab()
 {
 	struct terminal *term;
 	GtkWidget *tab_label_hbox;
@@ -3434,8 +3213,7 @@ sakura_error(const char *format, ...)
 
 
 /* This function is used to fix bug #1393939 */
-static void
-sakura_sanitize_working_directory()
+void sakura_sanitize_working_directory()
 {
 	const gchar *home_directory = g_getenv("HOME");
 	if (home_directory == NULL) {
@@ -3451,86 +3229,4 @@ sakura_sanitize_working_directory()
 }
 
 
-int
-main(int argc, char **argv)
-{
-	gchar *localedir;
-	int i; int n;
-	char **nargv; int nargc;
-	gboolean have_e;
 
-	/* Localization */
-	setlocale(LC_ALL, "");
-	localedir=g_strdup_printf("%s/locale", DATADIR);
-	textdomain(GETTEXT_PACKAGE);
-	bindtextdomain(GETTEXT_PACKAGE, localedir);
-	bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
-	g_free(localedir);
-
-	/* Rewrites argv to include a -- after the -e argument this is required to make
-	 * sure GOption doesn't grab any arguments meant for the command being called */
-
-	/* Initialize nargv */
-	nargv = (char**)calloc((argc+1), sizeof(char*));
-	n=0; nargc=argc;
-	have_e=FALSE;
-
-	for(i=0; i<argc; i++) {
-		if(!have_e && g_strcmp0(argv[i],"-e") == 0)
-		{
-			nargv[n]="-e";
-			n++;
-			nargv[n]="--";
-			nargc++;
-			have_e = TRUE;
-		} else {
-			nargv[n]=g_strdup(argv[i]);
-		}
-		n++;
-	}
-
-	/* Options parsing */
-	GError *error=NULL;
-	GOptionContext *context; GOptionGroup *option_group;
-
-	context = g_option_context_new (_("- vte-based terminal emulator"));
-	option_group = gtk_get_option_group(TRUE);
-	g_option_context_add_main_entries (context, entries, GETTEXT_PACKAGE);
-	g_option_group_set_translation_domain(option_group, GETTEXT_PACKAGE);
-	g_option_context_add_group (context, option_group);
-	if (!g_option_context_parse (context, &nargc, &nargv, &error)) {
-		fprintf(stderr, "%s\n", error->message);
-		g_error_free(error);
-		exit(1);
-	}
-
-	g_option_context_free(context);
-
-	if (option_workdir && chdir(option_workdir)) {
-		fprintf(stderr, _("Cannot change working directory\n"));
-		exit(1);
-	}
-
-	if (option_version) {
-		fprintf(stderr, _("sakura version is %s\n"), VERSION);
-		exit(1);
-	}
-
-	if (option_ntabs <= 0) {
-		option_ntabs=1;
-	}
-
-	/* Init stuff */
-	gtk_init(&nargc, &nargv); g_strfreev(nargv);
-	sakura_init();
-
-	/* Add initial tabs (1 by default) */
-	for (i=0; i<option_ntabs; i++)
-		sakura_add_tab();
-
-	sakura_sanitize_working_directory();
-
-	gtk_main();
-
-	return 0;
-}
