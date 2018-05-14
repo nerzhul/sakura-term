@@ -3,7 +3,7 @@ CMAKE_POLICY(SET CMP0005 NEW)
 PROJECT (sakura)
 SET (AUTHOR "David Gómez Espinosa" INTERNAL "Author")
 SET (VERSION "3.6.0")
-
+SET(CMAKE_CXX_STANDARD 17)
 
 INCLUDE (FindPkgConfig)
 

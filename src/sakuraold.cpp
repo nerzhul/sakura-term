@@ -20,8 +20,8 @@
  *
  *****************************************************************************/
 
-#include <stdio.h>
-#include <stdbool.h>
+#include <cstdio>
+#include <cstdbool>
 #include <cstdlib>
 #include <cstring>
 #include <cstdarg>
@@ -79,8 +79,6 @@
 #define DEFAULT_PALETTE "solarized_dark"
 #define TAB_MAX_SIZE 40
 #define TAB_MIN_SIZE 6
-#define FORWARD 1
-#define BACKWARDS 2
 #define FADE_PERCENT 60
 #define DEFAULT_ADD_TAB_ACCELERATOR  (GDK_CONTROL_MASK|GDK_SHIFT_MASK)
 #define DEFAULT_DEL_TAB_ACCELERATOR  (GDK_CONTROL_MASK|GDK_SHIFT_MASK)
@@ -139,11 +137,8 @@ const char cfg_group[] = "sakura";
 /* Spawn callback */
 void sakura_spawm_callback (VteTerminal *, GPid, GError, gpointer);
 /* Callbacks */
-static gboolean sakura_key_press (GtkWidget *, GdkEventKey *, gpointer);
 static gboolean sakura_button_press (GtkWidget *, GdkEventButton *, gpointer);
 static void     sakura_beep (GtkWidget *, void *);
-static void     sakura_increase_font (GtkWidget *, void *);
-static void     sakura_decrease_font (GtkWidget *, void *);
 static void     sakura_child_exited (GtkWidget *, void *);
 static void     sakura_eof (GtkWidget *, void *);
 static void     sakura_title_changed (GtkWidget *, void *);
@@ -159,21 +154,14 @@ static void     sakura_window_show_event (GtkWidget *, gpointer);
 static gboolean sakura_notebook_scroll (GtkWidget *, GdkEventScroll *);
 /* Menuitem callbacks */
 static void     sakura_font_dialog (GtkWidget *, void *);
-static void     sakura_set_name_dialog (GtkWidget *, void *);
 static void     sakura_color_dialog (GtkWidget *, void *);
 static void     sakura_set_title_dialog (GtkWidget *, void *);
-static void     sakura_search_dialog (GtkWidget *, void *);
 static void     sakura_new_tab (GtkWidget *, void *);
-static void     sakura_close_tab (GtkWidget *, void *);
-static void     sakura_fullscreen (GtkWidget *, void *);
 static void     sakura_open_url (GtkWidget *, void *);
-static void     sakura_copy (GtkWidget *, void *);
-static void     sakura_paste (GtkWidget *, void *);
 static void     sakura_show_first_tab (GtkWidget *widget, void *data);
 static void     sakura_tabs_on_bottom (GtkWidget *widget, void *data);
 static void     sakura_less_questions (GtkWidget *widget, void *data);
 static void     sakura_show_close_button (GtkWidget *widget, void *data);
-static void     sakura_show_scrollbar(GtkWidget *, void *);
 static void     sakura_disable_numbered_tabswitch (GtkWidget *, void *);
 static void     sakura_use_fading (GtkWidget *, void *);
 static void     sakura_setname_entry_changed(GtkWidget *, void *);
@@ -183,7 +171,6 @@ static void     sakura_error(const char *, ...);
 
 /* Functions */
 static void     sakura_init_popup();
-static void     sakura_move_tab(gint);
 static gint     sakura_find_tab(VteTerminal *);
 static void     sakura_set_font();
 static void     sakura_set_tab_label_text(const gchar *, gint page);
@@ -191,30 +178,28 @@ static void     sakura_set_size(void);
 static void     sakura_set_keybind(const gchar *, guint);
 static guint    sakura_get_keybind(const gchar *);
 static void     sakura_config_done();
-static void     sakura_set_colorset (int);
 static void     sakura_set_colors (void);
-static guint    sakura_tokeycode(guint key);
 static void	sakura_fade_in(void);
 static void	sakura_fade_out(void);
 
-static guint
+guint
 sakura_tokeycode (guint key)
 {
-        GdkKeymap *keymap;
-        GdkKeymapKey *keys;
-        gint n_keys;
-        guint res = 0;
+	GdkKeymap *keymap;
+	GdkKeymapKey *keys;
+	gint n_keys;
+	guint res = 0;
 
 	keymap = gdk_keymap_get_for_display(gdk_display_get_default());
 
-        if (gdk_keymap_get_entries_for_keyval(keymap, key, &keys, &n_keys)) {
-                if (n_keys > 0) {
-                        res = keys[0].keycode;
-                }
-                g_free(keys);
-        }
+	if (gdk_keymap_get_entries_for_keyval(keymap, key, &keys, &n_keys)) {
+		if (n_keys > 0) {
+			res = keys[0].keycode;
+		}
+		g_free(keys);
+	}
 
-        return res;
+	return res;
 }
 
 
@@ -241,150 +226,6 @@ search(VteTerminal *vte, const char *pattern, bool reverse)
 		if (regex) vte_regex_unref(regex);
 	}
 }
-
-
-static gboolean
-sakura_key_press (GtkWidget *widget, GdkEventKey *event, gpointer user_data)
-{
-	if (event->type!=GDK_KEY_PRESS) return FALSE;
-
-	unsigned int topage = 0;
-
-	gint npages = gtk_notebook_get_n_pages(GTK_NOTEBOOK(sakura.notebook));
-
-	/* Use keycodes instead of keyvals. With keyvals, key bindings work only in US/ISO8859-1 and similar locales */
-	guint keycode = event->hardware_keycode;
-
-	/* Add/delete tab keybinding pressed */
-	if ( (event->state & sakura.add_tab_accelerator)==sakura.add_tab_accelerator &&
-			keycode==sakura_tokeycode(sakura.add_tab_key)) {
-		sakura_add_tab();
-		return TRUE;
-	} else if ( (event->state & sakura.del_tab_accelerator)==sakura.del_tab_accelerator &&
-			keycode==sakura_tokeycode(sakura.del_tab_key) ) {
-		/* Delete current tab */
-		sakura_close_tab(NULL, NULL);
-		return TRUE;
-	}
-
-	/* Switch tab keybinding pressed (numbers or next/prev) */
-	/* In cases when the user configured accelerators like these ones:
-		switch_tab_accelerator=4  for ctrl+next[prev]_tab_key
-		move_tab_accelerator=5  for ctrl+shift+next[prev]_tab_key
-	   move never works, because switch will be processed first, so it needs to be fixed with the following condition */
-	if ( ((event->state & sakura.switch_tab_accelerator) == sakura.switch_tab_accelerator) &&
-	     ((event->state & sakura.move_tab_accelerator) != sakura.move_tab_accelerator) ) {
-
-		if ((keycode>=sakura_tokeycode(GDK_KEY_1)) && (keycode<=sakura_tokeycode( GDK_KEY_9))) {
-
-			/* User has explicitly disabled this branch, make sure to propagate the event */
-			if(sakura.disable_numbered_tabswitch) return FALSE;
-
-			if      (sakura_tokeycode(GDK_KEY_1) == keycode) topage = 0;
-			else if (sakura_tokeycode(GDK_KEY_2) == keycode) topage = 1;
-			else if (sakura_tokeycode(GDK_KEY_3) == keycode) topage = 2;
-			else if (sakura_tokeycode(GDK_KEY_4) == keycode) topage = 3;
-			else if (sakura_tokeycode(GDK_KEY_5) == keycode) topage = 4;
-			else if (sakura_tokeycode(GDK_KEY_6) == keycode) topage = 5;
-			else if (sakura_tokeycode(GDK_KEY_7) == keycode) topage = 6;
-			else if (sakura_tokeycode(GDK_KEY_8) == keycode) topage = 7;
-			else if (sakura_tokeycode(GDK_KEY_9) == keycode) topage = 8;
-			if (topage <= npages)
-				gtk_notebook_set_current_page(GTK_NOTEBOOK(sakura.notebook), topage);
-			return TRUE;
-		} else if (keycode==sakura_tokeycode(sakura.prev_tab_key)) {
-			if (gtk_notebook_get_current_page(GTK_NOTEBOOK(sakura.notebook))==0) {
-				gtk_notebook_set_current_page(GTK_NOTEBOOK(sakura.notebook), npages-1);
-			} else {
-				gtk_notebook_prev_page(GTK_NOTEBOOK(sakura.notebook));
-			}
-			return TRUE;
-		} else if (keycode==sakura_tokeycode(sakura.next_tab_key)) {
-			if (gtk_notebook_get_current_page(GTK_NOTEBOOK(sakura.notebook))==(npages-1)) {
-				gtk_notebook_set_current_page(GTK_NOTEBOOK(sakura.notebook), 0);
-			} else {
-				gtk_notebook_next_page(GTK_NOTEBOOK(sakura.notebook));
-			}
-			return TRUE;
-		}
-	}
-
-	/* Move tab keybinding pressed */
-	if ( ((event->state & sakura.move_tab_accelerator) == sakura.move_tab_accelerator)) {
-		if (keycode==sakura_tokeycode(sakura.prev_tab_key)) {
-			sakura_move_tab(BACKWARDS);
-			return TRUE;
-		} else if (keycode==sakura_tokeycode(sakura.next_tab_key)) {
-			sakura_move_tab(FORWARD);
-			return TRUE;
-		}
-	}
-
-	/* Copy/paste keybinding pressed */
-	if ( (event->state & sakura.copy_accelerator)==sakura.copy_accelerator ) {
-		if (keycode==sakura_tokeycode(sakura.copy_key)) {
-			sakura_copy(NULL, NULL);
-			return TRUE;
-		} else if (keycode==sakura_tokeycode(sakura.paste_key)) {
-			sakura_paste(NULL, NULL);
-			return TRUE;
-		}
-	}
-
-	/* Show scrollbar keybinding pressed */
-	if ( (event->state & sakura.scrollbar_accelerator)==sakura.scrollbar_accelerator ) {
-		if (keycode==sakura_tokeycode(sakura.scrollbar_key)) {
-			sakura_show_scrollbar(NULL, NULL);
-			return TRUE;
-		}
-	}
-
-	/* Set tab name keybinding pressed */
-	if ( (event->state & sakura.set_tab_name_accelerator)==sakura.set_tab_name_accelerator ) {
-		if (keycode==sakura_tokeycode(sakura.set_tab_name_key)) {
-			sakura_set_name_dialog(NULL, NULL);
-			return TRUE;
-		}
-	}
-
-	/* Search keybinding pressed */
-	if ( (event->state & sakura.search_accelerator)==sakura.search_accelerator ) {
-		if (keycode==sakura_tokeycode(sakura.search_key)) {
-			sakura_search_dialog(NULL, NULL);
-			return TRUE;
-		}
-	}
-
-	/* Increase/decrease font size keybinding pressed */
-	if ( (event->state & sakura.font_size_accelerator)==sakura.font_size_accelerator ) {
-		if (keycode==sakura_tokeycode(sakura.increase_font_size_key)) {
-			sakura_increase_font(NULL, NULL);
-			return TRUE;
-		} else if (keycode==sakura_tokeycode(sakura.decrease_font_size_key)) {
-			sakura_decrease_font(NULL, NULL);
-			return TRUE;
-		}
-	}
-
-	/* F11 (fullscreen) pressed */
-	if (keycode==sakura_tokeycode(sakura.fullscreen_key)){
-		sakura_fullscreen(NULL, NULL);
-		return TRUE;
-	}
-
-	/* Change in colorset */
-	if ( (event->state & sakura.set_colorset_accelerator)==sakura.set_colorset_accelerator ) {
-		int i;
-		for(i=0; i<NUM_COLORSETS; i++) {
-			if (keycode==sakura_tokeycode(sakura.set_colorset_keys[i])){
-				sakura_set_colorset(i);
-				return TRUE;
-			}
-		}
-	}
-	return FALSE;
-}
-
 
 static gboolean
 sakura_button_press(GtkWidget *widget, GdkEventButton *button_event, gpointer user_data)
@@ -578,7 +419,7 @@ sakura_beep (GtkWidget *widget, void *data)
 }
 
 
-static void
+void
 sakura_increase_font (GtkWidget *widget, void *data)
 {
 	gint new_size;
@@ -593,7 +434,7 @@ sakura_increase_font (GtkWidget *widget, void *data)
 }
 
 
-static void
+void
 sakura_decrease_font (GtkWidget *widget, void *data)
 {
 	gint new_size;
@@ -858,7 +699,7 @@ sakura_font_dialog (GtkWidget *widget, void *data)
 }
 
 
-static void
+void
 sakura_set_name_dialog (GtkWidget *widget, void *data)
 {
 	GtkWidget *input_dialog, *input_header;
@@ -921,7 +762,7 @@ sakura_set_name_dialog (GtkWidget *widget, void *data)
 	gtk_widget_destroy(input_dialog);
 }
 
-static void
+void
 sakura_set_colorset (int cs)
 {
 	gint page;
@@ -1204,7 +1045,7 @@ sakura_fade_in()
 }
 
 
-static void
+void
 sakura_search_dialog (GtkWidget *widget, void *data)
 {
 	GtkWidget *title_dialog, *title_header;
@@ -1421,7 +1262,7 @@ sakura_show_close_button (GtkWidget *widget, void *data)
 }
 
 
-static void
+void
 sakura_show_scrollbar (GtkWidget *widget, void *data)
 {
 	gint page;
@@ -1667,7 +1508,7 @@ sakura_setname_entry_changed (GtkWidget *widget, void *data)
 
 
 /* Parameters are never used */
-static void
+void
 sakura_copy (GtkWidget *widget, void *data)
 {
 	gint page;
@@ -1681,7 +1522,7 @@ sakura_copy (GtkWidget *widget, void *data)
 
 
 /* Parameters are never used */
-static void
+void
 sakura_paste (GtkWidget *widget, void *data)
 {
 	gint page;
@@ -1701,7 +1542,7 @@ sakura_new_tab (GtkWidget *widget, void *data)
 }
 
 
-static void
+void
 sakura_close_tab (GtkWidget *widget, void *data)
 {
 	pid_t pgid;
@@ -1742,7 +1583,7 @@ sakura_close_tab (GtkWidget *widget, void *data)
 }
 
 
-static void
+void
 sakura_fullscreen (GtkWidget *widget, void *data)
 {
 	if (sakura.fullscreen!=TRUE) {
@@ -1919,7 +1760,7 @@ void sakura_init()
 		if (!g_key_file_has_key(sakura.cfg, cfg_group, temp_name, NULL)) {
 			sakura_set_keybind(temp_name, cs_keys[i]);
 		}
-		sakura.set_colorset_keys[i]= sakura_get_keybind(temp_name);
+		sakura.keymap.set_colorset_keys[i]= sakura_get_keybind(temp_name);
 	}
 
 	if (!g_key_file_has_key(sakura.cfg, cfg_group, "last_colorset", NULL)) {
@@ -2100,62 +1941,62 @@ void sakura_init()
 	if (!g_key_file_has_key(sakura.cfg, cfg_group, "add_tab_key", NULL)) {
 		sakura_set_keybind("add_tab_key", DEFAULT_ADD_TAB_KEY);
 	}
-	sakura.add_tab_key = sakura_get_keybind("add_tab_key");
+	sakura.keymap.add_tab_key = sakura_get_keybind("add_tab_key");
 
 	if (!g_key_file_has_key(sakura.cfg, cfg_group, "del_tab_key", NULL)) {
 		sakura_set_keybind("del_tab_key", DEFAULT_DEL_TAB_KEY);
 	}
-	sakura.del_tab_key = sakura_get_keybind("del_tab_key");
+	sakura.keymap.del_tab_key = sakura_get_keybind("del_tab_key");
 
 	if (!g_key_file_has_key(sakura.cfg, cfg_group, "prev_tab_key", NULL)) {
 		sakura_set_keybind("prev_tab_key", DEFAULT_PREV_TAB_KEY);
 	}
-	sakura.prev_tab_key = sakura_get_keybind("prev_tab_key");
+	sakura.keymap.prev_tab_key = sakura_get_keybind("prev_tab_key");
 
 	if (!g_key_file_has_key(sakura.cfg, cfg_group, "next_tab_key", NULL)) {
 		sakura_set_keybind("next_tab_key", DEFAULT_NEXT_TAB_KEY);
 	}
-	sakura.next_tab_key = sakura_get_keybind("next_tab_key");
+	sakura.keymap.next_tab_key = sakura_get_keybind("next_tab_key");
 
 	if (!g_key_file_has_key(sakura.cfg, cfg_group, "copy_key", NULL)) {
 		sakura_set_keybind( "copy_key", DEFAULT_COPY_KEY);
 	}
-	sakura.copy_key = sakura_get_keybind("copy_key");
+	sakura.keymap.copy_key = sakura_get_keybind("copy_key");
 
 	if (!g_key_file_has_key(sakura.cfg, cfg_group, "paste_key", NULL)) {
 		sakura_set_keybind("paste_key", DEFAULT_PASTE_KEY);
 	}
-	sakura.paste_key = sakura_get_keybind("paste_key");
+	sakura.keymap.paste_key = sakura_get_keybind("paste_key");
 
 	if (!g_key_file_has_key(sakura.cfg, cfg_group, "scrollbar_key", NULL)) {
 		sakura_set_keybind("scrollbar_key", DEFAULT_SCROLLBAR_KEY);
 	}
-	sakura.scrollbar_key = sakura_get_keybind("scrollbar_key");
+	sakura.keymap.scrollbar_key = sakura_get_keybind("scrollbar_key");
 
 	if (!g_key_file_has_key(sakura.cfg, cfg_group, "set_tab_name_key", NULL)) {
 		sakura_set_keybind("set_tab_name_key", DEFAULT_SET_TAB_NAME_KEY);
 	}
-	sakura.set_tab_name_key = sakura_get_keybind("set_tab_name_key");
+	sakura.keymap.set_tab_name_key = sakura_get_keybind("set_tab_name_key");
 
 	if (!g_key_file_has_key(sakura.cfg, cfg_group, "search_key", NULL)) {
 		sakura_set_keybind("search_key", DEFAULT_SEARCH_KEY);
 	}
-	sakura.search_key = sakura_get_keybind("search_key");
+	sakura.keymap.search_key = sakura_get_keybind("search_key");
 
 	if (!g_key_file_has_key(sakura.cfg, cfg_group, "increase_font_size_key", NULL)) {
 		sakura_set_keybind("increase_font_size_key", DEFAULT_INCREASE_FONT_SIZE_KEY);
 	}
-	sakura.increase_font_size_key = sakura_get_keybind("increase_font_size_key");
+	sakura.keymap.increase_font_size_key = sakura_get_keybind("increase_font_size_key");
 
 	if (!g_key_file_has_key(sakura.cfg, cfg_group, "decrease_font_size_key", NULL)) {
 		sakura_set_keybind("decrease_font_size_key", DEFAULT_DECREASE_FONT_SIZE_KEY);
 	}
-	sakura.decrease_font_size_key = sakura_get_keybind("decrease_font_size_key");
+	sakura.keymap.decrease_font_size_key = sakura_get_keybind("decrease_font_size_key");
 
 	if (!g_key_file_has_key(sakura.cfg, cfg_group, "fullscreen_key", NULL)) {
 		sakura_set_keybind("fullscreen_key", DEFAULT_FULLSCREEN_KEY);
 	}
-	sakura.fullscreen_key = sakura_get_keybind("fullscreen_key");
+	sakura.keymap.fullscreen_key = sakura_get_keybind("fullscreen_key");
 
 	if (!g_key_file_has_key(sakura.cfg, cfg_group, "set_colorset_accelerator", NULL)) {
 		sakura_set_config_integer("set_colorset_accelerator", DEFAULT_SELECT_COLORSET_ACCELERATOR);
@@ -2283,7 +2124,7 @@ void sakura_init()
 
 	g_signal_connect(G_OBJECT(sakura.main_window), "delete_event", G_CALLBACK(sakura_delete_event), NULL);
 	g_signal_connect(G_OBJECT(sakura.main_window), "destroy", G_CALLBACK(sakura_destroy_window), NULL);
-	g_signal_connect(G_OBJECT(sakura.main_window), "key-press-event", G_CALLBACK(sakura_key_press), NULL);
+	g_signal_connect(G_OBJECT(sakura.main_window), "key-press-event", G_CALLBACK(Sakura::on_key_press), NULL);
 	g_signal_connect(G_OBJECT(sakura.main_window), "configure-event", G_CALLBACK(sakura_resized_window), NULL);
 	g_signal_connect(G_OBJECT(sakura.main_window), "focus-out-event", G_CALLBACK(sakura_focus_out), NULL);
 	g_signal_connect(G_OBJECT(sakura.main_window), "focus-in-event", G_CALLBACK(sakura_focus_in), NULL);
@@ -2639,7 +2480,7 @@ sakura_set_font()
 }
 
 
-static void
+void
 sakura_move_tab(gint direction)
 {
 	gint page, n_pages;
@@ -2829,7 +2670,7 @@ void sakura_add_tab()
 	}
 
 	/* Since vte-2.91 env is properly overwritten */
-	char *command_env[2]={"TERM=xterm-256color",0};
+	char *command_env[2]={const_cast<char *>("TERM=xterm-256color"), 0};
 	/* First tab */
 	npages=gtk_notebook_get_n_pages(GTK_NOTEBOOK(sakura.notebook));
 	if (npages == 1) {

@@ -2,6 +2,7 @@
 
 #include <vte/vte.h>
 #include "gettext.h"
+#include "sakura.h"
 
 /* Globals for command line parameters */
 static const char *option_workdir;
@@ -20,8 +21,6 @@ static char *option_config_file;
 static gboolean option_fullscreen;
 static gboolean option_maximize;
 static gint option_colorset;
-
-#define NUM_COLORSETS 6
 
 static GOptionEntry entries[] = {
 	{ "version", 'v', 0, G_OPTION_ARG_NONE, &option_version, N_("Print version number"), NULL },
@@ -57,84 +56,12 @@ struct terminal {
 	int colorset;
 };
 
-static struct {
-	GtkWidget *main_window;
-	GtkWidget *notebook;
-	GtkWidget *menu;
-	PangoFontDescription *font;
-	GdkRGBA forecolors[NUM_COLORSETS];
-	GdkRGBA backcolors[NUM_COLORSETS];
-	GdkRGBA curscolors[NUM_COLORSETS];
-	const GdkRGBA *palette;
-	char *current_match;
-	guint width;
-	guint height;
-	glong columns;
-	glong rows;
-	gint scroll_lines;
-	gint label_count;
-	VteCursorShape cursor_type;
-	bool first_tab;
-	bool show_scrollbar;
-	bool show_closebutton;
-	bool tabs_on_bottom;
-	bool less_questions;
-	bool urgent_bell;
-	bool audible_bell;
-	bool blinking_cursor;
-	bool stop_tab_cycling_at_end_tabs;
-	bool allow_bold;
-	bool fullscreen;
-	bool keep_fc;                    /* Global flag to indicate that we don't want changes in the files and columns values */
-	bool config_modified;            /* Configuration has been modified */
-	bool externally_modified;        /* Configuration file has been modified by another process */
-	bool resized;
-	bool disable_numbered_tabswitch; /* For disabling direct tabswitching key */
-	bool focused;                    /* For fading feature */
-	bool first_focus;                /* First time gtkwindow recieve focus when is created */
-	bool faded;			 /* Fading state */
-	bool use_fading;
-	bool scrollable_tabs;
-	GtkWidget *item_copy_link;       /* We include here only the items which need to be hidden */
-	GtkWidget *item_open_link;
-	GtkWidget *item_open_mail;
-	GtkWidget *open_link_separator;
-	GKeyFile *cfg;
-	GtkCssProvider *provider;
-	char *configfile;
-	char *icon;
-	char *word_chars;                /* Exceptions for word selection */
-	gchar *tab_default_title;
-	gint last_colorset;
-	gint add_tab_accelerator;
-	gint del_tab_accelerator;
-	gint switch_tab_accelerator;
-	gint move_tab_accelerator;
-	gint copy_accelerator;
-	gint scrollbar_accelerator;
-	gint open_url_accelerator;
-	gint font_size_accelerator;
-	gint set_tab_name_accelerator;
-	gint search_accelerator;
-	gint set_colorset_accelerator;
-	gint add_tab_key;
-	gint del_tab_key;
-	gint prev_tab_key;
-	gint next_tab_key;
-	gint copy_key;
-	gint paste_key;
-	gint scrollbar_key;
-	gint set_tab_name_key;
-	gint search_key;
-	gint fullscreen_key;
-	gint increase_font_size_key;
-	gint decrease_font_size_key;
-	gint set_colorset_keys[NUM_COLORSETS];
-	VteRegex *http_vteregexp, *mail_vteregexp;
-	char *argv[3];
-} sakura;
+static Sakura sakura;
 
 static GQuark term_data_id = 0;
+
+#define FORWARD 1
+#define BACKWARDS 2
 
 #define  sakura_get_page_term( sakura, page_idx )  \
     (struct terminal*)g_object_get_qdata(  \
@@ -143,4 +70,17 @@ static GQuark term_data_id = 0;
 void sakura_init();
 void sakura_add_tab();
 void sakura_sanitize_working_directory();
+guint    sakura_tokeycode(guint key);
+void     sakura_close_tab (GtkWidget *, void *);
+void     sakura_move_tab(gint);
+void     sakura_copy (GtkWidget *, void *);
+void     sakura_paste (GtkWidget *, void *);
+// Callbacks
+void     sakura_increase_font (GtkWidget *, void *);
+void     sakura_decrease_font (GtkWidget *, void *);
+void     sakura_set_name_dialog (GtkWidget *, void *);
 
+void     sakura_show_scrollbar(GtkWidget *, void *);
+void     sakura_search_dialog (GtkWidget *, void *);
+void     sakura_fullscreen (GtkWidget *, void *);
+void     sakura_set_colorset (int);
