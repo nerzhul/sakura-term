@@ -52,7 +52,7 @@ ADD_EXECUTABLE (sakura
 	src/sakura.cpp
 	src/sakuraold.cpp)
 
-ADD_SUBDIRECTORY (po)
+#ADD_SUBDIRECTORY (po)
 
 INSTALL (TARGETS sakura RUNTIME DESTINATION bin)
 INSTALL (FILES sakura.desktop DESTINATION share/applications)

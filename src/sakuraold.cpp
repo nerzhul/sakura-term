@@ -120,17 +120,17 @@ const char cfg_group[] = "sakura";
 
 #define  sakura_set_config_integer(key, value) do {\
 	g_key_file_set_integer(sakura.cfg, cfg_group, key, value);\
-	sakura.config_modified=TRUE;\
+	sakura.config_modified=true;\
 	} while(0);
 
 #define  sakura_set_config_string(key, value) do {\
 	g_key_file_set_value(sakura.cfg, cfg_group, key, value);\
-	sakura.config_modified=TRUE;\
+	sakura.config_modified=true;\
 	} while(0);
 
 #define  sakura_set_config_boolean(key, value) do {\
 	g_key_file_set_boolean(sakura.cfg, cfg_group, key, value);\
-	sakura.config_modified=TRUE;\
+	sakura.config_modified=true;\
 	} while(0);
 
 
@@ -2392,7 +2392,7 @@ sakura_init_popup()
 
 
 static void
-sakura_set_size(void)
+sakura_set_size()
 {
 	struct terminal *term;
 	gint pad_x, pad_y;
@@ -2553,7 +2553,7 @@ sakura_set_tab_label_text(const gchar *title, gint page)
 void
 sakura_spawn_callback (VteTerminal *vte, GPid pid, GError *error, gpointer user_data)
 {
-	struct terminal *term = (struct terminal *) user_data;
+	auto *term = (struct terminal *) user_data;
 	//term = sakura_get_page_term(sakura, page);
 	if (pid==-1) { /* Fork has failed */
 		SAY("Error: %s", error->message);
@@ -2830,7 +2830,7 @@ sakura_set_keybind(const gchar *key, guint value)
 
 	valname=gdk_keyval_name(value);
 	g_key_file_set_string(sakura.cfg, cfg_group, key, valname);
-	sakura.config_modified=TRUE;
+	sakura.config_modified=true;
 	//FIXME: free() valname?
 }
 

@@ -15,7 +15,7 @@ main(int argc, char **argv)
 
 	/* Localization */
 	std::setlocale(LC_ALL, "");
-	localedir=g_strdup_printf("%s/locale", DATADIR);
+	localedir = g_strdup_printf("%s/locale", DATADIR);
 	textdomain(GETTEXT_PACKAGE);
 	bindtextdomain(GETTEXT_PACKAGE, localedir);
 	bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
@@ -25,16 +25,16 @@ main(int argc, char **argv)
 	 * sure GOption doesn't grab any arguments meant for the command being called */
 
 	/* Initialize nargv */
-	nargv = (char**)calloc((argc+1), sizeof(char*));
+	nargv = (char**)calloc(static_cast<size_t>(argc + 1), sizeof(char*));
 	n=0; nargc=argc;
 	have_e=FALSE;
 
 	for(i=0; i<argc; i++) {
 		if(!have_e && g_strcmp0(argv[i],"-e") == 0)
 		{
-			nargv[n]="-e";
+			nargv[n] = const_cast<char *>("-e");
 			n++;
-			nargv[n]="--";
+			nargv[n] = const_cast<char *>("--");
 			nargc++;
 			have_e = TRUE;
 		} else {
@@ -44,7 +44,7 @@ main(int argc, char **argv)
 	}
 
 	/* Options parsing */
-	GError *error=NULL;
+	GError *error = nullptr;
 	GOptionContext *context; GOptionGroup *option_group;
 
 	context = g_option_context_new (_("- vte-based terminal emulator"));
