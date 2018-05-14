@@ -56,31 +56,31 @@ struct terminal {
 	int colorset;
 };
 
-static Sakura sakura;
+extern Sakura *sakura;
 
 static GQuark term_data_id = 0;
 
-#define DEFAULT_CONFIGFILE "sakura.conf"
+#define DEFAULT_CONFIGFILE "sakura->conf"
 #define FORWARD 1
 #define BACKWARDS 2
 
 #define  sakura_get_page_term( sakura, page_idx )  \
     (struct terminal*)g_object_get_qdata(  \
-            G_OBJECT( gtk_notebook_get_nth_page( (GtkNotebook*)sakura.notebook, page_idx ) ), term_data_id);
+            G_OBJECT( gtk_notebook_get_nth_page( (GtkNotebook*)sakura->notebook, page_idx ) ), term_data_id);
 
 #define  sakura_set_config_string(key, value) do {\
-	g_key_file_set_value(sakura.cfg, cfg_group, key, value);\
-	sakura.config_modified=true;\
+	g_key_file_set_value(sakura->cfg, cfg_group, key, value);\
+	sakura->config_modified=true;\
 	} while(0);
 
 #define  sakura_set_config_integer(key, value) do {\
-	g_key_file_set_integer(sakura.cfg, cfg_group, key, value);\
-	sakura.config_modified=true;\
+	g_key_file_set_integer(sakura->cfg, cfg_group, key, value);\
+	sakura->config_modified=true;\
 	} while(0);
 
 #define  sakura_set_config_boolean(key, value) do {\
-	g_key_file_set_boolean(sakura.cfg, cfg_group, key, value);\
-	sakura.config_modified=true;\
+	g_key_file_set_boolean(sakura->cfg, cfg_group, key, value);\
+	sakura->config_modified=true;\
 	} while(0);
 
 static const char cfg_group[] = "sakura";

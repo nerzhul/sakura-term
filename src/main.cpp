@@ -5,8 +5,11 @@
 #include "gettext.h"
 #include "sakuraold.h"
 
-int
-main(int argc, char **argv)
+// The global sakura singleton
+// It should disappear at a moment
+Sakura *sakura;
+
+int main(int argc, char **argv)
 {
 	gchar *localedir;
 	int i; int n;
@@ -78,8 +81,10 @@ main(int argc, char **argv)
 	gtk_init(&nargc, &nargv);
 	g_strfreev(nargv);
 
+	sakura = new Sakura();
 	Sakura::init();
 	gtk_main();
 
+	delete sakura;
 	return 0;
 }
