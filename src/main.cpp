@@ -76,13 +76,7 @@ main(int argc, char **argv)
 
 	/* Init stuff */
 	gtk_init(&nargc, &nargv); g_strfreev(nargv);
-	sakura_init();
-
-	/* Add initial tabs (1 by default) */
-	for (i=0; i<option_ntabs; i++)
-		sakura_add_tab();
-
-	sakura_sanitize_working_directory();
+	Sakura::init();
 
 	gtk_main();
 

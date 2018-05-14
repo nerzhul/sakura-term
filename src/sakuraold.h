@@ -60,12 +60,30 @@ static Sakura sakura;
 
 static GQuark term_data_id = 0;
 
+#define DEFAULT_CONFIGFILE "sakura.conf"
 #define FORWARD 1
 #define BACKWARDS 2
 
 #define  sakura_get_page_term( sakura, page_idx )  \
     (struct terminal*)g_object_get_qdata(  \
             G_OBJECT( gtk_notebook_get_nth_page( (GtkNotebook*)sakura.notebook, page_idx ) ), term_data_id);
+
+#define  sakura_set_config_string(key, value) do {\
+	g_key_file_set_value(sakura.cfg, cfg_group, key, value);\
+	sakura.config_modified=true;\
+	} while(0);
+
+#define  sakura_set_config_integer(key, value) do {\
+	g_key_file_set_integer(sakura.cfg, cfg_group, key, value);\
+	sakura.config_modified=true;\
+	} while(0);
+
+#define  sakura_set_config_boolean(key, value) do {\
+	g_key_file_set_boolean(sakura.cfg, cfg_group, key, value);\
+	sakura.config_modified=true;\
+	} while(0);
+
+static const char cfg_group[] = "sakura";
 
 void sakura_init();
 void sakura_add_tab();
@@ -79,8 +97,22 @@ void     sakura_paste (GtkWidget *, void *);
 void     sakura_increase_font (GtkWidget *, void *);
 void     sakura_decrease_font (GtkWidget *, void *);
 void     sakura_set_name_dialog (GtkWidget *, void *);
+gboolean sakura_delete_event (GtkWidget *, void *);
+void     sakura_destroy_window (GtkWidget *, void *);
+gboolean sakura_resized_window( GtkWidget *, GdkEventConfigure *, void *);
+gboolean sakura_focus_in( GtkWidget *, GdkEvent *, void *);
+gboolean sakura_focus_out( GtkWidget *, GdkEvent *, void *);
+void     sakura_conf_changed (GtkWidget *, void *);
+void     sakura_window_show_event (GtkWidget *, gpointer);
+//static gboolean sakura_notebook_focus_in (GtkWidget *, void *);
+gboolean sakura_notebook_scroll (GtkWidget *, GdkEventScroll *);
 
 void     sakura_show_scrollbar(GtkWidget *, void *);
 void     sakura_search_dialog (GtkWidget *, void *);
 void     sakura_fullscreen (GtkWidget *, void *);
 void     sakura_set_colorset (int);
+void     sakura_set_keybind(const gchar *, guint);
+guint    sakura_get_keybind(const gchar *);
+
+// Functions
+void     sakura_init_popup();

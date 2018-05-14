@@ -20,6 +20,7 @@ struct SakuraKeyMap {
 
 class Sakura {
 public:
+	static void init();
 	static void destroy();
 
 	static gboolean on_key_press(GtkWidget *widget, GdkEventKey *event,
