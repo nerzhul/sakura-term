@@ -75,9 +75,10 @@ main(int argc, char **argv)
 	}
 
 	/* Init stuff */
-	gtk_init(&nargc, &nargv); g_strfreev(nargv);
-	Sakura::init();
+	gtk_init(&nargc, &nargv);
+	g_strfreev(nargv);
 
+	Sakura::init();
 	gtk_main();
 
 	return 0;

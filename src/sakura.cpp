@@ -1,6 +1,7 @@
 #include <gtk/gtk.h>
 #include <vte/vte.h>
 #include <glib/gstdio.h>
+#include <iostream>
 #include "sakura.h"
 #include "debug.h"
 #include "palettes.h"
@@ -18,7 +19,6 @@ static int cs_keys[NUM_COLORSETS] =
 		{GDK_KEY_F1, GDK_KEY_F2, GDK_KEY_F3, GDK_KEY_F4, GDK_KEY_F5, GDK_KEY_F6};
 
 #define ICON_FILE "terminal-tango.svg"
-#define SCROLL_LINES 4096
 #define DEFAULT_SCROLL_LINES 4096
 #define HTTP_REGEXP "(ftp|http)s?://[^ \t\n\b()<>{}«»\\[\\]\'\"]+[^.]"
 #define MAIL_REGEXP "[^ \t\n\b]+@([^ \t\n\b]+\\.)+([a-zA-Z]{2,4})"
@@ -51,7 +51,6 @@ static int cs_keys[NUM_COLORSETS] =
 #define DEFAULT_FULLSCREEN_KEY  GDK_KEY_F11
 #define DEFAULT_INCREASE_FONT_SIZE_KEY GDK_KEY_plus
 #define DEFAULT_DECREASE_FONT_SIZE_KEY GDK_KEY_minus
-#define DEFAULT_SCROLLABLE_TABS TRUE
 
 void Sakura::init()
 {
@@ -63,19 +62,6 @@ void Sakura::init()
 	/* Config file initialization*/
 	sakura.cfg = g_key_file_new();
 	sakura.config_modified=false;
-
-	configdir = g_build_filename( g_get_user_config_dir(), "sakura", NULL );
-	if( ! g_file_test( g_get_user_config_dir(), G_FILE_TEST_EXISTS) )
-		g_mkdir( g_get_user_config_dir(), 0755 );
-	if( ! g_file_test( configdir, G_FILE_TEST_EXISTS) )
-		g_mkdir( configdir, 0755 );
-	if (option_config_file) {
-		sakura.configfile=g_build_filename(configdir, option_config_file, NULL);
-	} else {
-		/* Use more standard-conforming path for config files, if available. */
-		sakura.configfile=g_build_filename(configdir, DEFAULT_CONFIGFILE, NULL);
-	}
-	g_free(configdir);
 
 	GError *error=NULL;
 	/* Open config file */
@@ -525,8 +511,6 @@ void Sakura::destroy()
 	g_key_file_free(sakura.cfg);
 
 	pango_font_description_free(sakura.font);
-
-	free(sakura.configfile);
 
 	gtk_main_quit();
 

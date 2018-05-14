@@ -1,5 +1,7 @@
 #pragma once
 
+#include "config.h"
+
 #define NUM_COLORSETS 6
 
 struct SakuraKeyMap {
@@ -71,7 +73,6 @@ public:
 	GtkWidget *open_link_separator;
 	GKeyFile *cfg;
 	GtkCssProvider *provider;
-	char *configfile;
 	char *icon;
 	char *word_chars;                /* Exceptions for word selection */
 	gchar *tab_default_title;
@@ -90,5 +91,6 @@ public:
 	SakuraKeyMap keymap;
 	VteRegex *http_vteregexp, *mail_vteregexp;
 	char *argv[3];
+	Config config;
 private:
 };
