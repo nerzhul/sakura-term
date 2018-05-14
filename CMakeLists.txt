@@ -31,6 +31,11 @@ IF (NOT X11_FOUND)
 	MESSAGE(FATAL_ERROR "You don't seem to have x11 development libraries installed...")
 ENDIF (NOT X11_FOUND)
 
+pkg_check_modules (YAMLCPP REQUIRED yaml-cpp)
+IF (NOT YAMLCPP_FOUND)
+	MESSAGE(FATAL_ERROR "You don't seem to have yaml-cpp library installed...")
+ENDIF (NOT YAMLCPP_FOUND)
+
 FIND_PROGRAM(POD2MAN pod2man)
 MESSAGE ("pod2man executable is" ${POD2MAN})
 
@@ -46,12 +51,17 @@ ENDIF (${CMAKE_BUILD_TYPE} MATCHES "Debug")
 
 INCLUDE_DIRECTORIES (. ${GTK_INCLUDE_DIRS} ${VTE_INCLUDE_DIRS})
 LINK_DIRECTORIES (${GTK_LIBRARY_DIRS} ${VTE_LIBRARY_DIRS} ${X11_LIBRARY_DIRS})
-LINK_LIBRARIES (${GTK_LIBRARIES} ${VTE_LIBRARIES} ${X11_LIBRARIES} m)
 ADD_EXECUTABLE (sakura
 	src/config.cpp
 	src/main.cpp
 	src/sakura.cpp
 	src/sakuraold.cpp)
+target_link_libraries (sakura
+	${GTK_LIBRARIES}
+	${VTE_LIBRARIES}
+	${X11_LIBRARIES}
+	${YAMLCPP_LIBRARIES}
+	m)
 
 #ADD_SUBDIRECTORY (po)
 

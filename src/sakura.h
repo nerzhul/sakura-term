@@ -33,7 +33,6 @@ public:
 	GtkWidget *main_window;
 	GtkWidget *notebook;
 	GtkWidget *menu;
-	PangoFontDescription *font;
 	GdkRGBA forecolors[NUM_COLORSETS];
 	GdkRGBA backcolors[NUM_COLORSETS];
 	GdkRGBA curscolors[NUM_COLORSETS];
@@ -43,13 +42,8 @@ public:
 	guint height;
 	glong columns;
 	glong rows;
-	gint scroll_lines;
 	gint label_count;
 	VteCursorShape cursor_type;
-	bool first_tab;
-	bool show_scrollbar;
-	bool show_closebutton;
-	bool tabs_on_bottom;
 	bool less_questions;
 	bool urgent_bell;
 	bool audible_bell;
@@ -76,7 +70,6 @@ public:
 	char *icon;
 	char *word_chars;                /* Exceptions for word selection */
 	gchar *tab_default_title;
-	gint last_colorset;
 	gint add_tab_accelerator;
 	gint del_tab_accelerator;
 	gint switch_tab_accelerator;

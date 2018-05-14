@@ -3,6 +3,10 @@
 #include <glib.h>
 #include <glib/gstdio.h>
 #include <iostream>
+#include <yaml-cpp/yaml.h>
+
+#define DEFAULT_CONFIGFILE "sakura.yml"
+#define DEFAULT_FONT "Ubuntu Mono,monospace 12"
 
 Config::Config()
 {
@@ -23,7 +27,16 @@ Config::Config()
 	}
 	g_free(configdir);
 
+	font = pango_font_description_from_string(DEFAULT_FONT);
+
 	std::cout << "Configuration file set to " << m_file << std::endl;
+}
+
+Config::~Config()
+{
+	if (font) {
+		pango_font_description_free(font);
+	}
 }
 
 void Config::write()
@@ -33,8 +46,46 @@ void Config::write()
 
 bool Config::read()
 {
-	// @TODO
-	return false;
+	try {
+		YAML::Node config = YAML::LoadFile(m_file);
+
+		if (config["last_colorset"]) {
+			last_colorset = config["last_colorset"].as<gint>();
+		}
+
+		if (config["scroll_lines"]) {
+			scroll_lines = config["scroll_lines"].as<gint>();
+		}
+
+		if (config["font"]) {
+			if (font) {
+				pango_font_description_free(font);
+			}
+			font = pango_font_description_from_string(
+				config["font"].as<std::string>().c_str());
+		}
+
+		if (config["show_always_first_tab"]) {
+			first_tab = config["show_always_first_tab"].as<bool>();
+		}
+
+		if (config["scrollbar"]) {
+			show_scrollbar = config["scrollbar"].as<bool>();
+		}
+
+		if (config["closebutton"]) {
+			show_closebutton = config["closebutton"].as<bool>();
+		}
+
+		if (config["tabs_on_bottom"]) {
+			tabs_on_bottom = config["tabs_on_bottom"].as<bool>();
+		}
+	} catch (const YAML::BadFile &e) {
+		std::cout << "Failed to read configuration file: " << e.what()
+			<< ", using defaults" << std::endl;
+	}
+
+	return true;
 }
 
 void Config::monitor()

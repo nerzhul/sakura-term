@@ -19,12 +19,10 @@ static int cs_keys[NUM_COLORSETS] =
 		{GDK_KEY_F1, GDK_KEY_F2, GDK_KEY_F3, GDK_KEY_F4, GDK_KEY_F5, GDK_KEY_F6};
 
 #define ICON_FILE "terminal-tango.svg"
-#define DEFAULT_SCROLL_LINES 4096
 #define HTTP_REGEXP "(ftp|http)s?://[^ \t\n\b()<>{}«»\\[\\]\'\"]+[^.]"
 #define MAIL_REGEXP "[^ \t\n\b]+@([^ \t\n\b]+\\.)+([a-zA-Z]{2,4})"
 #define DEFAULT_COLUMNS 80
 #define DEFAULT_ROWS 24
-#define DEFAULT_FONT "Ubuntu Mono,monospace 12"
 #define DEFAULT_WORD_CHARS "-,./?%&#_~:"
 #define DEFAULT_PALETTE "solarized_dark"
 
@@ -52,6 +50,8 @@ static int cs_keys[NUM_COLORSETS] =
 #define DEFAULT_INCREASE_FONT_SIZE_KEY GDK_KEY_plus
 #define DEFAULT_DECREASE_FONT_SIZE_KEY GDK_KEY_minus
 
+static const gint BACKWARDS = 2;
+
 void Sakura::init()
 {
 	char* configdir = nullptr;
@@ -64,7 +64,6 @@ void Sakura::init()
 	sakura->config_modified=false;
 
 	if (!sakura->config.read()) {
-		std::cerr << "Invalid configuration file" << std::endl;
 		exit(EXIT_FAILURE);
 	}
 
@@ -112,45 +111,6 @@ void Sakura::init()
 		}
 		sakura->keymap.set_colorset_keys[i]= sakura_get_keybind(temp_name);
 	}
-
-	if (!g_key_file_has_key(sakura->cfg, cfg_group, "last_colorset", NULL)) {
-		sakura_set_config_integer("last_colorset", 1);
-	}
-	sakura->last_colorset = g_key_file_get_integer(sakura->cfg, cfg_group, "last_colorset", NULL);
-
-	if (!g_key_file_has_key(sakura->cfg, cfg_group, "scroll_lines", NULL)) {
-		g_key_file_set_integer(sakura->cfg, cfg_group, "scroll_lines", DEFAULT_SCROLL_LINES);
-	}
-	sakura->scroll_lines = g_key_file_get_integer(sakura->cfg, cfg_group, "scroll_lines", NULL);
-
-	if (!g_key_file_has_key(sakura->cfg, cfg_group, "font", NULL)) {
-		sakura_set_config_string("font", DEFAULT_FONT);
-	}
-	cfgtmp = g_key_file_get_value(sakura->cfg, cfg_group, "font", NULL);
-	sakura->font = pango_font_description_from_string(cfgtmp);
-	free(cfgtmp);
-
-	if (!g_key_file_has_key(sakura->cfg, cfg_group, "show_always_first_tab", NULL)) {
-		sakura_set_config_string("show_always_first_tab", "No");
-	}
-	cfgtmp = g_key_file_get_value(sakura->cfg, cfg_group, "show_always_first_tab", NULL);
-	sakura->first_tab = (strcmp(cfgtmp, "Yes")==0) ? true : false;
-	free(cfgtmp);
-
-	if (!g_key_file_has_key(sakura->cfg, cfg_group, "scrollbar", NULL)) {
-		sakura_set_config_boolean("scrollbar", FALSE);
-	}
-	sakura->show_scrollbar = g_key_file_get_boolean(sakura->cfg, cfg_group, "scrollbar", NULL);
-
-	if (!g_key_file_has_key(sakura->cfg, cfg_group, "closebutton", NULL)) {
-		sakura_set_config_boolean("closebutton", TRUE);
-	}
-	sakura->show_closebutton = g_key_file_get_boolean(sakura->cfg, cfg_group, "closebutton", NULL);
-
-	if (!g_key_file_has_key(sakura->cfg, cfg_group, "tabs_on_bottom", NULL)) {
-		sakura_set_config_boolean("tabs_on_bottom", FALSE);
-	}
-	sakura->tabs_on_bottom = g_key_file_get_boolean(sakura->cfg, cfg_group, "tabs_on_bottom", NULL);
 
 	if (!g_key_file_has_key(sakura->cfg, cfg_group, "less_questions", NULL)) {
 		sakura_set_config_boolean("less_questions", FALSE);
@@ -430,11 +390,11 @@ void Sakura::init()
 	if (error) g_error_free(error);
 
 	if (option_font) {
-		sakura->font=pango_font_description_from_string(option_font);
+		sakura->config.font=pango_font_description_from_string(option_font);
 	}
 
 	if (option_colorset && option_colorset>0 && option_colorset <= NUM_COLORSETS) {
-		sakura->last_colorset=option_colorset;
+		sakura->config.last_colorset = option_colorset;
 	}
 
 	/* These options are exclusive */
@@ -502,7 +462,7 @@ void Sakura::destroy()
 
 	g_key_file_free(sakura->cfg);
 
-	pango_font_description_free(sakura->font);
+	pango_font_description_free(sakura->config.font);
 
 	gtk_main_quit();
 
@@ -670,7 +630,7 @@ void Sakura::del_tab(gint page)
 	/* Do the first tab checks BEFORE deleting the tab, to ensure correct
 	 * sizes are calculated when the tab is deleted */
 	if (npages == 2) {
-		if (sakura->first_tab) {
+		if (sakura->config.first_tab) {
 			gtk_notebook_set_show_tabs(GTK_NOTEBOOK(sakura->notebook), TRUE);
 		} else {
 			gtk_notebook_set_show_tabs(GTK_NOTEBOOK(sakura->notebook), FALSE);

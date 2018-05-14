@@ -348,12 +348,12 @@ sakura_increase_font (GtkWidget *widget, void *data)
 	gint new_size;
 
 	/* Increment font size one unit */
-	new_size=pango_font_description_get_size(sakura->font)+PANGO_SCALE;
+	new_size=pango_font_description_get_size(sakura->config.font)+PANGO_SCALE;
 
-	pango_font_description_set_size(sakura->font, new_size);
+	pango_font_description_set_size(sakura->config.font, new_size);
 	sakura_set_font();
 	sakura_set_size();
-	sakura_set_config_string("font", pango_font_description_to_string(sakura->font));
+	sakura_set_config_string("font", pango_font_description_to_string(sakura->config.font));
 }
 
 
@@ -363,14 +363,14 @@ sakura_decrease_font (GtkWidget *widget, void *data)
 	gint new_size;
 
 	/* Decrement font size one unit */
-	new_size=pango_font_description_get_size(sakura->font)-PANGO_SCALE;
+	new_size=pango_font_description_get_size(sakura->config.font)-PANGO_SCALE;
 
 	/* Set a minimal size */
 	if (new_size >= FONT_MINIMAL_SIZE ) {
-		pango_font_description_set_size(sakura->font, new_size);
+		pango_font_description_set_size(sakura->config.font, new_size);
 		sakura_set_font();
 		sakura_set_size();
-		sakura_set_config_string("font", pango_font_description_to_string(sakura->font));
+		sakura_set_config_string("font", pango_font_description_to_string(sakura->config.font));
 	}
 }
 
@@ -586,16 +586,16 @@ sakura_font_dialog (GtkWidget *widget, void *data)
 	gint response;
 
 	font_dialog=gtk_font_chooser_dialog_new(_("Select font"), GTK_WINDOW(sakura->main_window));
-	gtk_font_chooser_set_font_desc(GTK_FONT_CHOOSER(font_dialog), sakura->font);
+	gtk_font_chooser_set_font_desc(GTK_FONT_CHOOSER(font_dialog), sakura->config.font);
 
 	response=gtk_dialog_run(GTK_DIALOG(font_dialog));
 
 	if (response==GTK_RESPONSE_OK) {
-		pango_font_description_free(sakura->font);
-		sakura->font=gtk_font_chooser_get_font_desc(GTK_FONT_CHOOSER(font_dialog));
+		pango_font_description_free(sakura->config.font);
+		sakura->config.font=gtk_font_chooser_get_font_desc(GTK_FONT_CHOOSER(font_dialog));
 		sakura_set_font();
 		sakura_set_size();
-		sakura_set_config_string("font", pango_font_description_to_string(sakura->font));
+		sakura_set_config_string("font", pango_font_description_to_string(sakura->config.font));
 	}
 
 	gtk_widget_destroy(font_dialog);
@@ -1116,14 +1116,14 @@ sakura_show_first_tab (GtkWidget *widget, void *data)
 	if (gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(widget))) {
 		gtk_notebook_set_show_tabs(GTK_NOTEBOOK(sakura->notebook), TRUE);
 		sakura_set_config_string("show_always_first_tab", "Yes");
-		sakura->first_tab = true;
+		sakura->config.first_tab = true;
 	} else {
 		/* Only hide tabs if the notebook has one page */
 		if (gtk_notebook_get_n_pages(GTK_NOTEBOOK(sakura->notebook)) == 1) {
 			gtk_notebook_set_show_tabs(GTK_NOTEBOOK(sakura->notebook), FALSE);
 		}
 		sakura_set_config_string("show_always_first_tab", "No");
-		sakura->first_tab = false;
+		sakura->config.first_tab = false;
 	}
 	sakura_set_size();
 }
@@ -1180,17 +1180,17 @@ sakura_show_scrollbar (GtkWidget *widget, void *data)
 	term = sakura_get_page_term(sakura, page);
 
 	if (!g_key_file_get_boolean(sakura->cfg, cfg_group, "scrollbar", NULL)) {
-		sakura->show_scrollbar=true;
+		sakura->config.show_scrollbar=true;
 		sakura_set_config_boolean("scrollbar", TRUE);
 	} else {
-		sakura->show_scrollbar=false;
+		sakura->config.show_scrollbar=false;
 		sakura_set_config_boolean("scrollbar", FALSE);
 	}
 
 	/* Toggle/Untoggle the scrollbar for all tabs */
 	for (i = (n_pages - 1); i >= 0; i--) {
 		term = sakura_get_page_term(sakura, i);
-		if (!sakura->show_scrollbar)
+		if (!sakura->config.show_scrollbar)
 			gtk_widget_hide(term->scrollbar);
 		else
 			gtk_widget_show(term->scrollbar);
@@ -1639,19 +1639,19 @@ void sakura_init_popup()
 	/* Show defaults in menu items */
 	gchar *cfgtmp = nullptr;
 
-	if (sakura->first_tab) {
+	if (sakura->config.first_tab) {
 		gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(item_show_first_tab), TRUE);
 	} else {
 		gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(item_show_first_tab), FALSE);
 	}
 
-	if (sakura->show_closebutton) {
+	if (sakura->config.show_closebutton) {
 		gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(item_show_close_button), TRUE);
 	} else {
 		gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(item_show_close_button), FALSE);
 	}
 
-	if (sakura->tabs_on_bottom) {
+	if (sakura->config.tabs_on_bottom) {
 		gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(item_tabs_on_bottom), TRUE);
 	} else {
 		gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(item_tabs_on_bottom), FALSE);
@@ -1663,7 +1663,7 @@ void sakura_init_popup()
 		gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(item_less_questions), FALSE);
 	}
 
-	if (sakura->show_scrollbar) {
+	if (sakura->config.show_scrollbar) {
 		gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(item_toggle_scrollbar), TRUE);
 	} else {
 		gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(item_toggle_scrollbar), FALSE);
@@ -1870,10 +1870,10 @@ sakura_set_size()
 	sakura->width = pad_x + (char_width * sakura->columns);
 	sakura->height = pad_y + (char_height * sakura->rows);
 
-	if (npages>=2 || sakura->first_tab) {
+	if (npages>=2 || sakura->config.first_tab) {
 
 		/* TODO: Yeah i know, this is utter shit. Remove this ugly hack and set geometry hints*/
-		if (!sakura->show_scrollbar)
+		if (!sakura->config.show_scrollbar)
 			//sakura->height += min_height - 10;
 			sakura->height += 10;
 		else
@@ -1889,7 +1889,7 @@ sakura_set_size()
 
 	gtk_widget_get_preferred_width(term->scrollbar, &min_width, &natural_width);
 	//SAY("SCROLLBAR min width %d natural width %d", min_width, natural_width);
-	if(sakura->show_scrollbar) {
+	if(sakura->config.show_scrollbar) {
 		sakura->width += min_width;
 	}
 
@@ -1920,7 +1920,7 @@ sakura_set_font()
 	/* Set the font for all tabs */
 	for (i = (n_pages - 1); i >= 0; i--) {
 		term = sakura_get_page_term(sakura, i);
-		vte_terminal_set_font(VTE_TERMINAL(term->vte), sakura->font);
+		vte_terminal_set_font(VTE_TERMINAL(term->vte), sakura->config.font);
 	}
 }
 
@@ -2038,7 +2038,7 @@ void sakura_add_tab()
 	gtk_box_pack_start(GTK_BOX(tab_label_hbox), term->label, TRUE, FALSE, 0);
 
 	/* If the tab close button is enabled, create and add it to the tab */
-	if (sakura->show_closebutton) {
+	if (sakura->config.show_closebutton) {
 		close_button=gtk_button_new();
 		/* Adding scroll-event to button, to propagate it to notebook (fix for scroll event when pointer is above the button) */
 		gtk_widget_add_events(close_button, GDK_SCROLL_MASK);
@@ -2051,7 +2051,7 @@ void sakura_add_tab()
 		gtk_box_pack_start(GTK_BOX(tab_label_hbox), close_button, FALSE, FALSE, 0);
 	}
 
-	if (sakura->tabs_on_bottom) {
+	if (sakura->config.tabs_on_bottom) {
 		gtk_notebook_set_tab_pos(GTK_NOTEBOOK(sakura->notebook), GTK_POS_BOTTOM);
 	}
 
@@ -2071,7 +2071,7 @@ void sakura_add_tab()
 	gtk_box_pack_start(GTK_BOX(term->hbox), term->vte, TRUE, TRUE, 0);
 	gtk_box_pack_start(GTK_BOX(term->hbox), term->scrollbar, FALSE, FALSE, 0);
 
-	term->colorset=sakura->last_colorset-1;
+	term->colorset = sakura->config.last_colorset - 1;
 
 	/* Select the directory to use for the new tab */
 	index = gtk_notebook_get_current_page(GTK_NOTEBOOK(sakura->notebook));
@@ -2110,7 +2110,7 @@ void sakura_add_tab()
 
 	/* Notebook signals */
 	g_signal_connect(G_OBJECT(sakura->notebook), "page-removed", G_CALLBACK(sakura_page_removed), NULL);
-	if (sakura->show_closebutton) {
+	if (sakura->config.show_closebutton) {
 		g_signal_connect(G_OBJECT(close_button), "clicked", G_CALLBACK(sakura_closebutton_clicked), term->hbox);
 	}
 
@@ -2119,7 +2119,7 @@ void sakura_add_tab()
 	/* First tab */
 	npages=gtk_notebook_get_n_pages(GTK_NOTEBOOK(sakura->notebook));
 	if (npages == 1) {
-		if (sakura->first_tab) {
+		if (sakura->config.first_tab) {
 			gtk_notebook_set_show_tabs(GTK_NOTEBOOK(sakura->notebook), TRUE);
 		} else {
 			gtk_notebook_set_show_tabs(GTK_NOTEBOOK(sakura->notebook), FALSE);
@@ -2132,7 +2132,7 @@ void sakura_add_tab()
 		sakura_set_size();
 
 		gtk_widget_show_all(sakura->notebook);
-		if (!sakura->show_scrollbar) {
+		if (!sakura->config.show_scrollbar) {
 			gtk_widget_hide(term->scrollbar);
 		}
 
@@ -2230,7 +2230,7 @@ void sakura_add_tab()
 		sakura_set_font();
 		sakura_set_colors();
 		gtk_widget_show_all(term->hbox);
-		if (!sakura->show_scrollbar) {
+		if (!sakura->config.show_scrollbar) {
 			gtk_widget_hide(term->scrollbar);
 		}
 
@@ -2249,7 +2249,7 @@ void sakura_add_tab()
 	free(cwd);
 
 	/* Init vte terminal */
-	vte_terminal_set_scrollback_lines(VTE_TERMINAL(term->vte), sakura->scroll_lines);
+	vte_terminal_set_scrollback_lines(VTE_TERMINAL(term->vte), sakura->config.scroll_lines);
 	vte_terminal_match_add_regex(VTE_TERMINAL(term->vte), sakura->http_vteregexp, PCRE2_CASELESS);
 	vte_terminal_match_add_regex(VTE_TERMINAL(term->vte), sakura->mail_vteregexp, PCRE2_CASELESS);
 	vte_terminal_set_mouse_autohide(VTE_TERMINAL(term->vte), TRUE);
