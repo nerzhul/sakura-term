@@ -170,7 +170,7 @@ sakura_button_press(GtkWidget *widget, GdkEventButton *button_event, gpointer us
 
 	/* Left button with accelerator: open the URL if any */
 	if (button_event->button == 1 &&
-	    ((button_event->state & sakura->open_url_accelerator) == sakura->open_url_accelerator) &&
+	    ((button_event->state & sakura->config.open_url_accelerator) == sakura->config.open_url_accelerator) &&
 	    sakura->current_match) {
 
 		sakura_open_url(NULL, NULL);
@@ -229,7 +229,7 @@ gboolean sakura_focus_in(GtkWidget *widget, GdkEvent *event, void *data)
 	if (!sakura->focused)  {
 		sakura->focused=true;
 
-		if (!sakura->first_focus && sakura->use_fading) {
+		if (!sakura->first_focus && sakura->config.use_fading) {
 			sakura_fade_in();
 		}
 
@@ -248,7 +248,7 @@ gboolean sakura_focus_out(GtkWidget *widget, GdkEvent *event, void *data)
 	if (sakura->focused)  {
 		sakura->focused=false;
 
-		if (!sakura->first_focus && sakura->use_fading) {
+		if (!sakura->first_focus && sakura->config.use_fading) {
 			sakura_fade_out();
 		}
 
@@ -292,7 +292,7 @@ gboolean sakura_notebook_scroll(GtkWidget *widget, GdkEventScroll *event)
 	switch(event->direction) {
 		case GDK_SCROLL_DOWN:
 		{
-			if (sakura->stop_tab_cycling_at_end_tabs == 1) {
+			if (sakura->config.stop_tab_cycling_at_end_tabs == 1) {
 				gtk_notebook_set_current_page(GTK_NOTEBOOK(sakura->notebook), --page >= 0 ? page : 0);
 			} else {
 				gtk_notebook_set_current_page(GTK_NOTEBOOK(sakura->notebook), --page >= 0 ? page : npages - 1);
@@ -301,7 +301,7 @@ gboolean sakura_notebook_scroll(GtkWidget *widget, GdkEventScroll *event)
 		}
 		case GDK_SCROLL_UP:
 		{
-			if (sakura->stop_tab_cycling_at_end_tabs == 1) {
+			if (sakura->config.stop_tab_cycling_at_end_tabs == 1) {
 				gtk_notebook_set_current_page(GTK_NOTEBOOK(sakura->notebook), ++page < npages ? page : npages - 1);
 			} else {
 				gtk_notebook_set_current_page(GTK_NOTEBOOK(sakura->notebook), ++page < npages ? page : 0);
@@ -336,7 +336,7 @@ sakura_beep (GtkWidget *widget, void *data)
 	// that a new urgent event happened when the urgent hint is set after this.
 	gtk_window_set_urgency_hint(GTK_WINDOW(sakura->main_window), FALSE);
 
-	if (sakura->urgent_bell) {
+	if (sakura->config.urgent_bell) {
 		gtk_window_set_urgency_hint(GTK_WINDOW(sakura->main_window), TRUE);
 	}
 }
@@ -532,7 +532,7 @@ gboolean sakura_delete_event (GtkWidget *widget, void *data)
 	gint i;
 	pid_t pgid;
 
-	if (!sakura->less_questions) {
+	if (!sakura->config.less_questions) {
 		npages = gtk_notebook_get_n_pages(GTK_NOTEBOOK(sakura->notebook));
 
 		/* Check for each tab if there are running processes. Use tcgetpgrp to compare to the shell PGID */
@@ -699,7 +699,7 @@ sakura_set_colors ()
 		vte_terminal_set_colors(VTE_TERMINAL(term->vte),
 		                        &sakura->forecolors[term->colorset],
 		                        &sakura->backcolors[term->colorset],
-		                        sakura->palette, PALETTE_SIZE);
+		                        sakura->config.palette, PALETTE_SIZE);
 		vte_terminal_set_color_cursor(VTE_TERMINAL(term->vte), &sakura->curscolors[term->colorset]);
 	}
 
@@ -1146,10 +1146,10 @@ sakura_less_questions (GtkWidget *widget, void *data)
 {
 
 	if (gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(widget))) {
-		sakura->less_questions=TRUE;
+		sakura->config.less_questions=TRUE;
 		sakura_set_config_boolean("less_questions", TRUE);
 	} else {
-		sakura->less_questions=FALSE;
+		sakura->config.less_questions=FALSE;
 		sakura_set_config_boolean("less_questions", FALSE);
 	}
 }
@@ -1202,8 +1202,8 @@ sakura_show_scrollbar (GtkWidget *widget, void *data)
 static void
 sakura_urgent_bell (GtkWidget *widget, void *data)
 {
-	sakura->urgent_bell = gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(widget));
-	if (sakura->urgent_bell) {
+	sakura->config.urgent_bell = gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(widget));
+	if (sakura->config.urgent_bell) {
 		sakura_set_config_string("urgent_bell", "Yes");
 	} else {
 		sakura_set_config_string("urgent_bell", "No");
@@ -1274,10 +1274,10 @@ sakura_stop_tab_cycling_at_end_tabs (GtkWidget *widget, void *data)
 
 	if (gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(widget))) {
 		sakura_set_config_string("stop_tab_cycling_at_end_tabs", "Yes");
-		sakura->stop_tab_cycling_at_end_tabs = TRUE;
+		sakura->config.stop_tab_cycling_at_end_tabs = true;
 	} else {
 		sakura_set_config_string("stop_tab_cycling_at_end_tabs", "No");
-		sakura->stop_tab_cycling_at_end_tabs = FALSE;
+		sakura->config.stop_tab_cycling_at_end_tabs = false;
 	}
 }
 
@@ -1294,19 +1294,19 @@ sakura_set_cursor(GtkWidget *widget, void *data)
 	if (gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(widget))) {
 
 		if (strcmp(cursor_string, "block")==0) {
-			sakura->cursor_type=VTE_CURSOR_SHAPE_BLOCK;
+			sakura->config.cursor_type = VTE_CURSOR_SHAPE_BLOCK;
 		} else if (strcmp(cursor_string, "underline")==0) {
-			sakura->cursor_type=VTE_CURSOR_SHAPE_UNDERLINE;
+			sakura->config.cursor_type = VTE_CURSOR_SHAPE_UNDERLINE;
 		} else if (strcmp(cursor_string, "ibeam")==0) {
-			sakura->cursor_type=VTE_CURSOR_SHAPE_IBEAM;
+			sakura->config.cursor_type = VTE_CURSOR_SHAPE_IBEAM;
 		}
 
 		for (i = (n_pages - 1); i >= 0; i--) {
 			term = sakura_get_page_term(sakura, i);
-			vte_terminal_set_cursor_shape(VTE_TERMINAL(term->vte), sakura->cursor_type);
+			vte_terminal_set_cursor_shape(VTE_TERMINAL(term->vte), sakura->config.cursor_type);
 		}
 
-		sakura_set_config_integer("cursor_type", sakura->cursor_type);
+		sakura_set_config_integer("cursor_type", sakura->config.cursor_type);
 	}
 }
 
@@ -1318,19 +1318,19 @@ sakura_set_palette(GtkWidget *widget, void *data)
 
 	if (gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(widget))) {
 		if (strcmp(palette, "linux")==0) {
-			sakura->palette=linux_palette;
+			sakura->config.palette=linux_palette;
 		} else if (strcmp(palette, "gruvbox")==0) {
-			sakura->palette=gruvbox_palette;
+			sakura->config.palette=gruvbox_palette;
 		} else if (strcmp(palette, "xterm")==0) {
-			sakura->palette=xterm_palette;
+			sakura->config.palette=xterm_palette;
 		} else if (strcmp(palette, "rxvt")==0) {
-			sakura->palette=rxvt_palette;
+			sakura->config.palette=rxvt_palette;
 		} else if (strcmp(palette, "tango")==0) {
-			sakura->palette=tango_palette;
+			sakura->config.palette=tango_palette;
 		} else if (strcmp(palette, "solarized_dark")==0) {
-			sakura->palette=solarized_dark_palette;
+			sakura->config.palette=solarized_dark_palette;
 		} else {
-			sakura->palette=solarized_light_palette;
+			sakura->config.palette=solarized_light_palette;
 		}
 
 		/* Palette changed so we ¿need? to set colors again */
@@ -1465,7 +1465,7 @@ sakura_close_tab (GtkWidget *widget, void *data)
 	/* Check if there are running processes for this tab. Use tcgetpgrp to compare to the shell PGID */
 	pgid = tcgetpgrp(vte_pty_get_fd(vte_terminal_get_pty(VTE_TERMINAL(term->vte))));
 
-	if ( (pgid != -1) && (pgid != term->pid) && (!sakura->less_questions) ) {
+	if ( (pgid != -1) && (pgid != term->pid) && (!sakura->config.less_questions) ) {
 			dialog=gtk_message_dialog_new(GTK_WINDOW(sakura->main_window), GTK_DIALOG_MODAL,
 										  GTK_MESSAGE_QUESTION, GTK_BUTTONS_YES_NO,
 										  _("There is a running process in this terminal.\n\nDo you really want to close it?"));
@@ -1521,7 +1521,7 @@ sakura_closebutton_clicked(GtkWidget *widget, void *data)
 	/* Check if there are running processes for this tab. Use tcgetpgrp to compare to the shell PGID */
 	pgid = tcgetpgrp(vte_pty_get_fd(vte_terminal_get_pty(VTE_TERMINAL(term->vte))));
 
-	if ( (pgid != -1) && (pgid != term->pid) && (!sakura->less_questions) ) {
+	if ( (pgid != -1) && (pgid != term->pid) && (!sakura->config.less_questions) ) {
 			dialog=gtk_message_dialog_new(GTK_WINDOW(sakura->main_window), GTK_DIALOG_MODAL,
 										  GTK_MESSAGE_QUESTION, GTK_BUTTONS_YES_NO,
 										  _("There is a running process in this terminal.\n\nDo you really want to close it?"));
@@ -1553,10 +1553,10 @@ void sakura_conf_changed (GtkWidget *widget, void *data)
 void sakura_disable_numbered_tabswitch(GtkWidget *widget, void *data)
 {
 	if (gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(widget))) {
-		sakura->disable_numbered_tabswitch = true;
+		sakura->config.disable_numbered_tabswitch = true;
 		sakura_set_config_boolean("disable_numbered_tabswitch", TRUE);
 	} else {
-		sakura->disable_numbered_tabswitch = false;
+		sakura->config.disable_numbered_tabswitch = false;
 		sakura_set_config_boolean("disable_numbered_tabswitch", FALSE);
 	}
 }
@@ -1565,10 +1565,10 @@ static void
 sakura_use_fading(GtkWidget *widget, void *data)
 {
 	if (gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(widget))) {
-		sakura->use_fading = true;
+		sakura->config.use_fading = true;
 		sakura_set_config_boolean("use_fading", TRUE);
 	} else {
-		sakura->use_fading = false;
+		sakura->config.use_fading = false;
 		sakura_set_config_boolean("use_fading", FALSE);
 		sakura_fade_in();
 		sakura_set_colors();
@@ -1657,7 +1657,7 @@ void sakura_init_popup()
 		gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(item_tabs_on_bottom), FALSE);
 	}
 
-	if (sakura->less_questions) {
+	if (sakura->config.less_questions) {
 		gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(item_less_questions), TRUE);
 	} else {
 		gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(item_less_questions), FALSE);
@@ -1669,39 +1669,39 @@ void sakura_init_popup()
 		gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(item_toggle_scrollbar), FALSE);
 	}
 
-	if (sakura->disable_numbered_tabswitch) {
+	if (sakura->config.disable_numbered_tabswitch) {
 		gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(item_disable_numbered_tabswitch), TRUE);
 	} else {
 		gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(item_disable_numbered_tabswitch), FALSE);
 	}
 
-	if (sakura->use_fading) {
+	if (sakura->config.use_fading) {
 		gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(item_use_fading), TRUE);
 	} else {
 		gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(item_use_fading), FALSE);
 	}
 
-	if (sakura->urgent_bell) {
+	if (sakura->config.urgent_bell) {
 		gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(item_urgent_bell), TRUE);
 	}
 
-	if (sakura->audible_bell) {
+	if (sakura->config.audible_bell) {
 		gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(item_audible_bell), TRUE);
 	}
 
-	if (sakura->blinking_cursor) {
+	if (sakura->config.blinking_cursor) {
 		gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(item_blinking_cursor), TRUE);
 	}
 
-	if (sakura->allow_bold) {
+	if (sakura->config.allow_bold) {
 		gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(item_allow_bold), TRUE);
 	}
 
-	if (sakura->stop_tab_cycling_at_end_tabs) {
+	if (sakura->config.stop_tab_cycling_at_end_tabs) {
 		gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(item_stop_tab_cycling_at_end_tabs), TRUE);
 	}
 
-	switch (sakura->cursor_type){
+	switch (sakura->config.cursor_type){
 		case VTE_CURSOR_SHAPE_BLOCK:
 			gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(item_cursor_block), TRUE);
 			break;
@@ -1712,23 +1712,21 @@ void sakura_init_popup()
 			gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(item_cursor_ibeam), TRUE);
 	}
 
-	cfgtmp = g_key_file_get_string(sakura->cfg, cfg_group, "palette", nullptr);
-	if (strcmp(cfgtmp, "linux")==0) {
+	if (sakura->config.palette_str == "linux") {
 		gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(item_palette_linux), TRUE);
-	} else if (strcmp(cfgtmp, "gruvbox")==0) {
+	} else if (sakura->config.palette_str == "gruvbox") {
 		gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(item_palette_gruvbox), TRUE);
-	} else if (strcmp(cfgtmp, "tango")==0) {
+	} else if (sakura->config.palette_str == "xterm") {
 		gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(item_palette_tango), TRUE);
-	} else if (strcmp(cfgtmp, "xterm")==0) {
-		gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(item_palette_xterm), TRUE);
-	} else if (strcmp(cfgtmp, "rxvt")==0) {
+	} else if (sakura->config.palette_str == "rxvt") {
 		gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(item_palette_rxvt), TRUE);
-	} else if (strcmp(cfgtmp, "solarized_dark")==0) {
+	} else if (sakura->config.palette_str == "tango") {
+		gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(item_palette_xterm), TRUE);
+	} else if (sakura->config.palette_str == "solarized_dark") {
 		gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(item_palette_solarized_dark), TRUE);
 	} else {
 		gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(item_palette_solarized_light), TRUE);
 	}
-	g_free(cfgtmp);
 
 	sakura->open_link_separator=gtk_separator_menu_item_new();
 
@@ -2097,7 +2095,7 @@ void sakura_add_tab()
 	// TODO: Set group id to support detached tabs
 	// gtk_notebook_set_tab_detachable(GTK_NOTEBOOK(sakura->notebook), term->hbox, TRUE);
 
-	sakura_set_page_term(sakura, index, term );
+	sakura_set_page_term(sakura, index, term);
 
 	/* vte signals */
 	g_signal_connect(G_OBJECT(term->vte), "bell", G_CALLBACK(sakura_beep), NULL);
@@ -2254,11 +2252,11 @@ void sakura_add_tab()
 	vte_terminal_match_add_regex(VTE_TERMINAL(term->vte), sakura->mail_vteregexp, PCRE2_CASELESS);
 	vte_terminal_set_mouse_autohide(VTE_TERMINAL(term->vte), TRUE);
 	vte_terminal_set_backspace_binding(VTE_TERMINAL(term->vte), VTE_ERASE_ASCII_DELETE);
-	vte_terminal_set_word_char_exceptions(VTE_TERMINAL(term->vte), sakura->word_chars);
-	vte_terminal_set_audible_bell (VTE_TERMINAL(term->vte), sakura->audible_bell ? TRUE : FALSE);
-	vte_terminal_set_cursor_blink_mode (VTE_TERMINAL(term->vte), sakura->blinking_cursor ? VTE_CURSOR_BLINK_ON : VTE_CURSOR_BLINK_OFF);
-	vte_terminal_set_allow_bold (VTE_TERMINAL(term->vte), sakura->allow_bold ? TRUE : FALSE);
-	vte_terminal_set_cursor_shape (VTE_TERMINAL(term->vte), sakura->cursor_type);
+	vte_terminal_set_word_char_exceptions(VTE_TERMINAL(term->vte), sakura->config.word_chars.c_str());
+	vte_terminal_set_audible_bell (VTE_TERMINAL(term->vte), sakura->config.audible_bell ? TRUE : FALSE);
+	vte_terminal_set_cursor_blink_mode (VTE_TERMINAL(term->vte), sakura->config.blinking_cursor ? VTE_CURSOR_BLINK_ON : VTE_CURSOR_BLINK_OFF);
+	vte_terminal_set_allow_bold (VTE_TERMINAL(term->vte), sakura->config.allow_bold ? TRUE : FALSE);
+	vte_terminal_set_cursor_shape (VTE_TERMINAL(term->vte), sakura->config.cursor_type);
 
 	//sakura_set_colors();
 

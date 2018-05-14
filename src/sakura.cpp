@@ -24,19 +24,7 @@ static int cs_keys[NUM_COLORSETS] = {
 #define MAIL_REGEXP "[^ \t\n\b]+@([^ \t\n\b]+\\.)+([a-zA-Z]{2,4})"
 #define DEFAULT_COLUMNS 80
 #define DEFAULT_ROWS 24
-#define DEFAULT_WORD_CHARS "-,./?%&#_~:"
-#define DEFAULT_PALETTE "solarized_dark"
 
-#define DEFAULT_ADD_TAB_ACCELERATOR (GDK_CONTROL_MASK | GDK_SHIFT_MASK)
-#define DEFAULT_DEL_TAB_ACCELERATOR (GDK_CONTROL_MASK | GDK_SHIFT_MASK)
-#define DEFAULT_SWITCH_TAB_ACCELERATOR (GDK_CONTROL_MASK)
-#define DEFAULT_MOVE_TAB_ACCELERATOR (GDK_CONTROL_MASK | GDK_SHIFT_MASK)
-#define DEFAULT_COPY_ACCELERATOR (GDK_CONTROL_MASK | GDK_SHIFT_MASK)
-#define DEFAULT_SCROLLBAR_ACCELERATOR (GDK_CONTROL_MASK | GDK_SHIFT_MASK)
-#define DEFAULT_OPEN_URL_ACCELERATOR (GDK_CONTROL_MASK | GDK_SHIFT_MASK)
-#define DEFAULT_FONT_SIZE_ACCELERATOR (GDK_CONTROL_MASK)
-#define DEFAULT_SET_TAB_NAME_ACCELERATOR (GDK_CONTROL_MASK | GDK_SHIFT_MASK)
-#define DEFAULT_SEARCH_ACCELERATOR (GDK_CONTROL_MASK | GDK_SHIFT_MASK)
 #define DEFAULT_SELECT_COLORSET_ACCELERATOR (GDK_CONTROL_MASK | GDK_SHIFT_MASK)
 #define DEFAULT_ADD_TAB_KEY GDK_KEY_T
 #define DEFAULT_DEL_TAB_KEY GDK_KEY_W
@@ -55,7 +43,6 @@ static const gint BACKWARDS = 2;
 
 void Sakura::init()
 {
-	char *configdir = nullptr;
 	int i;
 
 	term_data_id = g_quark_from_static_string("sakura_term");
@@ -112,171 +99,6 @@ void Sakura::init()
 		}
 		sakura->keymap.set_colorset_keys[i] = sakura_get_keybind(temp_name);
 	}
-
-	if (!g_key_file_has_key(sakura->cfg, cfg_group, "less_questions", NULL)) {
-		sakura_set_config_boolean("less_questions", FALSE);
-	}
-	sakura->less_questions = g_key_file_get_boolean(
-			sakura->cfg, cfg_group, "less_questions", NULL);
-
-	if (!g_key_file_has_key(
-			    sakura->cfg, cfg_group, "disable_numbered_tabswitch", NULL)) {
-		sakura_set_config_boolean("disable_numbered_tabswitch", FALSE);
-	}
-	sakura->disable_numbered_tabswitch = g_key_file_get_boolean(
-			sakura->cfg, cfg_group, "disable_numbered_tabswitch", NULL);
-
-	if (!g_key_file_has_key(sakura->cfg, cfg_group, "use_fading", NULL)) {
-		sakura_set_config_boolean("use_fading", FALSE);
-	}
-	sakura->use_fading = g_key_file_get_boolean(
-			sakura->cfg, cfg_group, "use_fading", NULL);
-
-	if (!g_key_file_has_key(sakura->cfg, cfg_group, "scrollable_tabs", NULL)) {
-		sakura_set_config_boolean("scrollable_tabs", TRUE);
-	}
-	sakura->scrollable_tabs = g_key_file_get_boolean(
-			sakura->cfg, cfg_group, "scrollable_tabs", NULL);
-
-	if (!g_key_file_has_key(sakura->cfg, cfg_group, "urgent_bell", NULL)) {
-		sakura_set_config_string("urgent_bell", "Yes");
-	}
-	cfgtmp = g_key_file_get_value(sakura->cfg, cfg_group, "urgent_bell", NULL);
-	sakura->urgent_bell = (strcmp(cfgtmp, "Yes") == 0) ? 1 : 0;
-	g_free(cfgtmp);
-
-	if (!g_key_file_has_key(sakura->cfg, cfg_group, "audible_bell", NULL)) {
-		sakura_set_config_string("audible_bell", "Yes");
-	}
-	cfgtmp = g_key_file_get_value(sakura->cfg, cfg_group, "audible_bell", NULL);
-	sakura->audible_bell = (strcmp(cfgtmp, "Yes") == 0) ? 1 : 0;
-	g_free(cfgtmp);
-
-	if (!g_key_file_has_key(sakura->cfg, cfg_group, "blinking_cursor", NULL)) {
-		sakura_set_config_string("blinking_cursor", "No");
-	}
-	cfgtmp = g_key_file_get_value(sakura->cfg, cfg_group, "blinking_cursor", NULL);
-	sakura->blinking_cursor = (strcmp(cfgtmp, "Yes") == 0) ? 1 : 0;
-	g_free(cfgtmp);
-
-	if (!g_key_file_has_key(sakura->cfg, cfg_group, "stop_tab_cycling_at_end_tabs",
-			    NULL)) {
-		sakura_set_config_string("stop_tab_cycling_at_end_tabs", "No");
-	}
-	cfgtmp = g_key_file_get_value(
-			sakura->cfg, cfg_group, "stop_tab_cycling_at_end_tabs", NULL);
-	sakura->stop_tab_cycling_at_end_tabs = (strcmp(cfgtmp, "Yes") == 0) ? 1 : 0;
-	g_free(cfgtmp);
-
-	if (!g_key_file_has_key(sakura->cfg, cfg_group, "allow_bold", NULL)) {
-		sakura_set_config_string("allow_bold", "Yes");
-	}
-	cfgtmp = g_key_file_get_value(sakura->cfg, cfg_group, "allow_bold", NULL);
-	sakura->allow_bold = (strcmp(cfgtmp, "Yes") == 0) ? 1 : 0;
-	g_free(cfgtmp);
-
-	if (!g_key_file_has_key(sakura->cfg, cfg_group, "cursor_type", NULL)) {
-		sakura_set_config_string("cursor_type", "VTE_CURSOR_SHAPE_BLOCK");
-	}
-	sakura->cursor_type = (VteCursorShape)g_key_file_get_integer(
-			sakura->cfg, cfg_group, "cursor_type", NULL);
-
-	if (!g_key_file_has_key(sakura->cfg, cfg_group, "word_chars", NULL)) {
-		sakura_set_config_string("word_chars", DEFAULT_WORD_CHARS);
-	}
-	sakura->word_chars =
-			g_key_file_get_value(sakura->cfg, cfg_group, "word_chars", NULL);
-
-	if (!g_key_file_has_key(sakura->cfg, cfg_group, "palette", NULL)) {
-		sakura_set_config_string("palette", DEFAULT_PALETTE);
-	}
-	cfgtmp = g_key_file_get_string(sakura->cfg, cfg_group, "palette", NULL);
-	if (strcmp(cfgtmp, "linux") == 0) {
-		sakura->palette = linux_palette;
-	} else if (strcmp(cfgtmp, "gruvbox") == 0) {
-		sakura->palette = gruvbox_palette;
-	} else if (strcmp(cfgtmp, "xterm") == 0) {
-		sakura->palette = xterm_palette;
-	} else if (strcmp(cfgtmp, "rxvt") == 0) {
-		sakura->palette = rxvt_palette;
-	} else if (strcmp(cfgtmp, "tango") == 0) {
-		sakura->palette = tango_palette;
-	} else if (strcmp(cfgtmp, "solarized_dark") == 0) {
-		sakura->palette = solarized_dark_palette;
-	} else {
-		sakura->palette = solarized_light_palette;
-	}
-	g_free(cfgtmp);
-
-	if (!g_key_file_has_key(sakura->cfg, cfg_group, "add_tab_accelerator", NULL)) {
-		sakura_set_config_integer(
-				"add_tab_accelerator", DEFAULT_ADD_TAB_ACCELERATOR);
-	}
-	sakura->add_tab_accelerator = g_key_file_get_integer(
-			sakura->cfg, cfg_group, "add_tab_accelerator", NULL);
-
-	if (!g_key_file_has_key(sakura->cfg, cfg_group, "del_tab_accelerator", NULL)) {
-		sakura_set_config_integer(
-				"del_tab_accelerator", DEFAULT_DEL_TAB_ACCELERATOR);
-	}
-	sakura->del_tab_accelerator = g_key_file_get_integer(
-			sakura->cfg, cfg_group, "del_tab_accelerator", NULL);
-
-	if (!g_key_file_has_key(sakura->cfg, cfg_group, "switch_tab_accelerator", NULL)) {
-		sakura_set_config_integer(
-				"switch_tab_accelerator", DEFAULT_SWITCH_TAB_ACCELERATOR);
-	}
-	sakura->switch_tab_accelerator = g_key_file_get_integer(
-			sakura->cfg, cfg_group, "switch_tab_accelerator", NULL);
-
-	if (!g_key_file_has_key(sakura->cfg, cfg_group, "move_tab_accelerator", NULL)) {
-		sakura_set_config_integer(
-				"move_tab_accelerator", DEFAULT_MOVE_TAB_ACCELERATOR);
-	}
-	sakura->move_tab_accelerator = g_key_file_get_integer(
-			sakura->cfg, cfg_group, "move_tab_accelerator", NULL);
-
-	if (!g_key_file_has_key(sakura->cfg, cfg_group, "copy_accelerator", NULL)) {
-		sakura_set_config_integer("copy_accelerator", DEFAULT_COPY_ACCELERATOR);
-	}
-	sakura->copy_accelerator = g_key_file_get_integer(
-			sakura->cfg, cfg_group, "copy_accelerator", NULL);
-
-	if (!g_key_file_has_key(sakura->cfg, cfg_group, "scrollbar_accelerator", NULL)) {
-		sakura_set_config_integer(
-				"scrollbar_accelerator", DEFAULT_SCROLLBAR_ACCELERATOR);
-	}
-	sakura->scrollbar_accelerator = g_key_file_get_integer(
-			sakura->cfg, cfg_group, "scrollbar_accelerator", NULL);
-
-	if (!g_key_file_has_key(sakura->cfg, cfg_group, "open_url_accelerator", NULL)) {
-		sakura_set_config_integer(
-				"open_url_accelerator", DEFAULT_OPEN_URL_ACCELERATOR);
-	}
-	sakura->open_url_accelerator = g_key_file_get_integer(
-			sakura->cfg, cfg_group, "open_url_accelerator", NULL);
-
-	if (!g_key_file_has_key(sakura->cfg, cfg_group, "font_size_accelerator", NULL)) {
-		sakura_set_config_integer(
-				"font_size_accelerator", DEFAULT_FONT_SIZE_ACCELERATOR);
-	}
-	sakura->font_size_accelerator = g_key_file_get_integer(
-			sakura->cfg, cfg_group, "font_size_accelerator", NULL);
-
-	if (!g_key_file_has_key(
-			    sakura->cfg, cfg_group, "set_tab_name_accelerator", NULL)) {
-		sakura_set_config_integer("set_tab_name_accelerator",
-				DEFAULT_SET_TAB_NAME_ACCELERATOR);
-	}
-	sakura->set_tab_name_accelerator = g_key_file_get_integer(
-			sakura->cfg, cfg_group, "set_tab_name_accelerator", NULL);
-
-	if (!g_key_file_has_key(sakura->cfg, cfg_group, "search_accelerator", NULL)) {
-		sakura_set_config_integer(
-				"search_accelerator", DEFAULT_SEARCH_ACCELERATOR);
-	}
-	sakura->search_accelerator = g_key_file_get_integer(
-			sakura->cfg, cfg_group, "search_accelerator", NULL);
 
 	if (!g_key_file_has_key(sakura->cfg, cfg_group, "add_tab_key", NULL)) {
 		sakura_set_keybind("add_tab_key", DEFAULT_ADD_TAB_KEY);
@@ -374,7 +196,7 @@ void Sakura::init()
 	/* Create notebook and set style */
 	sakura->notebook = gtk_notebook_new();
 	gtk_notebook_set_scrollable(
-			(GtkNotebook *)sakura->notebook, sakura->scrollable_tabs);
+			(GtkNotebook *)sakura->notebook, sakura->config.scrollable_tabs);
 
 	gchar *css = g_strdup_printf(NOTEBOOK_CSS);
 	gtk_css_provider_load_from_data(sakura->provider, css, -1, NULL);
@@ -533,12 +355,12 @@ gboolean Sakura::on_key_press(GtkWidget *widget, GdkEventKey *event, gpointer us
 	guint keycode = event->hardware_keycode;
 
 	/* Add/delete tab keybinding pressed */
-	if ((event->state & sakura->add_tab_accelerator) == sakura->add_tab_accelerator &&
+	if ((event->state & sakura->config.add_tab_accelerator) == sakura->config.add_tab_accelerator &&
 			keycode == sakura_tokeycode(sakura->keymap.add_tab_key)) {
 		sakura_add_tab();
 		return TRUE;
-	} else if ((event->state & sakura->del_tab_accelerator) ==
-					sakura->del_tab_accelerator &&
+	} else if ((event->state & sakura->config.del_tab_accelerator) ==
+					sakura->config.del_tab_accelerator &&
 			keycode == sakura_tokeycode(sakura->keymap.del_tab_key)) {
 		/* Delete current tab */
 		sakura_close_tab(NULL, NULL);
@@ -551,17 +373,17 @@ gboolean Sakura::on_key_press(GtkWidget *widget, GdkEventKey *event, gpointer us
 		move_tab_accelerator=5  for ctrl+shift+next[prev]_tab_key
 	   move never works, because switch will be processed first, so it needs to be
 	   fixed with the following condition */
-	if (((event->state & sakura->switch_tab_accelerator) ==
-			    sakura->switch_tab_accelerator) &&
-			((event->state & sakura->move_tab_accelerator) !=
-					sakura->move_tab_accelerator)) {
+	if (((event->state & sakura->config.switch_tab_accelerator) ==
+			    sakura->config.switch_tab_accelerator) &&
+			((event->state & sakura->config.move_tab_accelerator) !=
+					sakura->config.move_tab_accelerator)) {
 
 		if ((keycode >= sakura_tokeycode(GDK_KEY_1)) &&
 				(keycode <= sakura_tokeycode(GDK_KEY_9))) {
 
 			/* User has explicitly disabled this branch, make sure to
 			 * propagate the event */
-			if (sakura->disable_numbered_tabswitch)
+			if (sakura->config.disable_numbered_tabswitch)
 				return FALSE;
 
 			if (sakura_tokeycode(GDK_KEY_1) == keycode)
@@ -609,8 +431,8 @@ gboolean Sakura::on_key_press(GtkWidget *widget, GdkEventKey *event, gpointer us
 	}
 
 	/* Move tab keybinding pressed */
-	if (((event->state & sakura->move_tab_accelerator) ==
-			    sakura->move_tab_accelerator)) {
+	if (((event->state & sakura->config.move_tab_accelerator) ==
+			    sakura->config.move_tab_accelerator)) {
 		if (keycode == sakura_tokeycode(sakura->keymap.prev_tab_key)) {
 			sakura_move_tab(BACKWARDS);
 			return TRUE;
@@ -621,7 +443,7 @@ gboolean Sakura::on_key_press(GtkWidget *widget, GdkEventKey *event, gpointer us
 	}
 
 	/* Copy/paste keybinding pressed */
-	if ((event->state & sakura->copy_accelerator) == sakura->copy_accelerator) {
+	if ((event->state & sakura->config.copy_accelerator) == sakura->config.copy_accelerator) {
 		if (keycode == sakura_tokeycode(sakura->keymap.copy_key)) {
 			sakura_copy(NULL, NULL);
 			return TRUE;
@@ -632,8 +454,8 @@ gboolean Sakura::on_key_press(GtkWidget *widget, GdkEventKey *event, gpointer us
 	}
 
 	/* Show scrollbar keybinding pressed */
-	if ((event->state & sakura->scrollbar_accelerator) ==
-			sakura->scrollbar_accelerator) {
+	if ((event->state & sakura->config.scrollbar_accelerator) ==
+			sakura->config.scrollbar_accelerator) {
 		if (keycode == sakura_tokeycode(sakura->keymap.scrollbar_key)) {
 			sakura_show_scrollbar(NULL, NULL);
 			return TRUE;
@@ -641,8 +463,8 @@ gboolean Sakura::on_key_press(GtkWidget *widget, GdkEventKey *event, gpointer us
 	}
 
 	/* Set tab name keybinding pressed */
-	if ((event->state & sakura->set_tab_name_accelerator) ==
-			sakura->set_tab_name_accelerator) {
+	if ((event->state & sakura->config.set_tab_name_accelerator) ==
+			sakura->config.set_tab_name_accelerator) {
 		if (keycode == sakura_tokeycode(sakura->keymap.set_tab_name_key)) {
 			sakura_set_name_dialog(NULL, NULL);
 			return TRUE;
@@ -650,7 +472,7 @@ gboolean Sakura::on_key_press(GtkWidget *widget, GdkEventKey *event, gpointer us
 	}
 
 	/* Search keybinding pressed */
-	if ((event->state & sakura->search_accelerator) == sakura->search_accelerator) {
+	if ((event->state & sakura->config.search_accelerator) == sakura->config.search_accelerator) {
 		if (keycode == sakura_tokeycode(sakura->keymap.search_key)) {
 			sakura_search_dialog(NULL, NULL);
 			return TRUE;
@@ -658,8 +480,8 @@ gboolean Sakura::on_key_press(GtkWidget *widget, GdkEventKey *event, gpointer us
 	}
 
 	/* Increase/decrease font size keybinding pressed */
-	if ((event->state & sakura->font_size_accelerator) ==
-			sakura->font_size_accelerator) {
+	if ((event->state & sakura->config.font_size_accelerator) ==
+			sakura->config.font_size_accelerator) {
 		if (keycode == sakura_tokeycode(sakura->keymap.increase_font_size_key)) {
 			sakura_increase_font(NULL, NULL);
 			return TRUE;

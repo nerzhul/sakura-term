@@ -8,6 +8,7 @@
 // The global sakura singleton
 // It should disappear at a moment
 Sakura *sakura;
+GQuark term_data_id = 0;
 
 int main(int argc, char **argv)
 {

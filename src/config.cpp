@@ -34,9 +34,6 @@ Config::Config()
 
 Config::~Config()
 {
-	if (font) {
-		pango_font_description_free(font);
-	}
 }
 
 void Config::write()
@@ -78,7 +75,106 @@ bool Config::read()
 		}
 
 		if (config["tabs_on_bottom"]) {
-			tabs_on_bottom = config["tabs_on_bottom"].as<bool>();
+			less_questions = config["tabs_on_bottom"].as<bool>();
+		}
+
+		if (config["disable_numbered_tabswitch"]) {
+			disable_numbered_tabswitch = config["disable_numbered_tabswitch"].as<bool>();
+		}
+
+		if (config["use_fading"]) {
+			use_fading = config["use_fading"].as<bool>();
+		}
+
+		if (config["scrollable_tabs"]) {
+			scrollable_tabs = config["scrollable_tabs"].as<bool>();
+		}
+
+		if (config["urgent_bell"]) {
+			urgent_bell = config["urgent_bell"].as<bool>();
+		}
+
+		if (config["audible_bell"]) {
+			audible_bell = config["audible_bell"].as<bool>();
+		}
+
+		if (config["blinking_cursor"]) {
+			blinking_cursor = config["blinking_cursor"].as<bool>();
+		}
+
+		if (config["stop_tab_cycling_at_end_tabs"]) {
+			stop_tab_cycling_at_end_tabs = config["stop_tab_cycling_at_end_tabs"].as<bool>();
+		}
+
+		if (config["allow_bold"]) {
+			allow_bold = config["allow_bold"].as<bool>();
+		}
+
+		if (config["cursor_type"]) {
+			cursor_type = (VteCursorShape) config["cursor_type"].as<gint>();
+		}
+
+		if (config["word_chars"]) {
+			word_chars = config["word_chars"].as<std::string>();
+		}
+
+		if (config["palette"]) {
+			palette_str = config["palette"].as<std::string>();
+			if (palette_str == "linux") {
+				palette = linux_palette;
+			} else if (palette_str == "gruvbox") {
+				palette = gruvbox_palette;
+			} else if (palette_str == "xterm") {
+				palette = xterm_palette;
+			} else if (palette_str == "rxvt") {
+				palette = rxvt_palette;
+			} else if (palette_str == "tango") {
+				palette = tango_palette;
+			} else if (palette_str == "solarized_dark") {
+				palette = solarized_dark_palette;
+			} else {
+				palette = solarized_light_palette;
+			}
+		}
+
+		if (config["add_tab_accelerator"]) {
+			add_tab_accelerator = config["add_tab_accelerator"].as<gint>();
+		}
+
+		if (config["del_tab_accelerator"]) {
+			del_tab_accelerator = config["del_tab_accelerator"].as<gint>();
+		}
+
+		if (config["switch_tab_accelerator"]) {
+			switch_tab_accelerator = config["switch_tab_accelerator"].as<gint>();
+		}
+
+		if (config["move_tab_accelerator"]) {
+			move_tab_accelerator = config["move_tab_accelerator"].as<gint>();
+		}
+
+		if (config["copy_accelerator"]) {
+			copy_accelerator = config["copy_accelerator"].as<gint>();
+		}
+
+		if (config["scrollbar_accelerator"]) {
+			scrollbar_accelerator = config["scrollbar_accelerator"].as<gint>();
+		}
+
+		if (config["open_url_accelerator"]) {
+			open_url_accelerator = config["open_url_accelerator"].as<gint>();
+		}
+
+		if (config["font_size_accelerator"]) {
+			font_size_accelerator = config["font_size_accelerator"].as<gint>();
+		}
+
+		if (config["set_tab_name_accelerator"]) {
+			set_tab_name_accelerator = config["set_tab_name_accelerator"].as<gint>();
+		}
+
+		if (config["search_accelerator"]) {
+			search_accelerator = config["search_accelerator"].as<gint>();
 		}
 	} catch (const YAML::BadFile &e) {
 		std::cout << "Failed to read configuration file: " << e.what()

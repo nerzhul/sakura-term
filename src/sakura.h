@@ -36,31 +36,20 @@ public:
 	GdkRGBA forecolors[NUM_COLORSETS];
 	GdkRGBA backcolors[NUM_COLORSETS];
 	GdkRGBA curscolors[NUM_COLORSETS];
-	const GdkRGBA *palette;
 	char *current_match;
 	guint width;
 	guint height;
 	glong columns;
 	glong rows;
 	gint label_count;
-	VteCursorShape cursor_type;
-	bool less_questions;
-	bool urgent_bell;
-	bool audible_bell;
-	bool blinking_cursor;
-	bool stop_tab_cycling_at_end_tabs;
-	bool allow_bold;
 	bool fullscreen;
 	bool keep_fc;                    /* Global flag to indicate that we don't want changes in the files and columns values */
 	bool config_modified;            /* Configuration has been modified */
 	bool externally_modified;        /* Configuration file has been modified by another process */
 	bool resized;
-	bool disable_numbered_tabswitch; /* For disabling direct tabswitching key */
 	bool focused;                    /* For fading feature */
 	bool first_focus;                /* First time gtkwindow recieve focus when is created */
 	bool faded;			 /* Fading state */
-	bool use_fading;
-	bool scrollable_tabs;
 	GtkWidget *item_copy_link;       /* We include here only the items which need to be hidden */
 	GtkWidget *item_open_link;
 	GtkWidget *item_open_mail;
@@ -68,18 +57,7 @@ public:
 	GKeyFile *cfg;
 	GtkCssProvider *provider;
 	char *icon;
-	char *word_chars;                /* Exceptions for word selection */
 	gchar *tab_default_title;
-	gint add_tab_accelerator;
-	gint del_tab_accelerator;
-	gint switch_tab_accelerator;
-	gint move_tab_accelerator;
-	gint copy_accelerator;
-	gint scrollbar_accelerator;
-	gint open_url_accelerator;
-	gint font_size_accelerator;
-	gint set_tab_name_accelerator;
-	gint search_accelerator;
 	gint set_colorset_accelerator;
 	SakuraKeyMap keymap;
 	VteRegex *http_vteregexp, *mail_vteregexp;

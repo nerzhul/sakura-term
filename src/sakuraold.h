@@ -58,7 +58,7 @@ struct terminal {
 
 extern Sakura *sakura;
 
-static GQuark term_data_id = 0;
+extern GQuark term_data_id;
 
 static const gint FORWARD = 1;
 
@@ -83,7 +83,6 @@ static const gint FORWARD = 1;
 
 static const char cfg_group[] = "sakura";
 
-void sakura_init();
 void sakura_add_tab();
 void sakura_sanitize_working_directory();
 guint    sakura_tokeycode(guint key);
