@@ -62,7 +62,7 @@ bool Config::read()
 				pango_font_description_free(font);
 			}
 			font = pango_font_description_from_string(
-				config["font"].as<std::string>().c_str());
+					config["font"].as<std::string>().c_str());
 		}
 
 		if (config["show_always_first_tab"]) {
@@ -82,7 +82,7 @@ bool Config::read()
 		}
 	} catch (const YAML::BadFile &e) {
 		std::cout << "Failed to read configuration file: " << e.what()
-			<< ", using defaults" << std::endl;
+			  << ", using defaults" << std::endl;
 	}
 
 	return true;
@@ -92,6 +92,8 @@ void Config::monitor()
 {
 	/* Add GFile monitor to control file external changes */
 	GFile *cfgfile = g_file_new_for_path(m_file.c_str());
-	GFileMonitor *mon_cfgfile = g_file_monitor_file (cfgfile, (GFileMonitorFlags) 0, NULL, NULL);
-	g_signal_connect(G_OBJECT(mon_cfgfile), "changed", G_CALLBACK(sakura_conf_changed), NULL);
+	GFileMonitor *mon_cfgfile =
+			g_file_monitor_file(cfgfile, (GFileMonitorFlags)0, NULL, NULL);
+	g_signal_connect(G_OBJECT(mon_cfgfile), "changed",
+			G_CALLBACK(sakura_conf_changed), NULL);
 }
