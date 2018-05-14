@@ -49,7 +49,8 @@ LINK_DIRECTORIES (${GTK_LIBRARY_DIRS} ${VTE_LIBRARY_DIRS} ${X11_LIBRARY_DIRS})
 LINK_LIBRARIES (${GTK_LIBRARIES} ${VTE_LIBRARIES} ${X11_LIBRARIES} m)
 ADD_EXECUTABLE (sakura
 	src/main.cpp
-	src/sakura.cpp)
+	src/sakura.cpp
+	src/sakuraold.cpp)
 
 ADD_SUBDIRECTORY (po)
 

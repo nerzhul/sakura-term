@@ -3,7 +3,7 @@
 #include <glib.h>
 #include <gtk/gtk.h>
 #include "gettext.h"
-#include "sakura.h"
+#include "sakuraold.h"
 
 int
 main(int argc, char **argv)
