@@ -7,9 +7,9 @@ public:
 	static void init();
 	static void destroy();
 
-	static gboolean on_key_press(GtkWidget *widget, GdkEventKey *event,
-			gpointer user_data);
-	static void beep(GtkWidget *, void *data);
+	gboolean on_key_press(GtkWidget *widget, GdkEventKey *event);
+
+	void beep(GtkWidget *);
 
 	static void del_tab(gint);
 

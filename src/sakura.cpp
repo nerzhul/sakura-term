@@ -22,6 +22,12 @@
 
 static const gint BACKWARDS = 2;
 
+static void sakura_on_key_press(GtkWidget *widget, GdkEventKey *event, gpointer data)
+{
+	auto *obj = (Sakura *)data;
+	obj->on_key_press(widget, event);
+}
+
 void Sakura::init()
 {
 	int i;
@@ -167,7 +173,7 @@ void Sakura::init()
 	g_signal_connect(G_OBJECT(sakura->main_window), "destroy",
 			G_CALLBACK(sakura_destroy_window), NULL);
 	g_signal_connect(G_OBJECT(sakura->main_window), "key-press-event",
-			G_CALLBACK(Sakura::on_key_press), NULL);
+			G_CALLBACK(sakura_on_key_press), sakura);
 	g_signal_connect(G_OBJECT(sakura->main_window), "configure-event",
 			G_CALLBACK(sakura_resized_window), NULL);
 	g_signal_connect(G_OBJECT(sakura->main_window), "focus-out-event",
@@ -204,27 +210,27 @@ void Sakura::destroy()
 	gtk_main_quit();
 }
 
-gboolean Sakura::on_key_press(GtkWidget *widget, GdkEventKey *event, gpointer user_data)
+gboolean Sakura::on_key_press(GtkWidget *widget, GdkEventKey *event)
 {
 	if (event->type != GDK_KEY_PRESS)
 		return FALSE;
 
 	unsigned int topage = 0;
 
-	gint npages = gtk_notebook_get_n_pages(GTK_NOTEBOOK(sakura->notebook));
+	gint npages = gtk_notebook_get_n_pages(GTK_NOTEBOOK(notebook));
 
 	/* Use keycodes instead of keyvals. With keyvals, key bindings work only in
 	 * US/ISO8859-1 and similar locales */
 	guint keycode = event->hardware_keycode;
 
 	/* Add/delete tab keybinding pressed */
-	if ((event->state & sakura->config.add_tab_accelerator) == sakura->config.add_tab_accelerator &&
-			keycode == sakura_tokeycode(sakura->config.keymap.add_tab_key)) {
+	if ((event->state & config.add_tab_accelerator) == config.add_tab_accelerator &&
+			keycode == sakura_tokeycode(config.keymap.add_tab_key)) {
 		sakura_add_tab();
 		return TRUE;
 	} else if ((event->state & sakura->config.del_tab_accelerator) ==
-					sakura->config.del_tab_accelerator &&
-			keycode == sakura_tokeycode(sakura->config.keymap.del_tab_key)) {
+					config.del_tab_accelerator &&
+			keycode == sakura_tokeycode(config.keymap.del_tab_key)) {
 		/* Delete current tab */
 		sakura_close_tab(NULL, NULL);
 		return TRUE;
@@ -236,17 +242,17 @@ gboolean Sakura::on_key_press(GtkWidget *widget, GdkEventKey *event, gpointer us
 		move_tab_accelerator=5  for ctrl+shift+next[prev]_tab_key
 	   move never works, because switch will be processed first, so it needs to be
 	   fixed with the following condition */
-	if (((event->state & sakura->config.switch_tab_accelerator) ==
+	if (((event->state & config.switch_tab_accelerator) ==
 			    sakura->config.switch_tab_accelerator) &&
-			((event->state & sakura->config.move_tab_accelerator) !=
-					sakura->config.move_tab_accelerator)) {
+			((event->state & config.move_tab_accelerator) !=
+					config.move_tab_accelerator)) {
 
 		if ((keycode >= sakura_tokeycode(GDK_KEY_1)) &&
 				(keycode <= sakura_tokeycode(GDK_KEY_9))) {
 
 			/* User has explicitly disabled this branch, make sure to
 			 * propagate the event */
-			if (sakura->config.disable_numbered_tabswitch)
+			if (config.disable_numbered_tabswitch)
 				return FALSE;
 
 			if (sakura_tokeycode(GDK_KEY_1) == keycode)
@@ -269,104 +275,104 @@ gboolean Sakura::on_key_press(GtkWidget *widget, GdkEventKey *event, gpointer us
 				topage = 8;
 			if (topage <= npages)
 				gtk_notebook_set_current_page(
-						GTK_NOTEBOOK(sakura->notebook), topage);
+						GTK_NOTEBOOK(notebook), topage);
 			return TRUE;
-		} else if (keycode == sakura_tokeycode(sakura->config.keymap.prev_tab_key)) {
+		} else if (keycode == sakura_tokeycode(config.keymap.prev_tab_key)) {
 			if (gtk_notebook_get_current_page(
-					    GTK_NOTEBOOK(sakura->notebook)) == 0) {
+					    GTK_NOTEBOOK(notebook)) == 0) {
 				gtk_notebook_set_current_page(
-						GTK_NOTEBOOK(sakura->notebook),
+						GTK_NOTEBOOK(notebook),
 						npages - 1);
 			} else {
-				gtk_notebook_prev_page(GTK_NOTEBOOK(sakura->notebook));
+				gtk_notebook_prev_page(GTK_NOTEBOOK(notebook));
 			}
 			return TRUE;
-		} else if (keycode == sakura_tokeycode(sakura->config.keymap.next_tab_key)) {
+		} else if (keycode == sakura_tokeycode(config.keymap.next_tab_key)) {
 			if (gtk_notebook_get_current_page(GTK_NOTEBOOK(
-					    sakura->notebook)) == (npages - 1)) {
+					    notebook)) == (npages - 1)) {
 				gtk_notebook_set_current_page(
-						GTK_NOTEBOOK(sakura->notebook), 0);
+						GTK_NOTEBOOK(notebook), 0);
 			} else {
-				gtk_notebook_next_page(GTK_NOTEBOOK(sakura->notebook));
+				gtk_notebook_next_page(GTK_NOTEBOOK(notebook));
 			}
 			return TRUE;
 		}
 	}
 
 	/* Move tab keybinding pressed */
-	if (((event->state & sakura->config.move_tab_accelerator) ==
-			    sakura->config.move_tab_accelerator)) {
-		if (keycode == sakura_tokeycode(sakura->config.keymap.prev_tab_key)) {
+	if (((event->state & config.move_tab_accelerator) ==
+			    config.move_tab_accelerator)) {
+		if (keycode == sakura_tokeycode(config.keymap.prev_tab_key)) {
 			sakura_move_tab(BACKWARDS);
 			return TRUE;
-		} else if (keycode == sakura_tokeycode(sakura->config.keymap.next_tab_key)) {
+		} else if (keycode == sakura_tokeycode(config.keymap.next_tab_key)) {
 			sakura_move_tab(FORWARD);
 			return TRUE;
 		}
 	}
 
 	/* Copy/paste keybinding pressed */
-	if ((event->state & sakura->config.copy_accelerator) == sakura->config.copy_accelerator) {
-		if (keycode == sakura_tokeycode(sakura->config.keymap.copy_key)) {
+	if ((event->state & config.copy_accelerator) == config.copy_accelerator) {
+		if (keycode == sakura_tokeycode(config.keymap.copy_key)) {
 			sakura_copy(NULL, NULL);
 			return TRUE;
-		} else if (keycode == sakura_tokeycode(sakura->config.keymap.paste_key)) {
+		} else if (keycode == sakura_tokeycode(config.keymap.paste_key)) {
 			sakura_paste(NULL, NULL);
 			return TRUE;
 		}
 	}
 
 	/* Show scrollbar keybinding pressed */
-	if ((event->state & sakura->config.scrollbar_accelerator) ==
-			sakura->config.scrollbar_accelerator) {
-		if (keycode == sakura_tokeycode(sakura->config.keymap.scrollbar_key)) {
+	if ((event->state & config.scrollbar_accelerator) ==
+			config.scrollbar_accelerator) {
+		if (keycode == sakura_tokeycode(config.keymap.scrollbar_key)) {
 			sakura_show_scrollbar(NULL, NULL);
 			return TRUE;
 		}
 	}
 
 	/* Set tab name keybinding pressed */
-	if ((event->state & sakura->config.set_tab_name_accelerator) ==
-			sakura->config.set_tab_name_accelerator) {
-		if (keycode == sakura_tokeycode(sakura->config.keymap.set_tab_name_key)) {
+	if ((event->state & config.set_tab_name_accelerator) ==
+			config.set_tab_name_accelerator) {
+		if (keycode == sakura_tokeycode(config.keymap.set_tab_name_key)) {
 			sakura_set_name_dialog(NULL, NULL);
 			return TRUE;
 		}
 	}
 
 	/* Search keybinding pressed */
-	if ((event->state & sakura->config.search_accelerator) == sakura->config.search_accelerator) {
-		if (keycode == sakura_tokeycode(sakura->config.keymap.search_key)) {
+	if ((event->state & config.search_accelerator) == config.search_accelerator) {
+		if (keycode == sakura_tokeycode(config.keymap.search_key)) {
 			sakura_search_dialog(NULL, NULL);
 			return TRUE;
 		}
 	}
 
 	/* Increase/decrease font size keybinding pressed */
-	if ((event->state & sakura->config.font_size_accelerator) ==
-			sakura->config.font_size_accelerator) {
-		if (keycode == sakura_tokeycode(sakura->config.keymap.increase_font_size_key)) {
+	if ((event->state & config.font_size_accelerator) ==
+			config.font_size_accelerator) {
+		if (keycode == sakura_tokeycode(config.keymap.increase_font_size_key)) {
 			sakura_increase_font(NULL, NULL);
 			return TRUE;
 		} else if (keycode ==
-				sakura_tokeycode(sakura->config.keymap.decrease_font_size_key)) {
+				sakura_tokeycode(config.keymap.decrease_font_size_key)) {
 			sakura_decrease_font(NULL, NULL);
 			return TRUE;
 		}
 	}
 
 	/* F11 (fullscreen) pressed */
-	if (keycode == sakura_tokeycode(sakura->config.keymap.fullscreen_key)) {
+	if (keycode == sakura_tokeycode(config.keymap.fullscreen_key)) {
 		sakura_fullscreen(NULL, NULL);
 		return TRUE;
 	}
 
 	/* Change in colorset */
-	if ((event->state & sakura->config.set_colorset_accelerator) ==
-			sakura->config.set_colorset_accelerator) {
+	if ((event->state & config.set_colorset_accelerator) ==
+			config.set_colorset_accelerator) {
 		int i;
 		for (i = 0; i < NUM_COLORSETS; i++) {
-			if (keycode == sakura_tokeycode(sakura->config.keymap.set_colorset_keys[i])) {
+			if (keycode == sakura_tokeycode(config.keymap.set_colorset_keys[i])) {
 				sakura_set_colorset(i);
 				return TRUE;
 			}
@@ -415,15 +421,13 @@ void Sakura::del_tab(gint page)
 	}
 }
 
-void Sakura::beep(GtkWidget *widget, void *data)
+void Sakura::beep(GtkWidget *widget)
 {
-	auto *obj = (Sakura *)data;
-
 	// Remove the urgency hint. This is necessary to signal the window manager
 	// that a new urgent event happened when the urgent hint is set after this.
-	gtk_window_set_urgency_hint(GTK_WINDOW(obj->main_window), FALSE);
+	gtk_window_set_urgency_hint(GTK_WINDOW(main_window), FALSE);
 
-	if (obj->config.urgent_bell) {
-		gtk_window_set_urgency_hint(GTK_WINDOW(obj->main_window), TRUE);
+	if (config.urgent_bell) {
+		gtk_window_set_urgency_hint(GTK_WINDOW(main_window), TRUE);
 	}
 }

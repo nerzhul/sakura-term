@@ -108,7 +108,6 @@ void     sakura_show_scrollbar(GtkWidget *, void *);
 void     sakura_search_dialog (GtkWidget *, void *);
 void     sakura_fullscreen (GtkWidget *, void *);
 void     sakura_set_colorset (int);
-void     sakura_set_keybind(const gchar *, guint);
 
 // Functions
 void     sakura_init_popup();

@@ -1988,6 +1988,11 @@ sakura_spawn_callback (VteTerminal *vte, GPid pid, GError *error, gpointer user_
 	}
 }
 
+static void sakura_beep(GtkWidget *w, void *data)
+{
+	Sakura *obj = (Sakura *)data;
+	obj->beep(w);
+}
 
 void sakura_add_tab()
 {
@@ -2081,7 +2086,7 @@ void sakura_add_tab()
 	sakura_set_page_term(sakura, index, term);
 
 	/* vte signals */
-	g_signal_connect(G_OBJECT(term->vte), "bell", G_CALLBACK(Sakura::beep), sakura);
+	g_signal_connect(G_OBJECT(term->vte), "bell", G_CALLBACK(sakura_beep), sakura);
 	g_signal_connect(G_OBJECT(term->vte), "increase-font-size", G_CALLBACK(sakura_increase_font), NULL);
 	g_signal_connect(G_OBJECT(term->vte), "decrease-font-size", G_CALLBACK(sakura_decrease_font), NULL);
 	g_signal_connect(G_OBJECT(term->vte), "child-exited", G_CALLBACK(sakura_child_exited), NULL);
@@ -2247,18 +2252,6 @@ void sakura_add_tab()
 	 * events before setting keep_fc again to false */
 	sakura->keep_fc=false;
 }
-
-
-void sakura_set_keybind(const gchar *key, guint value)
-{
-	char *valname;
-
-	valname=gdk_keyval_name(value);
-	g_key_file_set_string(sakura->cfg, cfg_group, key, valname);
-	sakura->config_modified=true;
-	//FIXME: free() valname?
-}
-
 
 static void
 sakura_error(const char *format, ...)
