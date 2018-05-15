@@ -71,11 +71,8 @@
             term_data_id, term, (GDestroyNotify)g_free);
 
 
-/* Spawn callback */
-void sakura_spawm_callback (VteTerminal *, GPid, GError, gpointer);
 /* Callbacks */
 static gboolean sakura_button_press (GtkWidget *, GdkEventButton *, gpointer);
-static void     sakura_beep (GtkWidget *, void *);
 static void     sakura_child_exited (GtkWidget *, void *);
 static void     sakura_eof (GtkWidget *, void *);
 static void     sakura_title_changed (GtkWidget *, void *);
@@ -102,11 +99,11 @@ static void     sakura_error(const char *, ...);
 static gint     sakura_find_tab(VteTerminal *);
 static void     sakura_set_font();
 static void     sakura_set_tab_label_text(const gchar *, gint page);
-static void     sakura_set_size(void);
+static void     sakura_set_size();
 static void     sakura_config_done();
-static void     sakura_set_colors (void);
-static void	sakura_fade_in(void);
-static void	sakura_fade_out(void);
+static void     sakura_set_colors ();
+static void	sakura_fade_in();
+static void	sakura_fade_out();
 
 guint
 sakura_tokeycode (guint key)
@@ -327,20 +324,6 @@ sakura_page_removed (GtkWidget *widget, void *data)
 		sakura_set_size();
 	}
 }
-
-
-static void
-sakura_beep (GtkWidget *widget, void *data)
-{
-	// Remove the urgency hint. This is necessary to signal the window manager
-	// that a new urgent event happened when the urgent hint is set after this.
-	gtk_window_set_urgency_hint(GTK_WINDOW(sakura->main_window), FALSE);
-
-	if (sakura->config.urgent_bell) {
-		gtk_window_set_urgency_hint(GTK_WINDOW(sakura->main_window), TRUE);
-	}
-}
-
 
 void
 sakura_increase_font (GtkWidget *widget, void *data)
@@ -2098,7 +2081,7 @@ void sakura_add_tab()
 	sakura_set_page_term(sakura, index, term);
 
 	/* vte signals */
-	g_signal_connect(G_OBJECT(term->vte), "bell", G_CALLBACK(sakura_beep), NULL);
+	g_signal_connect(G_OBJECT(term->vte), "bell", G_CALLBACK(Sakura::beep), sakura);
 	g_signal_connect(G_OBJECT(term->vte), "increase-font-size", G_CALLBACK(sakura_increase_font), NULL);
 	g_signal_connect(G_OBJECT(term->vte), "decrease-font-size", G_CALLBACK(sakura_decrease_font), NULL);
 	g_signal_connect(G_OBJECT(term->vte), "child-exited", G_CALLBACK(sakura_child_exited), NULL);

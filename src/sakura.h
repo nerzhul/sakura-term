@@ -9,6 +9,7 @@ public:
 
 	static gboolean on_key_press(GtkWidget *widget, GdkEventKey *event,
 			gpointer user_data);
+	static void beep(GtkWidget *, void *data);
 
 	static void del_tab(gint);
 

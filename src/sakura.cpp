@@ -2,6 +2,7 @@
 #include <vte/vte.h>
 #include <glib/gstdio.h>
 #include <iostream>
+#include <cassert>
 #include "sakura.h"
 #include "debug.h"
 #include "palettes.h"
@@ -411,5 +412,18 @@ void Sakura::del_tab(gint page)
 		page = gtk_notebook_get_current_page(GTK_NOTEBOOK(sakura->notebook));
 		term = sakura_get_page_term(sakura, page);
 		gtk_widget_grab_focus(term->vte);
+	}
+}
+
+void Sakura::beep(GtkWidget *widget, void *data)
+{
+	auto *obj = (Sakura *)data;
+
+	// Remove the urgency hint. This is necessary to signal the window manager
+	// that a new urgent event happened when the urgent hint is set after this.
+	gtk_window_set_urgency_hint(GTK_WINDOW(obj->main_window), FALSE);
+
+	if (obj->config.urgent_bell) {
+		gtk_window_set_urgency_hint(GTK_WINDOW(obj->main_window), TRUE);
 	}
 }
