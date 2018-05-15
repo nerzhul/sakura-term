@@ -14,11 +14,6 @@
 	"border-color : rgba(0,0,0,1.0);\n"                                              \
 	"}"
 
-/* make this an array instead of #defines to get a compile time
- * error instead of a runtime if NUM_COLORSETS changes */
-static int cs_keys[NUM_COLORSETS] = {
-		GDK_KEY_F1, GDK_KEY_F2, GDK_KEY_F3, GDK_KEY_F4, GDK_KEY_F5, GDK_KEY_F6};
-
 #define HTTP_REGEXP "(ftp|http)s?://[^ \t\n\b()<>{}«»\\[\\]\'\"]+[^.]"
 #define MAIL_REGEXP "[^ \t\n\b]+@([^ \t\n\b]+\\.)+([a-zA-Z]{2,4})"
 #define DEFAULT_COLUMNS 80
@@ -43,47 +38,6 @@ void Sakura::init()
 	sakura->config.monitor();
 
 	gchar *cfgtmp = NULL;
-
-	/* We can safely ignore errors from g_key_file_get_value(), since if the
-	 * call to g_key_file_has_key() was successful, the key IS there. From the
-	 * glib docs I don't know if we can ignore errors from g_key_file_has_key,
-	 * too. I think we can: the only possible error is that the config file
-	 * doesn't exist, but we have just read it!
-	 */
-
-	for (i = 0; i < NUM_COLORSETS; i++) {
-		char temp_name[20];
-
-		sprintf(temp_name, "colorset%d_fore", i + 1);
-		if (!g_key_file_has_key(sakura->cfg, cfg_group, temp_name, NULL)) {
-			sakura_set_config_string(temp_name, "rgb(192,192,192)");
-		}
-		cfgtmp = g_key_file_get_value(sakura->cfg, cfg_group, temp_name, NULL);
-		gdk_rgba_parse(&sakura->forecolors[i], cfgtmp);
-		g_free(cfgtmp);
-
-		sprintf(temp_name, "colorset%d_back", i + 1);
-		if (!g_key_file_has_key(sakura->cfg, cfg_group, temp_name, NULL)) {
-			sakura_set_config_string(temp_name, "rgba(0,0,0,1)");
-		}
-		cfgtmp = g_key_file_get_value(sakura->cfg, cfg_group, temp_name, NULL);
-		gdk_rgba_parse(&sakura->backcolors[i], cfgtmp);
-		g_free(cfgtmp);
-
-		sprintf(temp_name, "colorset%d_curs", i + 1);
-		if (!g_key_file_has_key(sakura->cfg, cfg_group, temp_name, NULL)) {
-			sakura_set_config_string(temp_name, "rgb(255,255,255)");
-		}
-		cfgtmp = g_key_file_get_value(sakura->cfg, cfg_group, temp_name, NULL);
-		gdk_rgba_parse(&sakura->curscolors[i], cfgtmp);
-		g_free(cfgtmp);
-
-		sprintf(temp_name, "colorset%d_key", i + 1);
-		if (!g_key_file_has_key(sakura->cfg, cfg_group, temp_name, NULL)) {
-			sakura_set_keybind(temp_name, cs_keys[i]);
-		}
-		sakura->config.keymap.set_colorset_keys[i] = sakura_get_keybind(temp_name);
-	}
 
 	/* set default title pattern from config or NULL */
 	sakura->tab_default_title = g_key_file_get_string(

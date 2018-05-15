@@ -81,6 +81,7 @@ public:
 	SakuraKeyMap keymap;
 private:
 	void loadKeymap(const YAML::Node &keymap_node);
+	void loadColorset(const YAML::Node *colorset_node, uint8_t index);
 
 	std::string m_file;
 };

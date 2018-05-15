@@ -7,6 +7,10 @@
 
 #define DEFAULT_CONFIGFILE "sakura.yml"
 #define DEFAULT_FONT "Ubuntu Mono,monospace 12"
+/* make this an array instead of #defines to get a compile time
+ * error instead of a runtime if NUM_COLORSETS changes */
+static int cs_keys[NUM_COLORSETS] = {
+		GDK_KEY_F1, GDK_KEY_F2, GDK_KEY_F3, GDK_KEY_F4, GDK_KEY_F5, GDK_KEY_F6};
 
 Config::Config()
 {
@@ -191,9 +195,28 @@ bool Config::read()
 			loadKeymap(config["keymap"]);
 		}
 
+		for (uint8_t i = 0; i < NUM_COLORSETS; i++) {
+			char temp_name[64];
+			memset(temp_name, 0, sizeof(temp_name));
+			sprintf(temp_name, "colorset%d", i + 1);
+			// config[temp_name] can be nil, it will be handled in the function
+			if (config[temp_name]) {
+				const YAML::Node &node = config[temp_name];
+				loadColorset(&node, i);
+			} else {
+				loadColorset(nullptr, i);
+			}
+		}
+
 	} catch (const YAML::BadFile &e) {
 		std::cout << "Failed to read configuration file: " << e.what() << ", using defaults"
 			  << std::endl;
+		for (uint8_t i = 0; i < NUM_COLORSETS; i++) {
+			char temp_name[64];
+			memset(temp_name, 0, sizeof(temp_name));
+			sprintf(temp_name, "colorset%d", i + 1);
+			loadColorset(nullptr, i);
+		}
 	}
 
 	return true;
@@ -280,6 +303,34 @@ void Config::loadKeymap(const YAML::Node &keymap_node)
 	if (keymap_node["fullscreen"]) {
 		keymap.fullscreen_key = sakura_get_keybind(
 				keymap_node["fullscreen"].as<std::string>().c_str());
+	}
+}
+
+void Config::loadColorset(const YAML::Node *colorset_node, uint8_t index)
+{
+	if (colorset_node && (*colorset_node)["fore"]) {
+		gdk_rgba_parse(&sakura->forecolors[index], (*colorset_node)["fore"].as<std::string>().c_str());
+	} else {
+		gdk_rgba_parse(&sakura->forecolors[index], "rgb(192,192,192)");
+	}
+
+	if (colorset_node && (*colorset_node)["back"]) {
+		gdk_rgba_parse(&sakura->backcolors[index], (*colorset_node)["back"].as<std::string>().c_str());
+	} else {
+		gdk_rgba_parse(&sakura->backcolors[index], "rgba(0,0,0,1)");
+	}
+
+	if (colorset_node && (*colorset_node)["curs"]) {
+		gdk_rgba_parse(&sakura->curscolors[index], (*colorset_node)["curs"].as<std::string>().c_str());
+	} else {
+		gdk_rgba_parse(&sakura->curscolors[index], "rgb(255,255,255)");
+	}
+
+	if (colorset_node && (*colorset_node)["key"]) {
+		sakura->config.keymap.set_colorset_keys[index] =
+				sakura_get_keybind(colorset_node->Tag().c_str());
+	} else {
+		sakura->config.keymap.set_colorset_keys[index] = cs_keys[index];
 	}
 }
 
