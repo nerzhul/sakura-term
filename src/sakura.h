@@ -5,13 +5,12 @@
 class Sakura {
 public:
 	static void init();
-	static void destroy();
+	void destroy(GtkWidget *);
 
 	gboolean on_key_press(GtkWidget *widget, GdkEventKey *event);
 
 	void beep(GtkWidget *);
-
-	static void del_tab(gint);
+	void del_tab(gint, bool exit_if_needed = false);
 
 	GtkWidget *main_window;
 	GtkWidget *notebook;

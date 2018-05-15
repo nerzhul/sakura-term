@@ -100,31 +100,9 @@ static gint     sakura_find_tab(VteTerminal *);
 static void     sakura_set_font();
 static void     sakura_set_tab_label_text(const gchar *, gint page);
 static void     sakura_set_size();
-static void     sakura_config_done();
 static void     sakura_set_colors ();
 static void	sakura_fade_in();
 static void	sakura_fade_out();
-
-guint
-sakura_tokeycode (guint key)
-{
-	GdkKeymap *keymap;
-	GdkKeymapKey *keys;
-	gint n_keys;
-	guint res = 0;
-
-	keymap = gdk_keymap_get_for_display(gdk_display_get_default());
-
-	if (gdk_keymap_get_entries_for_keyval(keymap, key, &keys, &n_keys)) {
-		if (n_keys > 0) {
-			res = keys[0].keycode;
-		}
-		g_free(keys);
-	}
-
-	return res;
-}
-
 
 void
 search(VteTerminal *vte, const char *pattern, bool reverse)
@@ -382,11 +360,7 @@ sakura_child_exited (GtkWidget *widget, void *data)
 	/* Child should be automatically reaped because we don't use G_SPAWN_DO_NOT_REAP_CHILD flag */
 	g_spawn_close_pid(term->pid);
 
-	Sakura::del_tab(page);
-
-	npages = gtk_notebook_get_n_pages(GTK_NOTEBOOK(sakura->notebook));
-	if (npages==0)
-		Sakura::destroy();
+	sakura->del_tab(page, true);
 }
 
 
@@ -419,15 +393,11 @@ sakura_eof (GtkWidget *widget, void *data)
 
         //SAY("waiting for terminal pid (in eof) %d", term->pid);
         //waitpid(term->pid, &status, WNOHANG);
-	/* TODO: check wait return */
+		/* TODO: check wait return */
 		/* Child should be automatically reaped because we don't use G_SPAWN_DO_NOT_REAP_CHILD flag */
 		g_spawn_close_pid(term->pid);
 
-		Sakura::del_tab(0);
-
-		npages = gtk_notebook_get_n_pages(GTK_NOTEBOOK(sakura->notebook));
-		if (npages==0)
-			Sakura::destroy();
+		sakura->del_tab(0, true);
 	}
 }
 
@@ -465,8 +435,7 @@ sakura_title_changed (GtkWidget *widget, void *data)
 
 
 /* Save configuration */
-static void
-sakura_config_done()
+void sakura_config_done()
 {
 	GError *gerror = NULL;
 	gsize len = 0;
@@ -503,55 +472,6 @@ sakura_config_done()
 			sakura->config.write();
 		}
 	}
-}
-
-
-gboolean sakura_delete_event (GtkWidget *widget, void *data)
-{
-	struct terminal *term;
-	GtkWidget *dialog;
-	gint response;
-	gint npages;
-	gint i;
-	pid_t pgid;
-
-	if (!sakura->config.less_questions) {
-		npages = gtk_notebook_get_n_pages(GTK_NOTEBOOK(sakura->notebook));
-
-		/* Check for each tab if there are running processes. Use tcgetpgrp to compare to the shell PGID */
-		for (i=0; i < npages; i++) {
-
-			term = sakura_get_page_term(sakura, i);
-			pgid = tcgetpgrp(vte_pty_get_fd(vte_terminal_get_pty(VTE_TERMINAL(term->vte))));
-
-			/* If running processes are found, we ask one time and exit */
-			if ( (pgid != -1) && (pgid != term->pid)) {
-				dialog=gtk_message_dialog_new(GTK_WINDOW(sakura->main_window), GTK_DIALOG_MODAL,
-											  GTK_MESSAGE_QUESTION, GTK_BUTTONS_YES_NO,
-											  _("There are running processes.\n\nDo you really want to close Sakura?"));
-
-				response=gtk_dialog_run(GTK_DIALOG(dialog));
-				gtk_widget_destroy(dialog);
-
-				if (response==GTK_RESPONSE_YES) {
-					sakura_config_done();
-					return FALSE;
-				} else {
-					return TRUE;
-				}
-			}
-
-		}
-	}
-
-	sakura_config_done();
-	return FALSE;
-}
-
-
-void sakura_destroy_window (GtkWidget *widget, void *data)
-{
-	Sakura::destroy();
 }
 
 
@@ -1456,15 +1376,12 @@ sakura_close_tab (GtkWidget *widget, void *data)
 			response=gtk_dialog_run(GTK_DIALOG(dialog));
 			gtk_widget_destroy(dialog);
 
-			if (response==GTK_RESPONSE_YES) {
-				Sakura::del_tab(page);
+			if (response == GTK_RESPONSE_YES) {
+				sakura->del_tab(page, true);
 			}
-	} else
-		Sakura::del_tab(page);
-
-	npages = gtk_notebook_get_n_pages(GTK_NOTEBOOK(sakura->notebook));
-	if (npages==0)
-		Sakura::destroy();
+	} else {
+		sakura->del_tab(page, true);
+	}
 }
 
 
@@ -1513,17 +1430,10 @@ sakura_closebutton_clicked(GtkWidget *widget, void *data)
 			gtk_widget_destroy(dialog);
 
 			if (response==GTK_RESPONSE_YES) {
-				Sakura::del_tab(page);
-
-				if (gtk_notebook_get_n_pages(GTK_NOTEBOOK(sakura->notebook))==0)
-					Sakura::destroy();
+				sakura->del_tab(page, true);
 			}
 	} else {  /* No processes, hell with tab */
-
-		Sakura::del_tab(page);
-
-		if (gtk_notebook_get_n_pages(GTK_NOTEBOOK(sakura->notebook))==0)
-			Sakura::destroy();
+		sakura->del_tab(page, true);
 	}
 }
 
@@ -2272,23 +2182,3 @@ sakura_error(const char *format, ...)
 	gtk_widget_destroy (dialog);
 	free(buff);
 }
-
-
-/* This function is used to fix bug #1393939 */
-void sakura_sanitize_working_directory()
-{
-	const gchar *home_directory = g_getenv("HOME");
-	if (home_directory == NULL) {
-		home_directory = g_get_home_dir();
-	}
-
-	if (home_directory != NULL) {
-		if (chdir(home_directory)) {
-			fprintf(stderr, _("Cannot change working directory\n"));
-			exit(1);
-		}
-	}
-}
-
-
-

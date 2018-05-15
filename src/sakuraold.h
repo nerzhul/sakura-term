@@ -84,8 +84,7 @@ static const gint FORWARD = 1;
 static const char cfg_group[] = "sakura";
 
 void sakura_add_tab();
-void sakura_sanitize_working_directory();
-guint    sakura_tokeycode(guint key);
+void     sakura_config_done();
 void     sakura_close_tab (GtkWidget *, void *);
 void     sakura_move_tab(gint);
 void     sakura_copy (GtkWidget *, void *);
@@ -94,8 +93,6 @@ void     sakura_paste (GtkWidget *, void *);
 void     sakura_increase_font (GtkWidget *, void *);
 void     sakura_decrease_font (GtkWidget *, void *);
 void     sakura_set_name_dialog (GtkWidget *, void *);
-gboolean sakura_delete_event (GtkWidget *, void *);
-void     sakura_destroy_window (GtkWidget *, void *);
 gboolean sakura_resized_window( GtkWidget *, GdkEventConfigure *, void *);
 gboolean sakura_focus_in( GtkWidget *, GdkEvent *, void *);
 gboolean sakura_focus_out( GtkWidget *, GdkEvent *, void *);
