@@ -148,8 +148,7 @@ bool Config::read()
 		}
 
 		if (config["switch_tab_accelerator"]) {
-			switch_tab_accelerator =
-					config["switch_tab_accelerator"].as<gint>();
+			switch_tab_accelerator = config["switch_tab_accelerator"].as<gint>();
 		}
 
 		if (config["move_tab_accelerator"]) {
@@ -161,8 +160,7 @@ bool Config::read()
 		}
 
 		if (config["scrollbar_accelerator"]) {
-			scrollbar_accelerator =
-					config["scrollbar_accelerator"].as<gint>();
+			scrollbar_accelerator = config["scrollbar_accelerator"].as<gint>();
 		}
 
 		if (config["open_url_accelerator"]) {
@@ -170,17 +168,23 @@ bool Config::read()
 		}
 
 		if (config["font_size_accelerator"]) {
-			font_size_accelerator =
-					config["font_size_accelerator"].as<gint>();
+			font_size_accelerator = config["font_size_accelerator"].as<gint>();
 		}
 
 		if (config["set_tab_name_accelerator"]) {
-			set_tab_name_accelerator =
-					config["set_tab_name_accelerator"].as<gint>();
+			set_tab_name_accelerator = config["set_tab_name_accelerator"].as<gint>();
+		}
+
+		if (config["set_colorset_accelerator"]) {
+			set_colorset_accelerator = config["set_colorset_accelerator"].as<gint>();
 		}
 
 		if (config["search_accelerator"]) {
 			search_accelerator = config["search_accelerator"].as<gint>();
+		}
+
+		if (config["icon"]) {
+			icon = config["icon"].as<std::string>();
 		}
 
 		if (config["keymap"]) {
@@ -188,8 +192,8 @@ bool Config::read()
 		}
 
 	} catch (const YAML::BadFile &e) {
-		std::cout << "Failed to read configuration file: " << e.what()
-			  << ", using defaults" << std::endl;
+		std::cout << "Failed to read configuration file: " << e.what() << ", using defaults"
+			  << std::endl;
 	}
 
 	return true;
@@ -244,8 +248,8 @@ void Config::loadKeymap(const YAML::Node &keymap_node)
 	}
 
 	if (keymap_node["paste"]) {
-		keymap.paste_key = sakura_get_keybind(
-				keymap_node["paste"].as<std::string>().c_str());
+		keymap.paste_key =
+				sakura_get_keybind(keymap_node["paste"].as<std::string>().c_str());
 	}
 
 	if (keymap_node["scrollbar"]) {
@@ -259,8 +263,8 @@ void Config::loadKeymap(const YAML::Node &keymap_node)
 	}
 
 	if (keymap_node["search"]) {
-		keymap.search_key = sakura_get_keybind(
-				keymap_node["search"].as<std::string>().c_str());
+		keymap.search_key =
+				sakura_get_keybind(keymap_node["search"].as<std::string>().c_str());
 	}
 
 	if (keymap_node["increase_font_size"]) {
@@ -283,8 +287,6 @@ void Config::monitor()
 {
 	/* Add GFile monitor to control file external changes */
 	GFile *cfgfile = g_file_new_for_path(m_file.c_str());
-	GFileMonitor *mon_cfgfile =
-			g_file_monitor_file(cfgfile, (GFileMonitorFlags)0, NULL, NULL);
-	g_signal_connect(G_OBJECT(mon_cfgfile), "changed",
-			G_CALLBACK(sakura_conf_changed), NULL);
+	GFileMonitor *mon_cfgfile = g_file_monitor_file(cfgfile, (GFileMonitorFlags)0, NULL, NULL);
+	g_signal_connect(G_OBJECT(mon_cfgfile), "changed", G_CALLBACK(sakura_conf_changed), NULL);
 }

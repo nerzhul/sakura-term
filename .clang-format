@@ -16,7 +16,7 @@ BraceWrapping:
 AllowShortIfStatementsOnASingleLine: false
 IndentCaseLabels: false
 AccessModifierOffset: -8
-ColumnLimit: 90
+ColumnLimit: 100
 AllowShortFunctionsOnASingleLine: InlineOnly
 SortIncludes: false
 IncludeCategories:

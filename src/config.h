@@ -25,7 +25,7 @@ struct SakuraKeyMap {
 	gint fullscreen_key = GDK_KEY_F11;
 	gint increase_font_size_key = GDK_KEY_plus;
 	gint decrease_font_size_key = GDK_KEY_minus;
-	gint set_colorset_keys[NUM_COLORSETS];
+	std::array<gint, NUM_COLORSETS> set_colorset_keys;
 };
 
 class Config
@@ -72,9 +72,11 @@ public:
 	gint font_size_accelerator = (GDK_CONTROL_MASK);
 	gint set_tab_name_accelerator = (GDK_CONTROL_MASK | GDK_SHIFT_MASK);
 	gint search_accelerator = (GDK_CONTROL_MASK | GDK_SHIFT_MASK);
+	gint set_colorset_accelerator = (GDK_CONTROL_MASK | GDK_SHIFT_MASK);
 
 	VteCursorShape cursor_type = VTE_CURSOR_SHAPE_BLOCK;
 	std::string word_chars = "-,./?%&#_~:";  /* Exceptions for word selection */
+	std::string icon = "terminal-tango.svg";
 
 	SakuraKeyMap keymap;
 private:

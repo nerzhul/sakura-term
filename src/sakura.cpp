@@ -19,13 +19,10 @@
 static int cs_keys[NUM_COLORSETS] = {
 		GDK_KEY_F1, GDK_KEY_F2, GDK_KEY_F3, GDK_KEY_F4, GDK_KEY_F5, GDK_KEY_F6};
 
-#define ICON_FILE "terminal-tango.svg"
 #define HTTP_REGEXP "(ftp|http)s?://[^ \t\n\b()<>{}«»\\[\\]\'\"]+[^.]"
 #define MAIL_REGEXP "[^ \t\n\b]+@([^ \t\n\b]+\\.)+([a-zA-Z]{2,4})"
 #define DEFAULT_COLUMNS 80
 #define DEFAULT_ROWS 24
-
-#define DEFAULT_SELECT_COLORSET_ACCELERATOR (GDK_CONTROL_MASK | GDK_SHIFT_MASK)
 
 static const gint BACKWARDS = 2;
 
@@ -87,19 +84,6 @@ void Sakura::init()
 		}
 		sakura->config.keymap.set_colorset_keys[i] = sakura_get_keybind(temp_name);
 	}
-
-	if (!g_key_file_has_key(
-			    sakura->cfg, cfg_group, "set_colorset_accelerator", NULL)) {
-		sakura_set_config_integer("set_colorset_accelerator",
-				DEFAULT_SELECT_COLORSET_ACCELERATOR);
-	}
-	sakura->set_colorset_accelerator = g_key_file_get_integer(
-			sakura->cfg, cfg_group, "set_colorset_accelerator", NULL);
-
-	if (!g_key_file_has_key(sakura->cfg, cfg_group, "icon_file", NULL)) {
-		sakura_set_config_string("icon_file", ICON_FILE);
-	}
-	sakura->icon = g_key_file_get_string(sakura->cfg, cfg_group, "icon_file", NULL);
 
 	/* set default title pattern from config or NULL */
 	sakura->tab_default_title = g_key_file_get_string(
@@ -169,7 +153,7 @@ void Sakura::init()
 	if (option_icon) {
 		icon_path = g_strdup_printf("%s", option_icon);
 	} else {
-		icon_path = g_strdup_printf(DATADIR "/pixmaps/%s", sakura->icon);
+		icon_path = g_strdup_printf(DATADIR "/pixmaps/%s", sakura->config.icon.c_str());
 	}
 	gtk_window_set_icon_from_file(GTK_WINDOW(sakura->main_window), icon_path, &error);
 	g_free(icon_path);
@@ -423,12 +407,11 @@ gboolean Sakura::on_key_press(GtkWidget *widget, GdkEventKey *event, gpointer us
 	}
 
 	/* Change in colorset */
-	if ((event->state & sakura->set_colorset_accelerator) ==
-			sakura->set_colorset_accelerator) {
+	if ((event->state & sakura->config.set_colorset_accelerator) ==
+			sakura->config.set_colorset_accelerator) {
 		int i;
 		for (i = 0; i < NUM_COLORSETS; i++) {
-			if (keycode == sakura_tokeycode(sakura->config.keymap.set_colorset_keys
-									[i])) {
+			if (keycode == sakura_tokeycode(sakura->config.keymap.set_colorset_keys[i])) {
 				sakura_set_colorset(i);
 				return TRUE;
 			}

@@ -38,9 +38,7 @@ public:
 	GtkWidget *open_link_separator;
 	GKeyFile *cfg;
 	GtkCssProvider *provider;
-	char *icon;
 	gchar *tab_default_title;
-	gint set_colorset_accelerator;
 	VteRegex *http_vteregexp, *mail_vteregexp;
 	char *argv[3];
 	Config config;
