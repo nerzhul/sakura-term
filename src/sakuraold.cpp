@@ -2277,28 +2277,6 @@ void sakura_set_keybind(const gchar *key, guint value)
 }
 
 
-guint sakura_get_keybind(const gchar *key)
-{
-	gchar *value;
-	guint retval=GDK_KEY_VoidSymbol;
-
-	value=g_key_file_get_string(sakura->cfg, cfg_group, key, NULL);
-	if (value!=NULL){
-		retval=gdk_keyval_from_name(value);
-		g_free(value);
-	}
-
-	/* For backwards compatibility with integer values */
-	/* If gdk_keyval_from_name fail, it seems to be integer value*/
-	if ((retval==GDK_KEY_VoidSymbol)||(retval==0)) {
-		retval=g_key_file_get_integer(sakura->cfg, cfg_group, key, NULL);
-	}
-
-	/* Always use uppercase value as keyval */
-	return gdk_keyval_to_upper(retval);
-}
-
-
 static void
 sakura_error(const char *format, ...)
 {

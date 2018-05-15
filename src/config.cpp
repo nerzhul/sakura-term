@@ -79,7 +79,8 @@ bool Config::read()
 		}
 
 		if (config["disable_numbered_tabswitch"]) {
-			disable_numbered_tabswitch = config["disable_numbered_tabswitch"].as<bool>();
+			disable_numbered_tabswitch =
+					config["disable_numbered_tabswitch"].as<bool>();
 		}
 
 		if (config["use_fading"]) {
@@ -103,7 +104,8 @@ bool Config::read()
 		}
 
 		if (config["stop_tab_cycling_at_end_tabs"]) {
-			stop_tab_cycling_at_end_tabs = config["stop_tab_cycling_at_end_tabs"].as<bool>();
+			stop_tab_cycling_at_end_tabs =
+					config["stop_tab_cycling_at_end_tabs"].as<bool>();
 		}
 
 		if (config["allow_bold"]) {
@@ -111,7 +113,7 @@ bool Config::read()
 		}
 
 		if (config["cursor_type"]) {
-			cursor_type = (VteCursorShape) config["cursor_type"].as<gint>();
+			cursor_type = (VteCursorShape)config["cursor_type"].as<gint>();
 		}
 
 		if (config["word_chars"]) {
@@ -146,7 +148,8 @@ bool Config::read()
 		}
 
 		if (config["switch_tab_accelerator"]) {
-			switch_tab_accelerator = config["switch_tab_accelerator"].as<gint>();
+			switch_tab_accelerator =
+					config["switch_tab_accelerator"].as<gint>();
 		}
 
 		if (config["move_tab_accelerator"]) {
@@ -158,7 +161,8 @@ bool Config::read()
 		}
 
 		if (config["scrollbar_accelerator"]) {
-			scrollbar_accelerator = config["scrollbar_accelerator"].as<gint>();
+			scrollbar_accelerator =
+					config["scrollbar_accelerator"].as<gint>();
 		}
 
 		if (config["open_url_accelerator"]) {
@@ -166,22 +170,113 @@ bool Config::read()
 		}
 
 		if (config["font_size_accelerator"]) {
-			font_size_accelerator = config["font_size_accelerator"].as<gint>();
+			font_size_accelerator =
+					config["font_size_accelerator"].as<gint>();
 		}
 
 		if (config["set_tab_name_accelerator"]) {
-			set_tab_name_accelerator = config["set_tab_name_accelerator"].as<gint>();
+			set_tab_name_accelerator =
+					config["set_tab_name_accelerator"].as<gint>();
 		}
 
 		if (config["search_accelerator"]) {
 			search_accelerator = config["search_accelerator"].as<gint>();
 		}
+
+		if (config["keymap"]) {
+			loadKeymap(config["keymap"]);
+		}
+
 	} catch (const YAML::BadFile &e) {
 		std::cout << "Failed to read configuration file: " << e.what()
 			  << ", using defaults" << std::endl;
 	}
 
 	return true;
+}
+
+guint sakura_get_keybind(const gchar *key)
+{
+	gchar *value;
+	guint retval = GDK_KEY_VoidSymbol;
+
+	value = g_key_file_get_string(sakura->cfg, cfg_group, key, NULL);
+	if (value != NULL) {
+		retval = gdk_keyval_from_name(value);
+		g_free(value);
+	}
+
+	/* For backwards compatibility with integer values */
+	/* If gdk_keyval_from_name fail, it seems to be integer value*/
+	if ((retval == GDK_KEY_VoidSymbol) || (retval == 0)) {
+		retval = (guint)g_key_file_get_integer(sakura->cfg, cfg_group, key, NULL);
+	}
+
+	/* Always use uppercase value as keyval */
+	return gdk_keyval_to_upper(retval);
+}
+
+void Config::loadKeymap(const YAML::Node &keymap_node)
+{
+	if (keymap_node["add_tab"]) {
+		keymap.add_tab_key = sakura_get_keybind(
+				keymap_node["add_tab"].as<std::string>().c_str());
+	}
+
+	if (keymap_node["del_tab"]) {
+		keymap.del_tab_key = sakura_get_keybind(
+				keymap_node["del_tab"].as<std::string>().c_str());
+	}
+
+	if (keymap_node["prev_tab"]) {
+		keymap.prev_tab_key = sakura_get_keybind(
+				keymap_node["prev_tab"].as<std::string>().c_str());
+	}
+
+	if (keymap_node["next_tab"]) {
+		keymap.next_tab_key = sakura_get_keybind(
+				keymap_node["next_tab"].as<std::string>().c_str());
+	}
+
+	if (keymap_node["copy"]) {
+		keymap.copy_key = sakura_get_keybind(
+				keymap_node["copy_key"].as<std::string>().c_str());
+	}
+
+	if (keymap_node["paste"]) {
+		keymap.paste_key = sakura_get_keybind(
+				keymap_node["paste"].as<std::string>().c_str());
+	}
+
+	if (keymap_node["scrollbar"]) {
+		keymap.scrollbar_key = sakura_get_keybind(
+				keymap_node["scrollbar"].as<std::string>().c_str());
+	}
+
+	if (keymap_node["set_tab_name"]) {
+		keymap.set_tab_name_key = sakura_get_keybind(
+				keymap_node["set_tab_name"].as<std::string>().c_str());
+	}
+
+	if (keymap_node["search"]) {
+		keymap.search_key = sakura_get_keybind(
+				keymap_node["search"].as<std::string>().c_str());
+	}
+
+	if (keymap_node["increase_font_size"]) {
+		keymap.increase_font_size_key = sakura_get_keybind(
+				keymap_node["increase_font_size"].as<std::string>().c_str());
+	}
+
+	if (keymap_node["decrease_font_size"]) {
+		keymap.decrease_font_size_key = sakura_get_keybind(
+				keymap_node["decrease_font_size"].as<std::string>().c_str());
+	}
+
+	if (keymap_node["fullscreen"]) {
+		keymap.fullscreen_key = sakura_get_keybind(
+				keymap_node["fullscreen"].as<std::string>().c_str());
+	}
 }
 
 void Config::monitor()

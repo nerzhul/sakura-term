@@ -4,23 +4,27 @@
 #include <glib.h>
 #include <pango/pango.h>
 #include <vte/vte.h>
+#include <yaml-cpp/node/node.h>
 #include "palettes.h"
 
 #define NUM_COLORSETS 6
 
+// @TODO remove this when finished to migrate to Config object
+guint sakura_get_keybind(const gchar *key);
+
 struct SakuraKeyMap {
-	gint add_tab_key;
-	gint del_tab_key;
-	gint prev_tab_key;
-	gint next_tab_key;
-	gint copy_key;
-	gint paste_key;
-	gint scrollbar_key;
-	gint set_tab_name_key;
-	gint search_key;
-	gint fullscreen_key;
-	gint increase_font_size_key;
-	gint decrease_font_size_key;
+	gint add_tab_key = GDK_KEY_T;
+	gint del_tab_key = GDK_KEY_W;
+	gint prev_tab_key = GDK_KEY_Left;
+	gint next_tab_key = GDK_KEY_Right;
+	gint copy_key = GDK_KEY_C;
+	gint paste_key = GDK_KEY_V;
+	gint scrollbar_key = GDK_KEY_S;
+	gint set_tab_name_key = GDK_KEY_N;
+	gint search_key = GDK_KEY_F;
+	gint fullscreen_key = GDK_KEY_F11;
+	gint increase_font_size_key = GDK_KEY_plus;
+	gint decrease_font_size_key = GDK_KEY_minus;
 	gint set_colorset_keys[NUM_COLORSETS];
 };
 
@@ -74,5 +78,7 @@ public:
 
 	SakuraKeyMap keymap;
 private:
+	void loadKeymap(const YAML::Node &keymap_node);
+
 	std::string m_file;
 };
