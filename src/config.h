@@ -6,6 +6,24 @@
 #include <vte/vte.h>
 #include "palettes.h"
 
+#define NUM_COLORSETS 6
+
+struct SakuraKeyMap {
+	gint add_tab_key;
+	gint del_tab_key;
+	gint prev_tab_key;
+	gint next_tab_key;
+	gint copy_key;
+	gint paste_key;
+	gint scrollbar_key;
+	gint set_tab_name_key;
+	gint search_key;
+	gint fullscreen_key;
+	gint increase_font_size_key;
+	gint decrease_font_size_key;
+	gint set_colorset_keys[NUM_COLORSETS];
+};
+
 class Config
 {
 public:
@@ -53,6 +71,8 @@ public:
 
 	VteCursorShape cursor_type = VTE_CURSOR_SHAPE_BLOCK;
 	std::string word_chars = "-,./?%&#_~:";  /* Exceptions for word selection */
+
+	SakuraKeyMap keymap;
 private:
 	std::string m_file;
 };
