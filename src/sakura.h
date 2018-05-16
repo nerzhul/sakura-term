@@ -10,6 +10,7 @@ public:
 	gboolean on_key_press(GtkWidget *widget, GdkEventKey *event);
 
 	void beep(GtkWidget *);
+	void close_tab(GtkWidget *);
 	void del_tab(gint, bool exit_if_needed = false);
 	void toggle_fullscreen(GtkWidget *);
 
