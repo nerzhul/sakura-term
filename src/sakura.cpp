@@ -455,6 +455,63 @@ gboolean Sakura::on_key_press(GtkWidget *widget, GdkEventKey *event)
 	return FALSE;
 }
 
+void Sakura::on_child_exited(GtkWidget *widget)
+{
+	gint page = gtk_notebook_page_num(GTK_NOTEBOOK(notebook), gtk_widget_get_parent(widget));
+	gint npages = gtk_notebook_get_n_pages(GTK_NOTEBOOK(notebook));
+	auto *term = sakura_get_page_term(this, page);
+
+	/* Only write configuration to disk if it's the last tab */
+	if (npages == 1) {
+		sakura_config_done();
+	}
+
+	if (option_hold == TRUE) {
+		SAY("hold option has been activated");
+		return;
+	}
+
+	/* Child should be automatically reaped because we don't use G_SPAWN_DO_NOT_REAP_CHILD flag
+	 */
+	g_spawn_close_pid(term->pid);
+
+	del_tab(page, true);
+}
+
+void Sakura::on_eof(GtkWidget *widget)
+{
+	SAY("Got EOF signal");
+
+	gint npages = gtk_notebook_get_n_pages(GTK_NOTEBOOK(notebook));
+
+	/* Only write configuration to disk if it's the last tab */
+	if (npages == 1) {
+		sakura_config_done();
+	}
+
+	/* Workaround for libvte strange behaviour. There is not child-exited signal for
+	   the last terminal, so we need to kill it here.  Check with libvte authors about
+	   child-exited/eof signals */
+	if (gtk_notebook_get_current_page(GTK_NOTEBOOK(notebook)) == 0) {
+
+		auto *term = sakura_get_page_term(this, 0);
+
+		if (option_hold == TRUE) {
+			SAY("hold option has been activated");
+			return;
+		}
+
+		// SAY("waiting for terminal pid (in eof) %d", term->pid);
+		// waitpid(term->pid, &status, WNOHANG);
+		/* TODO: check wait return */
+		/* Child should be automatically reaped because we don't use
+		 * G_SPAWN_DO_NOT_REAP_CHILD flag */
+		g_spawn_close_pid(term->pid);
+
+		del_tab(0, true);
+	}
+}
+
 void Sakura::close_tab(GtkWidget *)
 {
 	pid_t pgid;
