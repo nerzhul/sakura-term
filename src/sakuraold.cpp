@@ -1326,13 +1326,8 @@ void sakura_conf_changed(GtkWidget *widget, void *data)
 
 void sakura_disable_numbered_tabswitch(GtkWidget *widget, void *data)
 {
-	if (gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(widget))) {
-		sakura->config.disable_numbered_tabswitch = true;
-		sakura_set_config_boolean("disable_numbered_tabswitch", TRUE);
-	} else {
-		sakura->config.disable_numbered_tabswitch = false;
-		sakura_set_config_boolean("disable_numbered_tabswitch", FALSE);
-	}
+	auto *obj = (Sakura *)data;
+	obj->toggle_numbered_tabswitch_option(widget);
 }
 
 static void sakura_use_fading(GtkWidget *widget, void *data)
@@ -1610,7 +1605,7 @@ void sakura_init_popup()
 	g_signal_connect(G_OBJECT(item_stop_tab_cycling_at_end_tabs), "activate",
 			G_CALLBACK(sakura_stop_tab_cycling_at_end_tabs), NULL);
 	g_signal_connect(G_OBJECT(item_disable_numbered_tabswitch), "activate",
-			G_CALLBACK(sakura_disable_numbered_tabswitch), NULL);
+			G_CALLBACK(sakura_disable_numbered_tabswitch), sakura);
 	g_signal_connect(
 			G_OBJECT(item_use_fading), "activate", G_CALLBACK(sakura_use_fading), NULL);
 	g_signal_connect(G_OBJECT(item_set_title), "activate", G_CALLBACK(sakura_set_title_dialog),

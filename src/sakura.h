@@ -15,6 +15,7 @@ public:
 	void close_tab(GtkWidget *);
 	void del_tab(gint, bool exit_if_needed = false);
 	void toggle_fullscreen(GtkWidget *);
+	void toggle_numbered_tabswitch_option(GtkWidget *widget);
 
 	GtkWidget *main_window;
 	GtkWidget *notebook;

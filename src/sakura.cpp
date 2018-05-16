@@ -603,6 +603,17 @@ void Sakura::toggle_fullscreen(GtkWidget *)
 	m_fullscreen = !m_fullscreen;
 }
 
+void Sakura::toggle_numbered_tabswitch_option(GtkWidget *widget)
+{
+	if (gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(widget))) {
+		config.disable_numbered_tabswitch = true;
+		sakura_set_config_boolean("disable_numbered_tabswitch", TRUE);
+	} else {
+		config.disable_numbered_tabswitch = false;
+		sakura_set_config_boolean("disable_numbered_tabswitch", FALSE);
+	}
+}
+
 void Sakura::beep(GtkWidget *widget)
 {
 	// Remove the urgency hint. This is necessary to signal the window manager
