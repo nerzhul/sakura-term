@@ -263,9 +263,9 @@ void Sakura::init()
 	g_signal_connect(G_OBJECT(sakura->main_window), "configure-event",
 			G_CALLBACK(sakura_resized_window), NULL);
 	g_signal_connect(G_OBJECT(sakura->main_window), "focus-out-event",
-			G_CALLBACK(sakura_focus_out), NULL);
+			G_CALLBACK(sakura_focus_out), sakura);
 	g_signal_connect(G_OBJECT(sakura->main_window), "focus-in-event",
-			G_CALLBACK(sakura_focus_in), NULL);
+			G_CALLBACK(sakura_focus_in), sakura);
 	g_signal_connect(G_OBJECT(sakura->main_window), "show",
 			G_CALLBACK(sakura_window_show_event), NULL);
 	// g_signal_connect(G_OBJECT(sakura->notebook), "focus-in-event",
@@ -294,6 +294,50 @@ void Sakura::destroy(GtkWidget *)
 	pango_font_description_free(config.font);
 
 	gtk_main_quit();
+}
+
+gboolean Sakura::on_focus_in(GtkWidget *widget, GdkEvent *event)
+{
+	if (event->type != GDK_FOCUS_CHANGE)
+		return FALSE;
+
+	/* Ignore first focus event */
+	if (first_focus) {
+		first_focus = false;
+		return FALSE;
+	}
+
+	if (!focused) {
+		focused = true;
+
+		if (!first_focus && config.use_fading) {
+			sakura_fade_in();
+		}
+
+		sakura_set_colors();
+		return TRUE;
+	}
+
+	return FALSE;
+}
+
+gboolean Sakura::on_focus_out(GtkWidget *widget, GdkEvent *event)
+{
+	if (event->type != GDK_FOCUS_CHANGE)
+		return FALSE;
+
+	if (focused) {
+		focused = false;
+
+		if (!first_focus && config.use_fading) {
+			sakura_fade_out();
+		}
+
+		sakura_set_colors();
+		return TRUE;
+	}
+
+	return FALSE;
 }
 
 gboolean Sakura::on_key_press(GtkWidget *widget, GdkEventKey *event)

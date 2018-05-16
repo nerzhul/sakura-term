@@ -83,7 +83,10 @@ static const gint FORWARD = 1;
 
 static const char cfg_group[] = "sakura";
 
+void sakura_fade_in();
+void sakura_fade_out();
 void sakura_add_tab();
+void sakura_set_colors();
 void     sakura_config_done();
 void     sakura_close_tab (GtkWidget *, void *);
 void     sakura_move_tab(gint);

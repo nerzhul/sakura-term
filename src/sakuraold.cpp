@@ -101,9 +101,6 @@ static gint sakura_find_tab(VteTerminal *);
 static void sakura_set_font();
 static void sakura_set_tab_label_text(const gchar *, gint page);
 static void sakura_set_size();
-static void sakura_set_colors();
-static void sakura_fade_in();
-static void sakura_fade_out();
 
 void search(VteTerminal *vte, const char *pattern, bool reverse)
 {
@@ -199,46 +196,14 @@ static gboolean sakura_button_press(
 
 gboolean sakura_focus_in(GtkWidget *widget, GdkEvent *event, void *data)
 {
-	if (event->type != GDK_FOCUS_CHANGE)
-		return FALSE;
-
-	/* Ignore first focus event */
-	if (sakura->first_focus) {
-		sakura->first_focus = false;
-		return FALSE;
-	}
-
-	if (!sakura->focused) {
-		sakura->focused = true;
-
-		if (!sakura->first_focus && sakura->config.use_fading) {
-			sakura_fade_in();
-		}
-
-		sakura_set_colors();
-		return TRUE;
-	}
-
-	return FALSE;
+	auto *obj = (Sakura *)data;
+	return sakura->on_focus_in(widget, event);
 }
 
 gboolean sakura_focus_out(GtkWidget *widget, GdkEvent *event, void *data)
 {
-	if (event->type != GDK_FOCUS_CHANGE)
-		return FALSE;
-
-	if (sakura->focused) {
-		sakura->focused = false;
-
-		if (!sakura->first_focus && sakura->config.use_fading) {
-			sakura_fade_out();
-		}
-
-		sakura_set_colors();
-		return TRUE;
-	}
-
-	return FALSE;
+	auto *obj = (Sakura *)data;
+	return sakura->on_focus_out(widget, event);
 }
 
 /* Handler for notebook focus-in-event */
@@ -533,7 +498,7 @@ void sakura_set_colorset(int cs)
 }
 
 /* Set the terminal colors for all notebook tabs */
-static void sakura_set_colors()
+void sakura_set_colors()
 {
 	int i;
 	int n_pages = gtk_notebook_get_n_pages(GTK_NOTEBOOK(sakura->notebook));
@@ -759,7 +724,7 @@ static void sakura_color_dialog(GtkWidget *widget, void *data)
 	gtk_widget_destroy(color_dialog);
 }
 
-static void sakura_fade_out()
+void sakura_fade_out()
 {
 	gint page;
 	struct terminal *term;
@@ -783,7 +748,7 @@ static void sakura_fade_out()
 	}
 }
 
-static void sakura_fade_in()
+void sakura_fade_in()
 {
 	gint page;
 	struct terminal *term;

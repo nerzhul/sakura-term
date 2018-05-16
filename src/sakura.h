@@ -8,6 +8,8 @@ public:
 	void destroy(GtkWidget *);
 
 	gboolean on_key_press(GtkWidget *widget, GdkEventKey *event);
+	gboolean on_focus_in(GtkWidget *widget, GdkEvent *event);
+	gboolean on_focus_out(GtkWidget *widget, GdkEvent *event);
 	void on_child_exited(GtkWidget *widget);
 	void on_eof(GtkWidget *widget);
 
