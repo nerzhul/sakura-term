@@ -2,6 +2,9 @@
 
 #include "config.h"
 
+#define DEFAULT_COLUMNS 80
+#define DEFAULT_ROWS 24
+
 class Sakura {
 public:
 	static void init();
@@ -12,12 +15,14 @@ public:
 	gboolean on_focus_out(GtkWidget *widget, GdkEvent *event);
 	void on_child_exited(GtkWidget *widget);
 	void on_eof(GtkWidget *widget);
+	void on_page_removed(GtkWidget *widget);
 
 	void beep(GtkWidget *);
 	void close_tab(GtkWidget *);
 	void del_tab(gint, bool exit_if_needed = false);
 	void toggle_fullscreen(GtkWidget *);
 	void toggle_numbered_tabswitch_option(GtkWidget *widget);
+	gboolean notebook_scoll(GtkWidget *widget, GdkEventScroll *event);
 
 	GtkWidget *main_window;
 	GtkWidget *notebook;
@@ -28,8 +33,8 @@ public:
 	char *current_match;
 	guint width;
 	guint height;
-	glong columns;
-	glong rows;
+	glong columns = DEFAULT_COLUMNS;
+	glong rows = DEFAULT_ROWS;
 	gint label_count;
 	bool keep_fc;                    /* Global flag to indicate that we don't want changes in the files and columns values */
 	bool config_modified;            /* Configuration has been modified */
@@ -48,6 +53,7 @@ public:
 	VteRegex *http_vteregexp, *mail_vteregexp;
 	char *argv[3];
 	Config config;
+
 private:
 	bool m_fullscreen = false;
 };

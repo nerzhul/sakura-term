@@ -100,7 +100,6 @@ static void sakura_error(const char *, ...);
 static gint sakura_find_tab(VteTerminal *);
 static void sakura_set_font();
 static void sakura_set_tab_label_text(const gchar *, gint page);
-static void sakura_set_size();
 
 void search(VteTerminal *vte, const char *pattern, bool reverse)
 {
@@ -229,48 +228,14 @@ gboolean sakura_focus_out(GtkWidget *widget, GdkEvent *event, void *data)
    TODO: let scroll directions configurable */
 gboolean sakura_notebook_scroll(GtkWidget *widget, GdkEventScroll *event)
 {
-	gint page, npages;
-
-	page = gtk_notebook_get_current_page(GTK_NOTEBOOK(sakura->notebook));
-	npages = gtk_notebook_get_n_pages(GTK_NOTEBOOK(sakura->notebook));
-
-	switch (event->direction) {
-	case GDK_SCROLL_DOWN: {
-		if (sakura->config.stop_tab_cycling_at_end_tabs == 1) {
-			gtk_notebook_set_current_page(
-					GTK_NOTEBOOK(sakura->notebook), --page >= 0 ? page : 0);
-		} else {
-			gtk_notebook_set_current_page(GTK_NOTEBOOK(sakura->notebook),
-					--page >= 0 ? page : npages - 1);
-		}
-		break;
-	}
-	case GDK_SCROLL_UP: {
-		if (sakura->config.stop_tab_cycling_at_end_tabs == 1) {
-			gtk_notebook_set_current_page(GTK_NOTEBOOK(sakura->notebook),
-					++page < npages ? page : npages - 1);
-		} else {
-			gtk_notebook_set_current_page(
-					GTK_NOTEBOOK(sakura->notebook), ++page < npages ? page : 0);
-		}
-		break;
-	}
-	case GDK_SCROLL_LEFT:
-	case GDK_SCROLL_RIGHT:
-	case GDK_SCROLL_SMOOTH:
-		break;
-	}
-
-	return FALSE;
+	return sakura->notebook_scoll(widget, event);
 }
 
 static void sakura_page_removed(GtkWidget *widget, void *data)
 {
-	if (gtk_notebook_get_n_pages(GTK_NOTEBOOK(sakura->notebook)) == 1) {
-		/* If the first tab is disabled, window size changes and we need
-		 * to recalculate its size */
-		sakura_set_size();
-	}
+	// auto *obj = (Sakura *)data;
+	// Strangely data is not sakura global pointer here...
+	sakura->on_page_removed(widget);
 }
 
 void sakura_increase_font(GtkWidget *widget, void *data)
@@ -305,8 +270,10 @@ void sakura_decrease_font(GtkWidget *widget, void *data)
 
 static void sakura_child_exited(GtkWidget *widget, void *data)
 {
-	auto *obj = (Sakura *)data;
-	obj->on_child_exited(widget);
+	//auto *obj = (Sakura *)data;
+	// Strangely the obj pointer is null here... use the globally defined pointed
+	// instead
+	sakura->on_child_exited(widget);
 }
 
 static void sakura_eof(GtkWidget *widget, void *data)
@@ -1608,7 +1575,7 @@ void sakura_init_popup()
 	gtk_widget_show_all(sakura->menu);
 }
 
-static void sakura_set_size()
+void sakura_set_size()
 {
 	struct terminal *term;
 	gint pad_x, pad_y;
@@ -1875,8 +1842,8 @@ void sakura_add_tab()
 			G_CALLBACK(sakura_increase_font), NULL);
 	g_signal_connect(G_OBJECT(term->vte), "decrease-font-size",
 			G_CALLBACK(sakura_decrease_font), NULL);
-	g_signal_connect(
-			G_OBJECT(term->vte), "child-exited", G_CALLBACK(sakura_child_exited), sakura);
+	g_signal_connect(G_OBJECT(term->vte), "child-exited", G_CALLBACK(sakura_child_exited),
+			sakura);
 	g_signal_connect(G_OBJECT(term->vte), "eof", G_CALLBACK(sakura_eof), sakura);
 	g_signal_connect(G_OBJECT(term->vte), "window-title-changed",
 			G_CALLBACK(sakura_title_changed), NULL);
@@ -1885,14 +1852,14 @@ void sakura_add_tab()
 
 	/* Notebook signals */
 	g_signal_connect(G_OBJECT(sakura->notebook), "page-removed",
-			G_CALLBACK(sakura_page_removed), NULL);
+			G_CALLBACK(sakura_page_removed), sakura);
 	if (sakura->config.show_closebutton) {
 		g_signal_connect(G_OBJECT(close_button), "clicked",
 				G_CALLBACK(sakura_closebutton_clicked), term->hbox);
 	}
 
 	/* Since vte-2.91 env is properly overwritten */
-	char *command_env[2] = {const_cast<char *>("TERM=xterm-256color"), 0};
+	char *command_env[2] = {const_cast<char *>("TERM=xterm-256color"), nullptr};
 	/* First tab */
 	npages = gtk_notebook_get_n_pages(GTK_NOTEBOOK(sakura->notebook));
 	if (npages == 1) {

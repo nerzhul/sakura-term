@@ -85,6 +85,7 @@ static const char cfg_group[] = "sakura";
 
 void sakura_fade_in();
 void sakura_fade_out();
+void sakura_set_size();
 void sakura_add_tab();
 void sakura_set_colors();
 void     sakura_config_done();

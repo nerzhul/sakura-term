@@ -18,8 +18,6 @@
 
 #define HTTP_REGEXP "(ftp|http)s?://[^ \t\n\b()<>{}«»\\[\\]\'\"]+[^.]"
 #define MAIL_REGEXP "[^ \t\n\b]+@([^ \t\n\b]+\\.)+([a-zA-Z]{2,4})"
-#define DEFAULT_COLUMNS 80
-#define DEFAULT_ROWS 24
 
 static const gint BACKWARDS = 2;
 
@@ -131,8 +129,6 @@ void Sakura::init()
 
 	sakura->config.monitor();
 
-	gchar *cfgtmp = NULL;
-
 	/* set default title pattern from config or NULL */
 	sakura->tab_default_title =
 			g_key_file_get_string(sakura->cfg, cfg_group, "tab_default_title", NULL);
@@ -144,10 +140,6 @@ void Sakura::init()
 
 	sakura->main_window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
 	gtk_window_set_title(GTK_WINDOW(sakura->main_window), "sakura");
-
-	/* Default terminal size*/
-	sakura->columns = DEFAULT_COLUMNS;
-	sakura->rows = DEFAULT_ROWS;
 
 	/* Create notebook and set style */
 	sakura->notebook = gtk_notebook_new();
@@ -257,7 +249,7 @@ void Sakura::init()
 	g_signal_connect(G_OBJECT(sakura->main_window), "delete_event",
 			G_CALLBACK(sakura_delete_event), NULL);
 	g_signal_connect(G_OBJECT(sakura->main_window), "destroy",
-			G_CALLBACK(sakura_destroy_window), NULL);
+			G_CALLBACK(sakura_destroy_window), sakura);
 	g_signal_connect(G_OBJECT(sakura->main_window), "key-press-event",
 			G_CALLBACK(sakura_on_key_press), sakura);
 	g_signal_connect(G_OBJECT(sakura->main_window), "configure-event",
@@ -270,8 +262,8 @@ void Sakura::init()
 			G_CALLBACK(sakura_window_show_event), NULL);
 	// g_signal_connect(G_OBJECT(sakura->notebook), "focus-in-event",
 	// G_CALLBACK(sakura_notebook_focus_in), NULL);
-	g_signal_connect(
-			sakura->notebook, "scroll-event", G_CALLBACK(sakura_notebook_scroll), NULL);
+	g_signal_connect(sakura->notebook, "scroll-event", G_CALLBACK(sakura_notebook_scroll),
+			sakura);
 
 	/* Add initial tabs (1 by default) */
 	for (i = 0; i < option_ntabs; i++)
@@ -556,6 +548,15 @@ void Sakura::on_eof(GtkWidget *widget)
 	}
 }
 
+void Sakura::on_page_removed(GtkWidget *widget)
+{
+	if (gtk_notebook_get_n_pages(GTK_NOTEBOOK(notebook)) == 1) {
+		/* If the first tab is disabled, window size changes and we need
+		 * to recalculate its size */
+		sakura_set_size();
+	}
+}
+
 void Sakura::close_tab(GtkWidget *)
 {
 	pid_t pgid;
@@ -667,4 +668,39 @@ void Sakura::beep(GtkWidget *widget)
 	if (config.urgent_bell) {
 		gtk_window_set_urgency_hint(GTK_WINDOW(main_window), TRUE);
 	}
+}
+
+gboolean Sakura::notebook_scoll(GtkWidget *widget, GdkEventScroll *event)
+{
+	gint page = gtk_notebook_get_current_page(GTK_NOTEBOOK(notebook));
+	gint npages = gtk_notebook_get_n_pages(GTK_NOTEBOOK(notebook));
+
+	switch (event->direction) {
+	case GDK_SCROLL_DOWN: {
+		if (config.stop_tab_cycling_at_end_tabs == 1) {
+			gtk_notebook_set_current_page(
+					GTK_NOTEBOOK(notebook), --page >= 0 ? page : 0);
+		} else {
+			gtk_notebook_set_current_page(
+					GTK_NOTEBOOK(notebook), --page >= 0 ? page : npages - 1);
+		}
+		break;
+	}
+	case GDK_SCROLL_UP: {
+		if (config.stop_tab_cycling_at_end_tabs == 1) {
+			gtk_notebook_set_current_page(GTK_NOTEBOOK(notebook),
+					++page < npages ? page : npages - 1);
+		} else {
+			gtk_notebook_set_current_page(
+					GTK_NOTEBOOK(notebook), ++page < npages ? page : 0);
+		}
+		break;
+	}
+	case GDK_SCROLL_LEFT:
+	case GDK_SCROLL_RIGHT:
+	case GDK_SCROLL_SMOOTH:
+		break;
+	}
+
+	return FALSE;
 }
