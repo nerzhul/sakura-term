@@ -9,11 +9,11 @@
 #include "palettes.h"
 #include "sakuraold.h"
 
-#define NOTEBOOK_CSS                                                                     \
-	"* {\n"                                                                          \
-	"color : rgba(0,0,0,1.0);\n"                                                     \
-	"background-color : rgba(0,0,0,1.0);\n"                                          \
-	"border-color : rgba(0,0,0,1.0);\n"                                              \
+#define NOTEBOOK_CSS                                                                               \
+	"* {\n"                                                                                    \
+	"color : rgba(0,0,0,1.0);\n"                                                               \
+	"background-color : rgba(0,0,0,1.0);\n"                                                    \
+	"border-color : rgba(0,0,0,1.0);\n"                                                        \
 	"}"
 
 #define HTTP_REGEXP "(ftp|http)s?://[^ \t\n\b()<>{}«»\\[\\]\'\"]+[^.]"
@@ -41,36 +41,38 @@ static gboolean sakura_delete_event(GtkWidget *widget, void *data)
 	if (!sakura->config.less_questions) {
 		npages = gtk_notebook_get_n_pages(GTK_NOTEBOOK(sakura->notebook));
 
-		/* Check for each tab if there are running processes. Use tcgetpgrp to compare to the shell PGID */
-		for (i=0; i < npages; i++) {
+		/* Check for each tab if there are running processes. Use tcgetpgrp to compare to
+		 * the shell PGID */
+		for (i = 0; i < npages; i++) {
 
 			term = sakura_get_page_term(sakura, i);
-			pgid = tcgetpgrp(vte_pty_get_fd(vte_terminal_get_pty(VTE_TERMINAL(term->vte))));
+			pgid = tcgetpgrp(vte_pty_get_fd(
+					vte_terminal_get_pty(VTE_TERMINAL(term->vte))));
 
 			/* If running processes are found, we ask one time and exit */
-			if ( (pgid != -1) && (pgid != term->pid)) {
-				dialog=gtk_message_dialog_new(GTK_WINDOW(sakura->main_window), GTK_DIALOG_MODAL,
-											  GTK_MESSAGE_QUESTION, GTK_BUTTONS_YES_NO,
-											  _("There are running processes.\n\nDo you really want to close Sakura?"));
+			if ((pgid != -1) && (pgid != term->pid)) {
+				dialog = gtk_message_dialog_new(GTK_WINDOW(sakura->main_window),
+						GTK_DIALOG_MODAL, GTK_MESSAGE_QUESTION,
+						GTK_BUTTONS_YES_NO,
+						_("There are running processes.\n\nDo you really "
+						  "want to close Sakura?"));
 
-				response=gtk_dialog_run(GTK_DIALOG(dialog));
+				response = gtk_dialog_run(GTK_DIALOG(dialog));
 				gtk_widget_destroy(dialog);
 
-				if (response==GTK_RESPONSE_YES) {
+				if (response == GTK_RESPONSE_YES) {
 					sakura_config_done();
 					return FALSE;
 				} else {
 					return TRUE;
 				}
 			}
-
 		}
 	}
 
 	sakura_config_done();
 	return FALSE;
 }
-
 
 static void sakura_destroy_window(GtkWidget *widget, void *data)
 {
@@ -132,8 +134,8 @@ void Sakura::init()
 	gchar *cfgtmp = NULL;
 
 	/* set default title pattern from config or NULL */
-	sakura->tab_default_title = g_key_file_get_string(
-			sakura->cfg, cfg_group, "tab_default_title", NULL);
+	sakura->tab_default_title =
+			g_key_file_get_string(sakura->cfg, cfg_group, "tab_default_title", NULL);
 
 	/* Use always GTK header bar*/
 	g_object_set(gtk_settings_get_default(), "gtk-dialogs-use-header", TRUE, NULL);
@@ -228,15 +230,15 @@ void Sakura::init()
 	sakura->externally_modified = false;
 
 	error = nullptr;
-	sakura->http_vteregexp = vte_regex_new_for_match(
-			HTTP_REGEXP, strlen(HTTP_REGEXP), 0, &error);
+	sakura->http_vteregexp =
+			vte_regex_new_for_match(HTTP_REGEXP, strlen(HTTP_REGEXP), 0, &error);
 	if (!sakura->http_vteregexp) {
 		SAY("http_regexp: %s", error->message);
 		g_error_free(error);
 	}
 	error = nullptr;
-	sakura->mail_vteregexp = vte_regex_new_for_match(
-			MAIL_REGEXP, strlen(MAIL_REGEXP), 0, &error);
+	sakura->mail_vteregexp =
+			vte_regex_new_for_match(MAIL_REGEXP, strlen(MAIL_REGEXP), 0, &error);
 	if (!sakura->mail_vteregexp) {
 		SAY("mail_regexp: %s", error->message);
 		g_error_free(error);
@@ -268,8 +270,8 @@ void Sakura::init()
 			G_CALLBACK(sakura_window_show_event), NULL);
 	// g_signal_connect(G_OBJECT(sakura->notebook), "focus-in-event",
 	// G_CALLBACK(sakura_notebook_focus_in), NULL);
-	g_signal_connect(sakura->notebook, "scroll-event",
-			G_CALLBACK(sakura_notebook_scroll), NULL);
+	g_signal_connect(
+			sakura->notebook, "scroll-event", G_CALLBACK(sakura_notebook_scroll), NULL);
 
 	/* Add initial tabs (1 by default) */
 	for (i = 0; i < option_ntabs; i++)
@@ -358,24 +360,18 @@ gboolean Sakura::on_key_press(GtkWidget *widget, GdkEventKey *event)
 			else if (sakura_tokeycode(GDK_KEY_9) == keycode)
 				topage = 8;
 			if (topage <= npages)
-				gtk_notebook_set_current_page(
-						GTK_NOTEBOOK(notebook), topage);
+				gtk_notebook_set_current_page(GTK_NOTEBOOK(notebook), topage);
 			return TRUE;
 		} else if (keycode == sakura_tokeycode(config.keymap.prev_tab_key)) {
-			if (gtk_notebook_get_current_page(
-					    GTK_NOTEBOOK(notebook)) == 0) {
-				gtk_notebook_set_current_page(
-						GTK_NOTEBOOK(notebook),
-						npages - 1);
+			if (gtk_notebook_get_current_page(GTK_NOTEBOOK(notebook)) == 0) {
+				gtk_notebook_set_current_page(GTK_NOTEBOOK(notebook), npages - 1);
 			} else {
 				gtk_notebook_prev_page(GTK_NOTEBOOK(notebook));
 			}
 			return TRUE;
 		} else if (keycode == sakura_tokeycode(config.keymap.next_tab_key)) {
-			if (gtk_notebook_get_current_page(GTK_NOTEBOOK(
-					    notebook)) == (npages - 1)) {
-				gtk_notebook_set_current_page(
-						GTK_NOTEBOOK(notebook), 0);
+			if (gtk_notebook_get_current_page(GTK_NOTEBOOK(notebook)) == (npages - 1)) {
+				gtk_notebook_set_current_page(GTK_NOTEBOOK(notebook), 0);
 			} else {
 				gtk_notebook_next_page(GTK_NOTEBOOK(notebook));
 			}
@@ -384,8 +380,7 @@ gboolean Sakura::on_key_press(GtkWidget *widget, GdkEventKey *event)
 	}
 
 	/* Move tab keybinding pressed */
-	if (((event->state & config.move_tab_accelerator) ==
-			    config.move_tab_accelerator)) {
+	if (((event->state & config.move_tab_accelerator) == config.move_tab_accelerator)) {
 		if (keycode == sakura_tokeycode(config.keymap.prev_tab_key)) {
 			sakura_move_tab(BACKWARDS);
 			return TRUE;
@@ -407,8 +402,7 @@ gboolean Sakura::on_key_press(GtkWidget *widget, GdkEventKey *event)
 	}
 
 	/* Show scrollbar keybinding pressed */
-	if ((event->state & config.scrollbar_accelerator) ==
-			config.scrollbar_accelerator) {
+	if ((event->state & config.scrollbar_accelerator) == config.scrollbar_accelerator) {
 		if (keycode == sakura_tokeycode(config.keymap.scrollbar_key)) {
 			sakura_show_scrollbar(NULL, NULL);
 			return TRUE;
@@ -416,8 +410,7 @@ gboolean Sakura::on_key_press(GtkWidget *widget, GdkEventKey *event)
 	}
 
 	/* Set tab name keybinding pressed */
-	if ((event->state & config.set_tab_name_accelerator) ==
-			config.set_tab_name_accelerator) {
+	if ((event->state & config.set_tab_name_accelerator) == config.set_tab_name_accelerator) {
 		if (keycode == sakura_tokeycode(config.keymap.set_tab_name_key)) {
 			sakura_set_name_dialog(NULL, NULL);
 			return TRUE;
@@ -433,13 +426,11 @@ gboolean Sakura::on_key_press(GtkWidget *widget, GdkEventKey *event)
 	}
 
 	/* Increase/decrease font size keybinding pressed */
-	if ((event->state & config.font_size_accelerator) ==
-			config.font_size_accelerator) {
+	if ((event->state & config.font_size_accelerator) == config.font_size_accelerator) {
 		if (keycode == sakura_tokeycode(config.keymap.increase_font_size_key)) {
 			sakura_increase_font(NULL, NULL);
 			return TRUE;
-		} else if (keycode ==
-				sakura_tokeycode(config.keymap.decrease_font_size_key)) {
+		} else if (keycode == sakura_tokeycode(config.keymap.decrease_font_size_key)) {
 			sakura_decrease_font(NULL, NULL);
 			return TRUE;
 		}
@@ -452,8 +443,7 @@ gboolean Sakura::on_key_press(GtkWidget *widget, GdkEventKey *event)
 	}
 
 	/* Change in colorset */
-	if ((event->state & config.set_colorset_accelerator) ==
-			config.set_colorset_accelerator) {
+	if ((event->state & config.set_colorset_accelerator) == config.set_colorset_accelerator) {
 		int i;
 		for (i = 0; i < NUM_COLORSETS; i++) {
 			if (keycode == sakura_tokeycode(config.keymap.set_colorset_keys[i])) {
@@ -474,8 +464,7 @@ void Sakura::del_tab(gint page, bool exit_if_needed)
 	/* When there's only one tab use the shell title, if provided */
 	if (npages == 2) {
 		term = sakura_get_page_term(this, 0);
-		const char *title =
-				vte_terminal_get_window_title(VTE_TERMINAL(term->vte));
+		const char *title = vte_terminal_get_window_title(VTE_TERMINAL(term->vte));
 		if (title)
 			gtk_window_set_title(GTK_WINDOW(main_window), title);
 	}
