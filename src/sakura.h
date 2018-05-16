@@ -11,6 +11,7 @@ public:
 
 	void beep(GtkWidget *);
 	void del_tab(gint, bool exit_if_needed = false);
+	void toggle_fullscreen(GtkWidget *);
 
 	GtkWidget *main_window;
 	GtkWidget *notebook;
@@ -24,7 +25,6 @@ public:
 	glong columns;
 	glong rows;
 	gint label_count;
-	bool fullscreen;
 	bool keep_fc;                    /* Global flag to indicate that we don't want changes in the files and columns values */
 	bool config_modified;            /* Configuration has been modified */
 	bool externally_modified;        /* Configuration file has been modified by another process */
@@ -43,4 +43,5 @@ public:
 	char *argv[3];
 	Config config;
 private:
+	bool m_fullscreen = false;
 };

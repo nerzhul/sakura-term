@@ -217,13 +217,12 @@ void Sakura::init()
 
 	/* These options are exclusive */
 	if (option_fullscreen) {
-		sakura_fullscreen(nullptr, NULL);
+		sakura_fullscreen(nullptr, sakura);
 	} else if (option_maximize) {
 		gtk_window_maximize(GTK_WINDOW(sakura->main_window));
 	}
 
 	sakura->label_count = 1;
-	sakura->fullscreen = FALSE;
 	sakura->resized = FALSE;
 	sakura->keep_fc = false;
 	sakura->externally_modified = false;
@@ -448,7 +447,7 @@ gboolean Sakura::on_key_press(GtkWidget *widget, GdkEventKey *event)
 
 	/* F11 (fullscreen) pressed */
 	if (keycode == sakura_tokeycode(config.keymap.fullscreen_key)) {
-		sakura_fullscreen(NULL, NULL);
+		toggle_fullscreen(nullptr);
 		return TRUE;
 	}
 
@@ -508,6 +507,17 @@ void Sakura::del_tab(gint page, bool exit_if_needed)
 		if (gtk_notebook_get_n_pages(GTK_NOTEBOOK(notebook)) == 0)
 			destroy(nullptr);
 	}
+}
+
+void Sakura::toggle_fullscreen(GtkWidget *)
+{
+	if (!m_fullscreen) {
+		gtk_window_fullscreen(GTK_WINDOW(main_window));
+	} else {
+		gtk_window_unfullscreen(GTK_WINDOW(main_window));
+	}
+
+	m_fullscreen = !m_fullscreen;
 }
 
 void Sakura::beep(GtkWidget *widget)

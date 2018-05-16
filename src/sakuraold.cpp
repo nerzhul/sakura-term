@@ -1385,16 +1385,10 @@ sakura_close_tab (GtkWidget *widget, void *data)
 }
 
 
-void
-sakura_fullscreen (GtkWidget *widget, void *data)
+void sakura_fullscreen (GtkWidget *widget, void *data)
 {
-	if (sakura->fullscreen!=TRUE) {
-		sakura->fullscreen=TRUE;
-		gtk_window_fullscreen(GTK_WINDOW(sakura->main_window));
-	} else {
-		gtk_window_unfullscreen(GTK_WINDOW(sakura->main_window));
-		sakura->fullscreen=FALSE;
-	}
+	auto *obj = (Sakura *)data;
+	obj->toggle_fullscreen(widget);
 }
 
 
@@ -1720,7 +1714,7 @@ void sakura_init_popup()
 	g_signal_connect(G_OBJECT(sakura->item_open_mail), "activate", G_CALLBACK(sakura_open_mail), NULL);
 	g_signal_connect(G_OBJECT(sakura->item_open_link), "activate", G_CALLBACK(sakura_open_url), NULL);
 	g_signal_connect(G_OBJECT(sakura->item_copy_link), "activate", G_CALLBACK(sakura_copy_url), NULL);
-	g_signal_connect(G_OBJECT(item_fullscreen), "activate", G_CALLBACK(sakura_fullscreen), NULL);
+	g_signal_connect(G_OBJECT(item_fullscreen), "activate", G_CALLBACK(sakura_fullscreen), sakura);
 
 	gtk_widget_show_all(sakura->menu);
 
