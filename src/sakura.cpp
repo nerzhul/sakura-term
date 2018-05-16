@@ -469,45 +469,44 @@ gboolean Sakura::on_key_press(GtkWidget *widget, GdkEventKey *event)
 /* Delete the notebook tab passed as a parameter */
 void Sakura::del_tab(gint page, bool exit_if_needed)
 {
-	gint npages;
-	auto *term = sakura_get_page_term(sakura, page);
-	npages = gtk_notebook_get_n_pages(GTK_NOTEBOOK(sakura->notebook));
+	auto *term = sakura_get_page_term(this, page);
+	gint npages = gtk_notebook_get_n_pages(GTK_NOTEBOOK(notebook));
 
 	/* When there's only one tab use the shell title, if provided */
 	if (npages == 2) {
-		term = sakura_get_page_term(sakura, 0);
+		term = sakura_get_page_term(this, 0);
 		const char *title =
 				vte_terminal_get_window_title(VTE_TERMINAL(term->vte));
 		if (title)
-			gtk_window_set_title(GTK_WINDOW(sakura->main_window), title);
+			gtk_window_set_title(GTK_WINDOW(main_window), title);
 	}
 
-	term = sakura_get_page_term(sakura, page);
+	term = sakura_get_page_term(this, page);
 
 	/* Do the first tab checks BEFORE deleting the tab, to ensure correct
 	 * sizes are calculated when the tab is deleted */
 	if (npages == 2) {
-		if (sakura->config.first_tab) {
-			gtk_notebook_set_show_tabs(GTK_NOTEBOOK(sakura->notebook), TRUE);
+		if (config.first_tab) {
+			gtk_notebook_set_show_tabs(GTK_NOTEBOOK(notebook), TRUE);
 		} else {
-			gtk_notebook_set_show_tabs(GTK_NOTEBOOK(sakura->notebook), FALSE);
+			gtk_notebook_set_show_tabs(GTK_NOTEBOOK(notebook), FALSE);
 		}
 		sakura->keep_fc = true;
 	}
 
 	gtk_widget_hide(term->hbox);
-	gtk_notebook_remove_page(GTK_NOTEBOOK(sakura->notebook), page);
+	gtk_notebook_remove_page(GTK_NOTEBOOK(notebook), page);
 
 	/* Find the next page, if it exists, and grab focus */
-	if (gtk_notebook_get_n_pages(GTK_NOTEBOOK(sakura->notebook)) > 0) {
-		page = gtk_notebook_get_current_page(GTK_NOTEBOOK(sakura->notebook));
-		term = sakura_get_page_term(sakura, page);
+	if (gtk_notebook_get_n_pages(GTK_NOTEBOOK(notebook)) > 0) {
+		page = gtk_notebook_get_current_page(GTK_NOTEBOOK(notebook));
+		term = sakura_get_page_term(this, page);
 		gtk_widget_grab_focus(term->vte);
 	}
 
 	if (exit_if_needed) {
-		if (gtk_notebook_get_n_pages(GTK_NOTEBOOK(sakura->notebook)) == 0)
-			sakura->destroy(nullptr);
+		if (gtk_notebook_get_n_pages(GTK_NOTEBOOK(notebook)) == 0)
+			destroy(nullptr);
 	}
 }
 
