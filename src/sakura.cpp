@@ -525,19 +525,21 @@ void Sakura::close_tab(GtkWidget *)
 	term = sakura_get_page_term(this, page);
 
 	/* Only write configuration to disk if it's the last tab */
-	if (npages==1) {
+	if (npages == 1) {
 		sakura_config_done();
 	}
 
-	/* Check if there are running processes for this tab. Use tcgetpgrp to compare to the shell PGID */
+	/* Check if there are running processes for this tab. Use tcgetpgrp to compare to the shell
+	 * PGID */
 	pgid = tcgetpgrp(vte_pty_get_fd(vte_terminal_get_pty(VTE_TERMINAL(term->vte))));
 
-	if ( (pgid != -1) && (pgid != term->pid) && (!config.less_questions) ) {
-		dialog=gtk_message_dialog_new(GTK_WINDOW(main_window), GTK_DIALOG_MODAL,
-									  GTK_MESSAGE_QUESTION, GTK_BUTTONS_YES_NO,
-									  _("There is a running process in this terminal.\n\nDo you really want to close it?"));
+	if ((pgid != -1) && (pgid != term->pid) && (!config.less_questions)) {
+		dialog = gtk_message_dialog_new(GTK_WINDOW(main_window), GTK_DIALOG_MODAL,
+				GTK_MESSAGE_QUESTION, GTK_BUTTONS_YES_NO,
+				_("There is a running process in this terminal.\n\nDo you really "
+				  "want to close it?"));
 
-		response=gtk_dialog_run(GTK_DIALOG(dialog));
+		response = gtk_dialog_run(GTK_DIALOG(dialog));
 		gtk_widget_destroy(dialog);
 
 		if (response == GTK_RESPONSE_YES) {
