@@ -358,7 +358,7 @@ void Sakura::set_colors()
 	for (i = (n_pages - 1); i >= 0; i--) {
 		term = sakura_get_page_term(sakura, i);
 
-		if (!config.background_image.empty()) {
+		if (!config.get_background_image().empty()) {
 			if (!term->bg_image_callback_id) {
 				term->bg_image_callback_id = g_signal_connect (term->hbox, "draw",
 					G_CALLBACK(terminal_screen_image_draw_cb), term);
@@ -366,7 +366,7 @@ void Sakura::set_colors()
 
 			g_clear_object (&term->bg_image);
 			GError *error = nullptr;
-			term->bg_image = gdk_pixbuf_new_from_file(config.background_image.c_str(),
+			term->bg_image = gdk_pixbuf_new_from_file(config.get_background_image().c_str(),
 				&error);
 			if (error) {
 				SAY("Failed to load background image %s", error->message);
@@ -375,7 +375,7 @@ void Sakura::set_colors()
 
 			gtk_widget_queue_draw(GTK_WIDGET(term->hbox));
 
-			sakura->backcolors[term->colorset].alpha = 0.9;
+			sakura->backcolors[term->colorset].alpha = config.get_background_alpha();
 		}
 
 		vte_terminal_set_colors(VTE_TERMINAL(term->vte),
