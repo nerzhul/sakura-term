@@ -358,7 +358,6 @@ void Sakura::set_colors()
 	for (i = (n_pages - 1); i >= 0; i--) {
 		term = sakura_get_page_term(sakura, i);
 
-		config.background_image = "/home/nerzhul/Images/17966.jpg";
 		if (!config.background_image.empty()) {
 			if (!term->bg_image_callback_id) {
 				term->bg_image_callback_id = g_signal_connect (term->hbox, "draw",
