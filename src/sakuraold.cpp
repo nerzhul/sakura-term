@@ -46,6 +46,7 @@
 #include "palettes.h"
 #include "sakura.h"
 #include "sakuraold.h"
+#include "terminal.h"
 
 #define HIG_DIALOG_CSS                                                                             \
 	"* {\n"                                                                                    \
@@ -66,11 +67,6 @@
 #define FADE_PERCENT 60
 
 #define ERROR_BUFFER_LENGTH 256
-
-#define sakura_set_page_term(sakura, page_idx, term)                                               \
-	g_object_set_qdata_full(G_OBJECT(gtk_notebook_get_nth_page(                                \
-						(GtkNotebook *)sakura->notebook, page_idx)),       \
-			term_data_id, term, (GDestroyNotify)g_free);
 
 /* Callbacks */
 static gboolean sakura_button_press(GtkWidget *, GdkEventButton *, gpointer);
@@ -130,7 +126,7 @@ void search(VteTerminal *vte, const char *pattern, bool reverse)
 static gboolean sakura_button_press(
 		GtkWidget *widget, GdkEventButton *button_event, gpointer user_data)
 {
-	struct terminal *term;
+	Terminal *term;
 	gint page, tag;
 
 	if (button_event->type != GDK_BUTTON_PRESS)
@@ -209,7 +205,7 @@ gboolean sakura_focus_out(GtkWidget *widget, GdkEvent *event, void *data)
 // static gboolean
 // sakura_notebook_focus_in(GtkWidget *widget, void *data)
 //{
-//	struct terminal *term;
+//	Terminal *term;
 //	int index;
 //
 //	index = gtk_notebook_get_current_page(GTK_NOTEBOOK(sakura->notebook));
@@ -286,7 +282,7 @@ static void sakura_eof(GtkWidget *widget, void *data)
  * titles */
 static void sakura_title_changed(GtkWidget *widget, void *data)
 {
-	struct terminal *term;
+	Terminal *term;
 	const char *title;
 	gint n_pages;
 	gint modified_page;
@@ -353,6 +349,8 @@ void sakura_config_done()
 			sakura->config.write();
 		}
 	}
+
+	free(cfgdata);
 }
 
 void sakura_window_show_event(GtkWidget *widget, gpointer data)
@@ -391,7 +389,7 @@ void sakura_set_name_dialog(GtkWidget *widget, void *data)
 	GtkWidget *name_hbox; /* We need this for correct spacing */
 	gint response;
 	gint page;
-	struct terminal *term;
+	Terminal *term;
 	const gchar *text;
 
 	page = gtk_notebook_get_current_page(GTK_NOTEBOOK(sakura->notebook));
@@ -450,7 +448,7 @@ void sakura_set_name_dialog(GtkWidget *widget, void *data)
 void sakura_set_colorset(int cs)
 {
 	gint page;
-	struct terminal *term;
+	Terminal *term;
 
 	if (cs < 0 || cs >= NUM_COLORSETS)
 		return;
@@ -461,30 +459,7 @@ void sakura_set_colorset(int cs)
 
 	sakura_set_config_integer("last_colorset", term->colorset + 1);
 
-	sakura_set_colors();
-}
-
-/* Set the terminal colors for all notebook tabs */
-void sakura_set_colors()
-{
-	int i;
-	int n_pages = gtk_notebook_get_n_pages(GTK_NOTEBOOK(sakura->notebook));
-	struct terminal *term;
-
-	for (i = (n_pages - 1); i >= 0; i--) {
-		term = sakura_get_page_term(sakura, i);
-		// SAY("Setting colorset %d", term->colorset+1);
-
-		vte_terminal_set_colors(VTE_TERMINAL(term->vte),
-				&sakura->forecolors[term->colorset],
-				&sakura->backcolors[term->colorset], sakura->config.palette,
-				PALETTE_SIZE);
-		vte_terminal_set_color_cursor(
-				VTE_TERMINAL(term->vte), &sakura->curscolors[term->colorset]);
-	}
-
-	/* Main window opacity must be set. Otherwise vte widget will remain opaque */
-	gtk_widget_set_opacity(sakura->main_window, sakura->backcolors[term->colorset].alpha);
+	sakura->set_colors();
 }
 
 /* Callback from the color change dialog. Updates the contents of that
@@ -542,7 +517,7 @@ static void sakura_color_dialog(GtkWidget *widget, void *data)
 	GtkAdjustment *spinner_adj;
 	GtkWidget *hbox_fore, *hbox_back, *hbox_curs, *hbox_sets, *hbox_opacity;
 	gint response;
-	struct terminal *term;
+	Terminal *term;
 	gint page;
 	int cs;
 	int i;
@@ -685,7 +660,7 @@ static void sakura_color_dialog(GtkWidget *widget, void *data)
 		 * hopefully will not mind. */
 		term->colorset = gtk_combo_box_get_active(GTK_COMBO_BOX(set_combo));
 		sakura_set_config_integer("last_colorset", term->colorset + 1);
-		sakura_set_colors();
+		sakura->set_colors();
 	}
 
 	gtk_widget_destroy(color_dialog);
@@ -694,7 +669,7 @@ static void sakura_color_dialog(GtkWidget *widget, void *data)
 void sakura_fade_out()
 {
 	gint page;
-	struct terminal *term;
+	Terminal *term;
 
 	page = gtk_notebook_get_current_page(GTK_NOTEBOOK(sakura->notebook));
 	term = sakura_get_page_term(sakura, page);
@@ -718,7 +693,7 @@ void sakura_fade_out()
 void sakura_fade_in()
 {
 	gint page;
-	struct terminal *term;
+	Terminal *term;
 
 	page = gtk_notebook_get_current_page(GTK_NOTEBOOK(sakura->notebook));
 	term = sakura_get_page_term(sakura, page);
@@ -782,7 +757,7 @@ void sakura_search_dialog(GtkWidget *widget, void *data)
 	response = gtk_dialog_run(GTK_DIALOG(title_dialog));
 	if (response == GTK_RESPONSE_ACCEPT) {
 		gint page;
-		struct terminal *term;
+		Terminal *term;
 		page = gtk_notebook_get_current_page(GTK_NOTEBOOK(sakura->notebook));
 		term = sakura_get_page_term(sakura, page);
 		search(VTE_TERMINAL(term->vte), gtk_entry_get_text(GTK_ENTRY(entry)), 0);
@@ -947,7 +922,7 @@ static void sakura_show_close_button(GtkWidget *widget, void *data)
 void sakura_show_scrollbar(GtkWidget *widget, void *data)
 {
 	gint page;
-	struct terminal *term;
+	Terminal *term;
 	gint n_pages;
 	int i;
 
@@ -989,7 +964,7 @@ static void sakura_urgent_bell(GtkWidget *widget, void *data)
 static void sakura_audible_bell(GtkWidget *widget, void *data)
 {
 	gint page;
-	struct terminal *term;
+	Terminal *term;
 
 	page = gtk_notebook_get_current_page(GTK_NOTEBOOK(sakura->notebook));
 	term = sakura_get_page_term(sakura, page);
@@ -1006,7 +981,7 @@ static void sakura_audible_bell(GtkWidget *widget, void *data)
 static void sakura_blinking_cursor(GtkWidget *widget, void *data)
 {
 	gint page;
-	struct terminal *term;
+	Terminal *term;
 
 	page = gtk_notebook_get_current_page(GTK_NOTEBOOK(sakura->notebook));
 	term = sakura_get_page_term(sakura, page);
@@ -1023,7 +998,7 @@ static void sakura_blinking_cursor(GtkWidget *widget, void *data)
 static void sakura_allow_bold(GtkWidget *widget, void *data)
 {
 	gint page;
-	struct terminal *term;
+	Terminal *term;
 
 	page = gtk_notebook_get_current_page(GTK_NOTEBOOK(sakura->notebook));
 	term = sakura_get_page_term(sakura, page);
@@ -1051,7 +1026,7 @@ static void sakura_stop_tab_cycling_at_end_tabs(GtkWidget *widget, void *data)
 
 static void sakura_set_cursor(GtkWidget *widget, void *data)
 {
-	struct terminal *term;
+	Terminal *term;
 	int n_pages, i;
 
 	char *cursor_string = (char *)data;
@@ -1099,7 +1074,7 @@ static void sakura_set_palette(GtkWidget *widget, void *data)
 		}
 
 		/* Palette changed so we ¿need? to set colors again */
-		sakura_set_colors();
+		sakura->set_colors();
 
 		sakura_set_config_string("palette", palette);
 	}
@@ -1108,7 +1083,7 @@ static void sakura_set_palette(GtkWidget *widget, void *data)
 /* Retrieve the cwd of the specified term page.
  * Original function was from terminal-screen.c of gnome-terminal, copyright (C) 2001 Havoc
  * Pennington Adapted by Hong Jen Yee, non-linux shit removed by David Gómez */
-static char *sakura_get_term_cwd(struct terminal *term)
+static char *sakura_get_term_cwd(Terminal *term)
 {
 	char *cwd = NULL;
 
@@ -1173,7 +1148,7 @@ static void sakura_setname_entry_changed(GtkWidget *widget, void *data)
 void sakura_copy(GtkWidget *widget, void *data)
 {
 	gint page;
-	struct terminal *term;
+	Terminal *term;
 
 	page = gtk_notebook_get_current_page(GTK_NOTEBOOK(sakura->notebook));
 	term = sakura_get_page_term(sakura, page);
@@ -1185,7 +1160,7 @@ void sakura_copy(GtkWidget *widget, void *data)
 void sakura_paste(GtkWidget *widget, void *data)
 {
 	gint page;
-	struct terminal *term;
+	Terminal *term;
 
 	page = gtk_notebook_get_current_page(GTK_NOTEBOOK(sakura->notebook));
 	term = sakura_get_page_term(sakura, page);
@@ -1215,7 +1190,7 @@ static void sakura_closebutton_clicked(GtkWidget *widget, void *data)
 {
 	gint page;
 	GtkWidget *hbox = (GtkWidget *)data;
-	struct terminal *term;
+	Terminal *term;
 	pid_t pgid;
 	GtkWidget *dialog;
 	gint npages, response;
@@ -1271,7 +1246,7 @@ static void sakura_use_fading(GtkWidget *widget, void *data)
 		sakura->config.use_fading = false;
 		sakura_set_config_boolean("use_fading", FALSE);
 		sakura_fade_in();
-		sakura_set_colors();
+		sakura->set_colors();
 	}
 }
 
@@ -1577,7 +1552,7 @@ void sakura_init_popup()
 
 void sakura_set_size()
 {
-	struct terminal *term;
+	Terminal *term;
 	gint pad_x, pad_y;
 	gint char_width, char_height;
 	guint npages;
@@ -1647,7 +1622,7 @@ void sakura_set_size()
 static void sakura_set_font()
 {
 	gint n_pages;
-	struct terminal *term;
+	Terminal *term;
 	int i;
 
 	n_pages = gtk_notebook_get_n_pages(GTK_NOTEBOOK(sakura->notebook));
@@ -1681,7 +1656,7 @@ void sakura_move_tab(gint direction)
 static gint sakura_find_tab(VteTerminal *vte_term)
 {
 	gint matched_page, page, n_pages;
-	struct terminal *term;
+	Terminal *term;
 
 	n_pages = gtk_notebook_get_n_pages(GTK_NOTEBOOK(sakura->notebook));
 
@@ -1701,7 +1676,7 @@ static gint sakura_find_tab(VteTerminal *vte_term)
 
 static void sakura_set_tab_label_text(const gchar *title, gint page)
 {
-	struct terminal *term;
+	Terminal *term;
 	gchar *chopped_title;
 
 	term = sakura_get_page_term(sakura, page);
@@ -1725,7 +1700,7 @@ static void sakura_set_tab_label_text(const gchar *title, gint page)
 /* Callback for vte_terminal_spawn_async */
 void sakura_spawn_callback(VteTerminal *vte, GPid pid, GError *error, gpointer user_data)
 {
-	auto *term = (struct terminal *)user_data;
+	auto *term = (Terminal *)user_data;
 	// term = sakura_get_page_term(sakura, page);
 	if (pid == -1) { /* Fork has failed */
 		SAY("Error: %s", error->message);
@@ -1742,28 +1717,13 @@ static void sakura_beep(GtkWidget *w, void *data)
 
 void sakura_add_tab()
 {
-	struct terminal *term;
 	GtkWidget *tab_label_hbox;
 	GtkWidget *close_button;
 	int index;
 	int npages;
 	gchar *cwd = NULL;
-	gchar *label_text = _("Terminal %d");
 
-	term = g_new0(struct terminal, 1);
-
-	/* Create label for tabs */
-	term->label_set_byuser = false;
-
-	/* appling tab title pattern from config
-	 * (https://answers.launchpad.net/sakura/+question/267951) */
-	if (sakura->tab_default_title != NULL) {
-		label_text = sakura->tab_default_title;
-		term->label_set_byuser = true;
-	}
-
-	term->label_text = g_strdup_printf(label_text, sakura->label_count++);
-	term->label = gtk_label_new(term->label_text);
+	Terminal *term = new Terminal();
 
 	tab_label_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 2);
 	gtk_widget_set_hexpand(tab_label_hbox, TRUE);
@@ -1799,20 +1759,10 @@ void sakura_add_tab()
 
 	gtk_widget_show_all(tab_label_hbox);
 
-	/* Create new vte terminal, scrollbar, and pack it */
-	term->vte = vte_terminal_new();
-	term->scrollbar = gtk_scrollbar_new(GTK_ORIENTATION_VERTICAL,
-			gtk_scrollable_get_vadjustment(GTK_SCROLLABLE(term->vte)));
-	term->hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
-	gtk_box_pack_start(GTK_BOX(term->hbox), term->vte, TRUE, TRUE, 0);
-	gtk_box_pack_start(GTK_BOX(term->hbox), term->scrollbar, FALSE, FALSE, 0);
-
-	term->colorset = sakura->config.last_colorset - 1;
-
 	/* Select the directory to use for the new tab */
 	index = gtk_notebook_get_current_page(GTK_NOTEBOOK(sakura->notebook));
 	if (index >= 0) {
-		struct terminal *prev_term;
+		Terminal *prev_term;
 		prev_term = sakura_get_page_term(sakura, index);
 		cwd = sakura_get_term_cwd(prev_term);
 
@@ -1834,7 +1784,9 @@ void sakura_add_tab()
 	// TODO: Set group id to support detached tabs
 	// gtk_notebook_set_tab_detachable(GTK_NOTEBOOK(sakura->notebook), term->hbox, TRUE);
 
-	sakura_set_page_term(sakura, index, term);
+	g_object_set_qdata_full(G_OBJECT(gtk_notebook_get_nth_page(
+		(GtkNotebook *)sakura->notebook, index)), term_data_id, term, (GDestroyNotify)Terminal::free);
+
 
 	/* vte signals */
 	g_signal_connect(G_OBJECT(term->vte), "bell", G_CALLBACK(sakura_beep), sakura);
@@ -1871,7 +1823,7 @@ void sakura_add_tab()
 
 		gtk_notebook_set_show_border(GTK_NOTEBOOK(sakura->notebook), FALSE);
 		sakura_set_font();
-		sakura_set_colors();
+		sakura->set_colors();
 		/* Set size before showing the widgets but after setting the font */
 		sakura_set_size();
 
@@ -1988,7 +1940,7 @@ void sakura_add_tab()
 		/* Not the first tab */
 	} else {
 		sakura_set_font();
-		sakura_set_colors();
+		sakura->set_colors();
 		gtk_widget_show_all(term->hbox);
 		if (!sakura->config.show_scrollbar) {
 			gtk_widget_hide(term->scrollbar);
@@ -2029,7 +1981,7 @@ void sakura_add_tab()
 			VTE_TERMINAL(term->vte), sakura->config.allow_bold ? TRUE : FALSE);
 	vte_terminal_set_cursor_shape(VTE_TERMINAL(term->vte), sakura->config.cursor_type);
 
-	// sakura_set_colors();
+	// sakura->set_colors();
 
 	/* FIXME: Possible race here. Find some way to force to process all configure
 	 * events before setting keep_fc again to false */

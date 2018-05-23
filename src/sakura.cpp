@@ -8,6 +8,7 @@
 #include "debug.h"
 #include "palettes.h"
 #include "sakuraold.h"
+#include "terminal.h"
 
 #define NOTEBOOK_CSS                                                                               \
 	"* {\n"                                                                                    \
@@ -19,6 +20,23 @@
 #define HTTP_REGEXP "(ftp|http)s?://[^ \t\n\b()<>{}«»\\[\\]\'\"]+[^.]"
 #define MAIL_REGEXP "[^ \t\n\b]+@([^ \t\n\b]+\\.)+([a-zA-Z]{2,4})"
 
+Sakura::~Sakura()
+{
+	for (uint8_t i=0; i < 3; i++) {
+		if (argv[i]) {
+			free(argv[i]);
+		}
+	}
+
+	if (http_vteregexp) {
+		vte_regex_unref(http_vteregexp);
+	}
+
+	if (mail_vteregexp) {
+		vte_regex_unref(mail_vteregexp);
+	}
+}
+
 static const gint BACKWARDS = 2;
 
 static void sakura_on_key_press(GtkWidget *widget, GdkEventKey *event, gpointer data)
@@ -29,7 +47,7 @@ static void sakura_on_key_press(GtkWidget *widget, GdkEventKey *event, gpointer 
 
 static gboolean sakura_delete_event(GtkWidget *widget, void *data)
 {
-	struct terminal *term;
+	Terminal *term;
 	GtkWidget *dialog;
 	gint response;
 	gint npages;
@@ -288,6 +306,93 @@ void Sakura::destroy(GtkWidget *)
 	gtk_main_quit();
 }
 
+static gboolean
+terminal_screen_image_draw_cb (GtkWidget *widget, cairo_t *cr, void *userdata)
+{
+	auto *obj = (Terminal *)userdata;
+	GdkRectangle target_rect;
+	GtkAllocation alloc;
+	cairo_surface_t *child_surface;
+	cairo_t *child_cr;
+
+	if (!obj->bg_image)
+		return FALSE;
+
+	gtk_widget_get_allocation (widget, &alloc);
+
+	target_rect.x = 0;
+	target_rect.y = 0;
+	target_rect.width = alloc.width;
+	target_rect.height = alloc.height;
+
+	child_surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, alloc.width, alloc.height);
+	child_cr = cairo_create (child_surface);
+
+	g_signal_handler_block (widget, obj->bg_image_callback_id);
+	gtk_widget_draw (widget, child_cr);
+	g_signal_handler_unblock (widget, obj->bg_image_callback_id);
+
+	gdk_cairo_set_source_pixbuf (cr, obj->bg_image, 0, 0);
+	cairo_pattern_set_extend (cairo_get_source (cr), CAIRO_EXTEND_REPEAT);
+
+	gdk_cairo_rectangle (cr, &target_rect);
+	cairo_fill (cr);
+
+	cairo_set_source_surface (cr, child_surface, 0, 0);
+	cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
+	cairo_paint (cr);
+
+	cairo_destroy (child_cr);
+	cairo_surface_destroy (child_surface);
+
+	return TRUE;
+}
+
+/* Set the terminal colors for all notebook tabs */
+void Sakura::set_colors()
+{
+	int i;
+	int n_pages = gtk_notebook_get_n_pages(GTK_NOTEBOOK(sakura->notebook));
+	Terminal *term;
+
+	for (i = (n_pages - 1); i >= 0; i--) {
+		term = sakura_get_page_term(sakura, i);
+
+		config.background_image = "/home/nerzhul/Images/17966.jpg";
+		if (!config.background_image.empty()) {
+			if (!term->bg_image_callback_id) {
+				term->bg_image_callback_id = g_signal_connect (term->hbox, "draw",
+					G_CALLBACK(terminal_screen_image_draw_cb), term);
+			}
+
+			g_clear_object (&term->bg_image);
+			GError *error = nullptr;
+			term->bg_image = gdk_pixbuf_new_from_file(config.background_image.c_str(),
+				&error);
+			if (error) {
+				SAY("Failed to load background image %s", error->message);
+				g_clear_error(&error);
+			}
+
+			gtk_widget_queue_draw(GTK_WIDGET(term->hbox));
+
+			sakura->backcolors[term->colorset].alpha = 0.9;
+		}
+
+		vte_terminal_set_colors(VTE_TERMINAL(term->vte),
+			&sakura->forecolors[term->colorset],
+			&sakura->backcolors[term->colorset], sakura->config.palette,
+			PALETTE_SIZE);
+		vte_terminal_set_color_cursor(
+			VTE_TERMINAL(term->vte), &sakura->curscolors[term->colorset]);
+
+
+	}
+
+	/* Main window opacity must be set. Otherwise vte widget will remain opaque */
+	gtk_widget_set_opacity(sakura->main_window, sakura->backcolors[term->colorset].alpha);
+}
+
 gboolean Sakura::on_focus_in(GtkWidget *widget, GdkEvent *event)
 {
 	if (event->type != GDK_FOCUS_CHANGE)
@@ -306,7 +411,7 @@ gboolean Sakura::on_focus_in(GtkWidget *widget, GdkEvent *event)
 			sakura_fade_in();
 		}
 
-		sakura_set_colors();
+		set_colors();
 		return TRUE;
 	}
 
@@ -325,7 +430,7 @@ gboolean Sakura::on_focus_out(GtkWidget *widget, GdkEvent *event)
 			sakura_fade_out();
 		}
 
-		sakura_set_colors();
+		set_colors();
 		return TRUE;
 	}
 
@@ -562,7 +667,7 @@ void Sakura::close_tab(GtkWidget *)
 	pid_t pgid;
 	GtkWidget *dialog;
 	gint response;
-	struct terminal *term;
+	Terminal *term;
 	gint page, npages;
 
 	page = gtk_notebook_get_current_page(GTK_NOTEBOOK(notebook));

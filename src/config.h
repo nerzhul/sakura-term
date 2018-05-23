@@ -78,10 +78,13 @@ public:
 	std::string word_chars = "-,./?%&#_~:";  /* Exceptions for word selection */
 	std::string icon = "terminal-tango.svg";
 
+	std::string background_image;
+
 	SakuraKeyMap keymap;
 private:
 	void loadKeymap(const YAML::Node &keymap_node);
 	void loadColorset(const YAML::Node *colorset_node, uint8_t index);
 
+	GFile *m_monitored_file = nullptr;
 	std::string m_file;
 };

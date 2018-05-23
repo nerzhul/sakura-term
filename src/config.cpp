@@ -4,6 +4,7 @@
 #include <glib/gstdio.h>
 #include <iostream>
 #include <yaml-cpp/yaml.h>
+#include <cassert>
 
 #define DEFAULT_CONFIGFILE "sakura.yml"
 #define DEFAULT_FONT "Ubuntu Mono,monospace 12"
@@ -38,6 +39,15 @@ Config::Config()
 
 Config::~Config()
 {
+	if (m_monitored_file) {
+		g_object_unref(m_monitored_file);
+	}
+
+	if (font) {
+		// it seems invalid to free with that method (reported by valgrind)
+		// pango_font_description_free(font);
+	}
+
 }
 
 void Config::write()
@@ -191,6 +201,10 @@ bool Config::read()
 			icon = config["icon"].as<std::string>();
 		}
 
+		if (config["background_image"]) {
+			background_image = config["background_image"].as<std::string>();
+		}
+
 		if (config["keymap"]) {
 			loadKeymap(config["keymap"]);
 		}
@@ -336,8 +350,9 @@ void Config::loadColorset(const YAML::Node *colorset_node, uint8_t index)
 
 void Config::monitor()
 {
+	assert(m_monitored_file == nullptr);
 	/* Add GFile monitor to control file external changes */
-	GFile *cfgfile = g_file_new_for_path(m_file.c_str());
-	GFileMonitor *mon_cfgfile = g_file_monitor_file(cfgfile, (GFileMonitorFlags)0, NULL, NULL);
+	m_monitored_file = g_file_new_for_path(m_file.c_str());
+	GFileMonitor *mon_cfgfile = g_file_monitor_file(m_monitored_file, (GFileMonitorFlags)0, NULL, NULL);
 	g_signal_connect(G_OBJECT(mon_cfgfile), "changed", G_CALLBACK(sakura_conf_changed), NULL);
 }
