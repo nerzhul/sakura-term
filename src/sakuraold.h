@@ -44,27 +44,13 @@ static GOptionEntry entries[] = {
 	{ NULL }
 };
 
-struct terminal {
-	GtkWidget *hbox;
-	GtkWidget *vte;     /* Reference to VTE terminal */
-	GPid pid;          /* pid of the forked process */
-	GtkWidget *scrollbar;
-	GtkWidget *label;
-	gchar *label_text;
-	bool label_set_byuser;
-	GtkBorder padding;   /* inner-property data */
-	int colorset;
-};
+
 
 extern Sakura *sakura;
 
 extern GQuark term_data_id;
 
 static const gint FORWARD = 1;
-
-#define  sakura_get_page_term( sakura, page_idx )  \
-    (struct terminal*)g_object_get_qdata(  \
-            G_OBJECT( gtk_notebook_get_nth_page( (GtkNotebook*)sakura->notebook, page_idx ) ), term_data_id);
 
 #define  sakura_set_config_string(key, value) do {\
 	g_key_file_set_value(sakura->cfg, cfg_group, key, value);\
@@ -87,7 +73,6 @@ void sakura_fade_in();
 void sakura_fade_out();
 void sakura_set_size();
 void sakura_add_tab();
-void sakura_set_colors();
 void     sakura_config_done();
 void     sakura_close_tab (GtkWidget *, void *);
 void     sakura_move_tab(gint);

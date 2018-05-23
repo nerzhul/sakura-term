@@ -55,7 +55,9 @@ ADD_EXECUTABLE (sakura
 	src/config.cpp
 	src/main.cpp
 	src/sakura.cpp
-	src/sakuraold.cpp)
+	src/sakuraold.cpp
+	src/terminal.cpp)
+
 target_link_libraries (sakura
 	${GTK_LIBRARIES}
 	${VTE_LIBRARIES}

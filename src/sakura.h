@@ -7,6 +7,8 @@
 
 class Sakura {
 public:
+	Sakura() = default;
+	~Sakura();
 	static void init();
 	void destroy(GtkWidget *);
 
@@ -24,7 +26,9 @@ public:
 	void toggle_numbered_tabswitch_option(GtkWidget *widget);
 	gboolean notebook_scoll(GtkWidget *widget, GdkEventScroll *event);
 
-	GtkWidget *main_window;
+	void set_colors();
+
+	GtkWidget *main_window = nullptr;
 	GtkWidget *notebook;
 	GtkWidget *menu;
 	GdkRGBA forecolors[NUM_COLORSETS];
