@@ -374,9 +374,9 @@ void Sakura::set_colors()
 			}
 
 			gtk_widget_queue_draw(GTK_WIDGET(term->hbox));
-
-			sakura->backcolors[term->colorset].alpha = config.get_background_alpha();
 		}
+
+		sakura->backcolors[term->colorset].alpha = config.get_background_alpha();
 
 		vte_terminal_set_colors(VTE_TERMINAL(term->vte),
 			&sakura->forecolors[term->colorset],

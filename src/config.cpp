@@ -209,8 +209,9 @@ bool Config::read()
 			m_background_alpha = config["background_alpha"].as<double>();
 			if (m_background_alpha < 0.0 || m_background_alpha > 1.0) {
 				std::cerr << "Invalid background alpha value " << m_background_alpha
-					<< ", reseting to 0.9" << std::endl;
-				m_background_alpha = 0.9;
+					<< ", reseting to " << (config["background_image"] ? 0.9 : 1.0)
+					<< std::endl;
+				m_background_alpha = (config["background_image"] ? 0.9 : 1.0);
 			}
 		}
 
