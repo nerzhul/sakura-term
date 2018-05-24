@@ -2,7 +2,7 @@
 image: docker.io/nerzhul/archlinux:cpp-latest
 
 before_script:
-  - pacman --noconfirm -Sy vte3 yaml-cpp pkg-config base-devel > /dev/null 2>&1
+  - pacman --noconfirm -Sy vte3 yaml-cpp pkg-config base-devel
 
 stages:
   - cppcheck
