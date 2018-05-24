@@ -1,0 +1,44 @@
+---
+image: docker.io/nerzhul/archlinux:cpp-latest
+
+before_script:
+  - pacman --noconfirm -Sy vte3 yaml-cpp > /dev/null 2>&1
+
+stages:
+  - cppcheck
+  - build
+
+cppcheck:cppcheck:
+  stage: cppcheck
+  script:
+    - pacman --noconfirm -Sy cppcheck > /dev/null 2>&1
+    - mkdir -p cppcheck_tests
+    - cd cppcheck_tests
+    - cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON ..
+    - cppcheck --enable=warning,performance --project=compile_commands.json
+
+cppcheck:clang-tidy:
+  stage: cppcheck
+  script:
+    - pacman --noconfirm -Sy clang-tools-extra clang llvm
+    - mkdir -p build
+    - cd build
+    - cmake -DCMAKE_CXX_COMPILER=g++ -DCMAKE_C_COMPILER=gcc -DENABLE_UNITTESTS=1 ..
+    - cd ..
+    - clang-tidy -checks="*,-cert-env33-c,-cppcoreguidelines-no-malloc,-cppcoreguidelines-pro-bounds-array-to-pointer-decay,-cppcoreguidelines-pro-bounds-constant-array-index,-cppcoreguidelines-pro-bounds-pointer-arithmetic,-cppcoreguidelines-pro-type-const-cast,-cppcoreguidelines-pro-type-cstyle-cast,-cppcoreguidelines-pro-type-union-access,-google-*,google-default-arguments,google-explicit-constructor,google-runtime-member-string-references,google-runtime-memset,google-runtime-operator,-llvm-*,-readability-simplify-boolean-expr,-readability-braces-around-statements,-readability-identifier-naming,-readability-function-size,-misc-bool-pointer-implicit-conversion,-misc-unused-parameters,-modernize-use-using,-safety-no-assembler,-clang-diagnostic-*,-clang-analyzer-*,-readability-implicit-bool-cast" $(find . -name "*.cpp" -or -name "*.h") -- -I include -I include/core -I include/extras -I /usr/include/libxml2 -std=c++14
+
+build:gcc:
+  stage: build
+  script:
+    - mkdir -p build
+    - cd build
+    - cmake -DCMAKE_CXX_COMPILER=g++ -DCMAKE_C_COMPILER=gcc ..
+    - make -j4
+
+build:clang:
+  stage: build
+  script:
+    - mkdir -p build
+    - cd build
+    - cmake -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang ..
+    - make -j4
