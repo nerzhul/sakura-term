@@ -2,6 +2,7 @@
 #include <libintl.h>
 #include <glib.h>
 #include <gtk/gtk.h>
+#include <gtkmm.h>
 #include "gettext.h"
 #include "sakuraold.h"
 
@@ -82,12 +83,12 @@ int main(int argc, char **argv)
 	}
 
 	/* Init stuff */
-	gtk_init(&nargc, &nargv);
+	Gtk::Main app(&nargc, &nargv);
 	g_strfreev(nargv);
 
 	sakura = new Sakura();
 	Sakura::init();
-	gtk_main();
+	Gtk::Main::run();
 
 	delete sakura;
 	return 0;

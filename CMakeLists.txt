@@ -21,6 +21,13 @@ IF (NOT GTK_FOUND)
 	MESSAGE(FATAL_ERROR "You don't seem to have gtk >= 3.20 development libraries installed...")
 ENDIF (NOT GTK_FOUND)
 
+pkg_check_modules (GTKMM REQUIRED gtkmm-3.0>=3.0)
+IF (GTKMM_FOUND)
+	MESSAGE("Found gtkmm")
+ELSE()
+	MESSAGE(FATAL_ERROR "You don't seem to have gtkmm >= 3.0 development libraries installed...")
+ENDIF()
+
 pkg_check_modules (VTE REQUIRED vte-2.91>=0.50)
 IF (NOT VTE_FOUND)
 	MESSAGE(FATAL_ERROR "You don't seem to have vte >= 0.50 development libraries installed...")
@@ -49,9 +56,15 @@ ELSE (${CMAKE_BUILD_TYPE} NOT MATCHES "Debug")
 	SET (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O2 -Wno-deprecated-declarations")
 ENDIF (${CMAKE_BUILD_TYPE} MATCHES "Debug")
 
-INCLUDE_DIRECTORIES (. ${GTK_INCLUDE_DIRS} ${VTE_INCLUDE_DIRS})
-LINK_DIRECTORIES (${GTK_LIBRARY_DIRS} ${VTE_LIBRARY_DIRS} ${X11_LIBRARY_DIRS})
-ADD_EXECUTABLE (sakura
+include_directories(. ${GTK_INCLUDE_DIRS} ${GTKMM_INCLUDE_DIRS} ${VTE_INCLUDE_DIRS})
+link_directories(
+	${GTK_LIBRARY_DIRS}
+	${GTKMM_LIBRARY_DIRS}
+	${VTE_LIBRARY_DIRS}
+	${X11_LIBRARY_DIRS}
+)
+
+add_executable(sakura
 	src/config.cpp
 	src/main.cpp
 	src/sakura.cpp
@@ -60,6 +73,7 @@ ADD_EXECUTABLE (sakura
 
 target_link_libraries (sakura
 	${GTK_LIBRARIES}
+	${GTKMM_LIBRARIES}
 	${VTE_LIBRARIES}
 	${X11_LIBRARIES}
 	${YAMLCPP_LIBRARIES}
