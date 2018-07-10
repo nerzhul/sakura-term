@@ -2,6 +2,10 @@
 
 #include "config.h"
 
+namespace Gtk {
+class Window;
+}
+
 #define DEFAULT_COLUMNS 80
 #define DEFAULT_ROWS 24
 
@@ -28,7 +32,7 @@ public:
 
 	void set_colors();
 
-	GtkWidget *main_window = nullptr;
+	Gtk::Window *main_window = nullptr;
 	GtkWidget *notebook;
 	GtkWidget *menu;
 	GdkRGBA forecolors[NUM_COLORSETS];

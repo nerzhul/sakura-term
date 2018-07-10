@@ -34,6 +34,8 @@
 #include <fcntl.h>
 #include <clocale>
 #include <libintl.h>
+#include <gtkmm.h>
+#include <X11/Xlib.h>
 #include <glib.h>
 #include <glib/gstdio.h>
 #include <gdk/gdk.h>
@@ -302,11 +304,11 @@ static void sakura_title_changed(GtkWidget *widget, void *data)
 		if (n_pages == 1) {
 			/* Beware: It doesn't work in Unity because there is a Compiz bug: #257391
 			 */
-			gtk_window_set_title(GTK_WINDOW(sakura->main_window), title);
+			sakura->main_window->set_title(title);
 		} else
-			gtk_window_set_title(GTK_WINDOW(sakura->main_window), "sakura");
+			sakura->main_window->set_title("sakura");
 	} else {
-		gtk_window_set_title(GTK_WINDOW(sakura->main_window), option_title);
+		sakura->main_window->set_title(option_title);
 	}
 }
 
@@ -331,7 +333,7 @@ void sakura_config_done()
 			GtkWidget *dialog;
 			gint response;
 
-			dialog = gtk_message_dialog_new(GTK_WINDOW(sakura->main_window),
+			dialog = gtk_message_dialog_new(GTK_WINDOW(sakura->main_window->gobj()),
 					GTK_DIALOG_MODAL, GTK_MESSAGE_QUESTION, GTK_BUTTONS_YES_NO,
 					_("Configuration has been modified by another process. "
 					  "Overwrite?"));
@@ -365,7 +367,7 @@ static void sakura_font_dialog(GtkWidget *widget, void *data)
 	gint response;
 
 	font_dialog = gtk_font_chooser_dialog_new(
-			_("Select font"), GTK_WINDOW(sakura->main_window));
+			_("Select font"), GTK_WINDOW(sakura->main_window->gobj()));
 	gtk_font_chooser_set_font_desc(GTK_FONT_CHOOSER(font_dialog), sakura->config.font);
 
 	response = gtk_dialog_run(GTK_DIALOG(font_dialog));
@@ -396,7 +398,7 @@ void sakura_set_name_dialog(GtkWidget *widget, void *data)
 	term = sakura_get_page_term(sakura, page);
 
 	input_dialog = gtk_dialog_new_with_buttons(_("Set tab name"),
-			GTK_WINDOW(sakura->main_window),
+			GTK_WINDOW(sakura->main_window->gobj()),
 			(GtkDialogFlags)(GTK_DIALOG_MODAL | GTK_DIALOG_USE_HEADER_BAR),
 			_("_Cancel"), GTK_RESPONSE_CANCEL, _("_Apply"), GTK_RESPONSE_ACCEPT, NULL);
 
@@ -530,7 +532,7 @@ static void sakura_color_dialog(GtkWidget *widget, void *data)
 	term = sakura_get_page_term(sakura, page);
 
 	color_dialog = gtk_dialog_new_with_buttons(_("Select colors"),
-			GTK_WINDOW(sakura->main_window),
+			GTK_WINDOW(sakura->main_window->gobj()),
 			(GtkDialogFlags)(GTK_DIALOG_MODAL | GTK_DIALOG_USE_HEADER_BAR),
 			_("_Cancel"), GTK_RESPONSE_CANCEL, _("_Select"), GTK_RESPONSE_ACCEPT, NULL);
 
@@ -721,7 +723,7 @@ void sakura_search_dialog(GtkWidget *widget, void *data)
 	GtkWidget *title_hbox;
 	gint response;
 
-	title_dialog = gtk_dialog_new_with_buttons(_("Search"), GTK_WINDOW(sakura->main_window),
+	title_dialog = gtk_dialog_new_with_buttons(_("Search"), GTK_WINDOW(sakura->main_window->gobj()),
 			(GtkDialogFlags)(GTK_DIALOG_MODAL | GTK_DIALOG_USE_HEADER_BAR),
 			_("_Cancel"), GTK_RESPONSE_CANCEL, _("_Apply"), GTK_RESPONSE_ACCEPT, NULL);
 
@@ -773,7 +775,7 @@ static void sakura_set_title_dialog(GtkWidget *widget, void *data)
 	gint response;
 
 	title_dialog = gtk_dialog_new_with_buttons(_("Set window title"),
-			GTK_WINDOW(sakura->main_window),
+			GTK_WINDOW(sakura->main_window->gobj()),
 			(GtkDialogFlags)(GTK_DIALOG_MODAL | GTK_DIALOG_USE_HEADER_BAR),
 			_("_Cancel"), GTK_RESPONSE_CANCEL, _("_Apply"), GTK_RESPONSE_ACCEPT, NULL);
 
@@ -794,7 +796,7 @@ static void sakura_set_title_dialog(GtkWidget *widget, void *data)
 	label = gtk_label_new(_("New window title"));
 	title_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
 	/* Set window label as entry default text */
-	gtk_entry_set_text(GTK_ENTRY(entry), gtk_window_get_title(GTK_WINDOW(sakura->main_window)));
+	gtk_entry_set_text(GTK_ENTRY(entry), gtk_window_get_title(GTK_WINDOW(sakura->main_window->gobj())));
 	gtk_entry_set_activates_default(GTK_ENTRY(entry), TRUE);
 	gtk_box_pack_start(GTK_BOX(title_hbox), label, TRUE, TRUE, 12);
 	gtk_box_pack_start(GTK_BOX(title_hbox), entry, TRUE, TRUE, 12);
@@ -811,8 +813,7 @@ static void sakura_set_title_dialog(GtkWidget *widget, void *data)
 	response = gtk_dialog_run(GTK_DIALOG(title_dialog));
 	if (response == GTK_RESPONSE_ACCEPT) {
 		/* Bug #257391 shadow reachs here too... */
-		gtk_window_set_title(GTK_WINDOW(sakura->main_window),
-				gtk_entry_get_text(GTK_ENTRY(entry)));
+		sakura->main_window->set_title(gtk_entry_get_text(GTK_ENTRY(entry)));
 	}
 	gtk_widget_destroy(title_dialog);
 }
@@ -1209,7 +1210,7 @@ static void sakura_closebutton_clicked(GtkWidget *widget, void *data)
 	pgid = tcgetpgrp(vte_pty_get_fd(vte_terminal_get_pty(VTE_TERMINAL(term->vte))));
 
 	if ((pgid != -1) && (pgid != term->pid) && (!sakura->config.less_questions)) {
-		dialog = gtk_message_dialog_new(GTK_WINDOW(sakura->main_window), GTK_DIALOG_MODAL,
+		dialog = gtk_message_dialog_new(GTK_WINDOW(sakura->main_window->gobj()), GTK_DIALOG_MODAL,
 				GTK_MESSAGE_QUESTION, GTK_BUTTONS_YES_NO,
 				_("There is a running process in this terminal.\n\nDo you really "
 				  "want to close it?"));
@@ -1607,7 +1608,7 @@ void sakura_set_size()
 
 	/* GTK does not ignore resize for maximized windows on some systems,
 	so we do need check if it's maximized or not */
-	GdkWindow *gdk_window = gtk_widget_get_window(GTK_WIDGET(sakura->main_window));
+	GdkWindow *gdk_window = gtk_widget_get_window(GTK_WIDGET(sakura->main_window->gobj()));
 	if (gdk_window != NULL) {
 		if (gdk_window_get_state(gdk_window) & GDK_WINDOW_STATE_MAXIMIZED) {
 			SAY("window is maximized, will not resize");
@@ -1615,7 +1616,7 @@ void sakura_set_size()
 		}
 	}
 
-	gtk_window_resize(GTK_WINDOW(sakura->main_window), sakura->width, sakura->height);
+	gtk_window_resize(GTK_WINDOW(sakura->main_window->gobj()), sakura->width, sakura->height);
 	SAY("Resized to %d %d", sakura->width, sakura->height);
 }
 
@@ -1832,14 +1833,14 @@ void sakura_add_tab()
 			gtk_widget_hide(term->scrollbar);
 		}
 
-		gtk_widget_show(sakura->main_window);
+		sakura->main_window->show();
 
 #ifdef GDK_WINDOWING_X11
 		/* Set WINDOWID env variable */
-		GdkDisplay *display = gdk_display_get_default();
+		auto display = Gdk::Display::get_default();
 
-		if (GDK_IS_X11_DISPLAY(display)) {
-			GdkWindow *gwin = gtk_widget_get_window(sakura->main_window);
+		if (GDK_IS_X11_DISPLAY(display->gobj())) {
+			GdkWindow *gwin = sakura->main_window->get_window()->gobj();
 			if (gwin != NULL) {
 				guint winid = gdk_x11_window_get_xid(gwin);
 				gchar *winidstr = g_strdup_printf("%d", winid);
@@ -1999,7 +2000,7 @@ static void sakura_error(const char *format, ...)
 	vsnprintf(buff, sizeof(char) * ERROR_BUFFER_LENGTH, format, args);
 	va_end(args);
 
-	dialog = gtk_message_dialog_new(GTK_WINDOW(sakura->main_window),
+	dialog = gtk_message_dialog_new(GTK_WINDOW(sakura->main_window->gobj()),
 			GTK_DIALOG_DESTROY_WITH_PARENT, GTK_MESSAGE_ERROR, GTK_BUTTONS_CLOSE, "%s",
 			buff);
 	gtk_window_set_title(GTK_WINDOW(dialog), _("Error message"));

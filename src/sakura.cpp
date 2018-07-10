@@ -4,6 +4,7 @@
 #include <iostream>
 #include <cassert>
 #include <libintl.h>
+#include <gtkmm/window.h>
 #include "sakura.h"
 #include "debug.h"
 #include "palettes.h"
@@ -67,7 +68,7 @@ static gboolean sakura_delete_event(GtkWidget *widget, void *data)
 
 			/* If running processes are found, we ask one time and exit */
 			if ((pgid != -1) && (pgid != term->pid)) {
-				dialog = gtk_message_dialog_new(GTK_WINDOW(sakura->main_window),
+				dialog = gtk_message_dialog_new(GTK_WINDOW(sakura->main_window->gobj()),
 						GTK_DIALOG_MODAL, GTK_MESSAGE_QUESTION,
 						GTK_BUTTONS_YES_NO,
 						_("There are running processes.\n\nDo you really "
@@ -156,8 +157,8 @@ void Sakura::init()
 
 	sakura->provider = gtk_css_provider_new();
 
-	sakura->main_window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-	gtk_window_set_title(GTK_WINDOW(sakura->main_window), "sakura");
+	sakura->main_window = new Gtk::Window(Gtk::WINDOW_TOPLEVEL);
+	sakura->main_window->set_title("sakura");
 
 	/* Create notebook and set style */
 	sakura->notebook = gtk_notebook_new();
@@ -175,10 +176,10 @@ void Sakura::init()
 	gtk_widget_add_events(sakura->notebook, GDK_SCROLL_MASK);
 
 	/* Figure out if we have rgba capabilities. FIXME: Is this really needed? */
-	GdkScreen *screen = gtk_widget_get_screen(GTK_WIDGET(sakura->main_window));
+	GdkScreen *screen = sakura->main_window->get_screen()->gobj();
 	GdkVisual *visual = gdk_screen_get_rgba_visual(screen);
 	if (visual != NULL && gdk_screen_is_composited(screen)) {
-		gtk_widget_set_visual(GTK_WIDGET(sakura->main_window), visual);
+		gtk_widget_set_visual(GTK_WIDGET(sakura->main_window->gobj()), visual);
 	}
 
 	/* Command line optionsNULL initialization */
@@ -194,7 +195,7 @@ void Sakura::init()
 	sakura->argv[2] = NULL;
 
 	if (option_title) {
-		gtk_window_set_title(GTK_WINDOW(sakura->main_window), option_title);
+		sakura->main_window->set_title(option_title);
 	}
 
 	if (option_columns) {
@@ -207,17 +208,14 @@ void Sakura::init()
 
 	/* Add datadir path to icon name and set icon */
 	gchar *icon_path;
-	GError *error = nullptr;
 	if (option_icon) {
 		icon_path = g_strdup_printf("%s", option_icon);
 	} else {
 		icon_path = g_strdup_printf(DATADIR "/pixmaps/%s", sakura->config.icon.c_str());
 	}
-	gtk_window_set_icon_from_file(GTK_WINDOW(sakura->main_window), icon_path, &error);
+	sakura->main_window->set_icon_from_file(std::string(icon_path));
 	g_free(icon_path);
 	icon_path = NULL;
-	if (error)
-		g_error_free(error);
 
 	if (option_font) {
 		sakura->config.font = pango_font_description_from_string(option_font);
@@ -231,7 +229,7 @@ void Sakura::init()
 	if (option_fullscreen) {
 		sakura_fullscreen(nullptr, sakura);
 	} else if (option_maximize) {
-		gtk_window_maximize(GTK_WINDOW(sakura->main_window));
+		sakura->main_window->maximize();
 	}
 
 	sakura->label_count = 1;
@@ -239,7 +237,7 @@ void Sakura::init()
 	sakura->keep_fc = false;
 	sakura->externally_modified = false;
 
-	error = nullptr;
+	GError *error = nullptr;
 	sakura->http_vteregexp =
 			vte_regex_new_for_match(HTTP_REGEXP, strlen(HTTP_REGEXP), 0, &error);
 	if (!sakura->http_vteregexp) {
@@ -254,7 +252,7 @@ void Sakura::init()
 		g_error_free(error);
 	}
 
-	gtk_container_add(GTK_CONTAINER(sakura->main_window), sakura->notebook);
+	gtk_container_add(GTK_CONTAINER(sakura->main_window->gobj()), sakura->notebook);
 
 	/* Adding mask to see wheter sakura window is focused or not */
 	// gtk_widget_add_events(sakura->main_window, GDK_FOCUS_CHANGE_MASK);
@@ -264,19 +262,19 @@ void Sakura::init()
 
 	sakura_init_popup();
 
-	g_signal_connect(G_OBJECT(sakura->main_window), "delete_event",
+	g_signal_connect(G_OBJECT(sakura->main_window->gobj()), "delete_event",
 			G_CALLBACK(sakura_delete_event), NULL);
-	g_signal_connect(G_OBJECT(sakura->main_window), "destroy",
+	g_signal_connect(G_OBJECT(sakura->main_window->gobj()), "destroy",
 			G_CALLBACK(sakura_destroy_window), sakura);
-	g_signal_connect(G_OBJECT(sakura->main_window), "key-press-event",
+	g_signal_connect(G_OBJECT(sakura->main_window->gobj()), "key-press-event",
 			G_CALLBACK(sakura_on_key_press), sakura);
-	g_signal_connect(G_OBJECT(sakura->main_window), "configure-event",
+	g_signal_connect(G_OBJECT(sakura->main_window->gobj()), "configure-event",
 			G_CALLBACK(sakura_resized_window), NULL);
-	g_signal_connect(G_OBJECT(sakura->main_window), "focus-out-event",
+	g_signal_connect(G_OBJECT(sakura->main_window->gobj()), "focus-out-event",
 			G_CALLBACK(sakura_focus_out), sakura);
-	g_signal_connect(G_OBJECT(sakura->main_window), "focus-in-event",
+	g_signal_connect(G_OBJECT(sakura->main_window->gobj()), "focus-in-event",
 			G_CALLBACK(sakura_focus_in), sakura);
-	g_signal_connect(G_OBJECT(sakura->main_window), "show",
+	g_signal_connect(G_OBJECT(sakura->main_window->gobj()), "show",
 			G_CALLBACK(sakura_window_show_event), NULL);
 	// g_signal_connect(G_OBJECT(sakura->notebook), "focus-in-event",
 	// G_CALLBACK(sakura_notebook_focus_in), NULL);
@@ -389,7 +387,7 @@ void Sakura::set_colors()
 	}
 
 	/* Main window opacity must be set. Otherwise vte widget will remain opaque */
-	gtk_widget_set_opacity(sakura->main_window, sakura->backcolors[term->colorset].alpha);
+	sakura->main_window->set_opacity(sakura->backcolors[term->colorset].alpha);
 }
 
 gboolean Sakura::on_focus_in(GtkWidget *widget, GdkEvent *event)
