@@ -5,6 +5,7 @@
 #include <cassert>
 #include <libintl.h>
 #include <gtkmm/window.h>
+#include <gtkmm/notebook.h>
 #include "sakura.h"
 #include "debug.h"
 #include "palettes.h"
@@ -207,15 +208,13 @@ void Sakura::init()
 	}
 
 	/* Add datadir path to icon name and set icon */
-	gchar *icon_path;
+	std::string icon_path;
 	if (option_icon) {
-		icon_path = g_strdup_printf("%s", option_icon);
+		icon_path.append(option_icon);
 	} else {
-		icon_path = g_strdup_printf(DATADIR "/pixmaps/%s", sakura->config.icon.c_str());
+		icon_path.append(DATADIR).append("/pixmaps/").append(sakura->config.icon);
 	}
 	sakura->main_window->set_icon_from_file(std::string(icon_path));
-	g_free(icon_path);
-	icon_path = NULL;
 
 	if (option_font) {
 		sakura->config.font = pango_font_description_from_string(option_font);
