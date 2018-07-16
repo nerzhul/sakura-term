@@ -355,9 +355,6 @@ void Sakura::init_popup()
 	item_palette_solarized_light = gtk_radio_menu_item_new_with_label_from_widget(
 		GTK_RADIO_MENU_ITEM(item_palette_tango), "Solarized light");
 
-	/* Show defaults in menu items */
-	gchar *cfgtmp = nullptr;
-
 	if (config.first_tab) {
 		gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(item_show_first_tab), TRUE);
 	} else {
