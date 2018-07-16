@@ -13,7 +13,6 @@ class Sakura {
 public:
 	Sakura();
 	~Sakura();
-	static void init();
 	void destroy(GtkWidget *);
 
 	gboolean on_key_press(GtkWidget *widget, GdkEventKey *event);
@@ -43,14 +42,14 @@ public:
 	guint height;
 	glong columns = DEFAULT_COLUMNS;
 	glong rows = DEFAULT_ROWS;
-	gint label_count;
-	bool keep_fc;                    /* Global flag to indicate that we don't want changes in the files and columns values */
+	gint label_count = 1;
+	bool keep_fc = false;                    /* Global flag to indicate that we don't want changes in the files and columns values */
 	bool config_modified = false;            /* Configuration has been modified */
-	bool externally_modified;        /* Configuration file has been modified by another process */
-	bool resized;
-	bool focused;                    /* For fading feature */
-	bool first_focus;                /* First time gtkwindow recieve focus when is created */
-	bool faded;			 /* Fading state */
+	bool externally_modified = false;        /* Configuration file has been modified by another process */
+	bool resized = FALSE;
+	bool focused = true;                    /* For fading feature */
+	bool first_focus = true;                /* First time gtkwindow recieve focus when is created */
+	bool faded = false;			 /* Fading state */
 	GtkWidget *item_copy_link;       /* We include here only the items which need to be hidden */
 	GtkWidget *item_open_link;
 	GtkWidget *item_open_mail;

@@ -86,10 +86,7 @@ int main(int argc, char **argv)
 	Gtk::Main app(&nargc, &nargv);
 	g_strfreev(nargv);
 
-	Sakura *me = new Sakura();
-	Sakura::init();
+	std::unique_ptr<Sakura> me(new Sakura());
 	Gtk::Main::run();
-
-	delete me;
 	return 0;
 }

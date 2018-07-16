@@ -12,60 +12,6 @@
 #include "sakuraold.h"
 #include "terminal.h"
 
-#define NOTEBOOK_CSS                                                                               \
-	"* {\n"                                                                                    \
-	"color : rgba(0,0,0,1.0);\n"                                                               \
-	"background-color : rgba(0,0,0,1.0);\n"                                                    \
-	"border-color : rgba(0,0,0,1.0);\n"                                                        \
-	"}"
-
-#define HTTP_REGEXP "(ftp|http)s?://[^ \t\n\b()<>{}«»\\[\\]\'\"]+[^.]"
-#define MAIL_REGEXP "[^ \t\n\b]+@([^ \t\n\b]+\\.)+([a-zA-Z]{2,4})"
-
-Sakura::Sakura()
-{
-	// This object is a singleton
-	assert(sakura == nullptr);
-	sakura = this;
-
-	/* Config file initialization*/
-	cfg = g_key_file_new();
-
-	if (!config.read()) {
-		exit(EXIT_FAILURE);
-	}
-
-	config.monitor();
-
-	/* set default title pattern from config or NULL */
-	tab_default_title = g_key_file_get_string(cfg, cfg_group, "tab_default_title", NULL);
-}
-
-Sakura::~Sakura()
-{
-	for (uint8_t i=0; i < 3; i++) {
-		if (argv[i]) {
-			free(argv[i]);
-		}
-	}
-
-	if (http_vteregexp) {
-		vte_regex_unref(http_vteregexp);
-	}
-
-	if (mail_vteregexp) {
-		vte_regex_unref(mail_vteregexp);
-	}
-}
-
-static const gint BACKWARDS = 2;
-
-static void sakura_on_key_press(GtkWidget *widget, GdkEventKey *event, gpointer data)
-{
-	auto *obj = (Sakura *)data;
-	obj->on_key_press(widget, event);
-}
-
 static gboolean sakura_delete_event(GtkWidget *widget, void *data)
 {
 	Terminal *term;
@@ -84,15 +30,15 @@ static gboolean sakura_delete_event(GtkWidget *widget, void *data)
 
 			term = sakura_get_page_term(sakura, i);
 			pgid = tcgetpgrp(vte_pty_get_fd(
-					vte_terminal_get_pty(VTE_TERMINAL(term->vte))));
+				vte_terminal_get_pty(VTE_TERMINAL(term->vte))));
 
 			/* If running processes are found, we ask one time and exit */
 			if ((pgid != -1) && (pgid != term->pid)) {
 				dialog = gtk_message_dialog_new(GTK_WINDOW(sakura->main_window->gobj()),
-						GTK_DIALOG_MODAL, GTK_MESSAGE_QUESTION,
-						GTK_BUTTONS_YES_NO,
-						_("There are running processes.\n\nDo you really "
-						  "want to close Sakura?"));
+					GTK_DIALOG_MODAL, GTK_MESSAGE_QUESTION,
+					GTK_BUTTONS_YES_NO,
+					_("There are running processes.\n\nDo you really "
+					  "want to close Sakura?"));
 
 				response = gtk_dialog_run(GTK_DIALOG(dialog));
 				gtk_widget_destroy(dialog);
@@ -110,6 +56,14 @@ static gboolean sakura_delete_event(GtkWidget *widget, void *data)
 	sakura_config_done();
 	return FALSE;
 }
+
+static void sakura_on_key_press(GtkWidget *widget, GdkEventKey *event, gpointer data)
+{
+	auto *obj = (Sakura *)data;
+	obj->on_key_press(widget, event);
+}
+
+
 
 static void sakura_destroy_window(GtkWidget *widget, void *data)
 {
@@ -133,6 +87,172 @@ void sanitize_working_directory()
 	}
 }
 
+#define NOTEBOOK_CSS                                                                               \
+	"* {\n"                                                                                    \
+	"color : rgba(0,0,0,1.0);\n"                                                               \
+	"background-color : rgba(0,0,0,1.0);\n"                                                    \
+	"border-color : rgba(0,0,0,1.0);\n"                                                        \
+	"}"
+
+#define HTTP_REGEXP "(ftp|http)s?://[^ \t\n\b()<>{}«»\\[\\]\'\"]+[^.]"
+#define MAIL_REGEXP "[^ \t\n\b]+@([^ \t\n\b]+\\.)+([a-zA-Z]{2,4})"
+
+Sakura::Sakura() :
+	cfg(g_key_file_new()),
+	main_window(new Gtk::Window(Gtk::WINDOW_TOPLEVEL)),
+	provider(gtk_css_provider_new()),
+	notebook(gtk_notebook_new())
+{
+	// This object is a singleton
+	assert(sakura == nullptr);
+	sakura = this;
+
+	if (!config.read()) {
+		exit(EXIT_FAILURE);
+	}
+
+	config.monitor();
+
+	/* set default title pattern from config or NULL */
+	tab_default_title = g_key_file_get_string(cfg, cfg_group, "tab_default_title", NULL);
+
+	term_data_id = g_quark_from_static_string("sakura_term");
+
+	/* Use always GTK header bar*/
+	g_object_set(gtk_settings_get_default(), "gtk-dialogs-use-header", TRUE, NULL);
+
+	main_window->set_title("sakura");
+
+	/* Create notebook and set style */
+	gtk_notebook_set_scrollable((GtkNotebook *) notebook, config.scrollable_tabs);
+
+	gchar *css = g_strdup_printf(NOTEBOOK_CSS);
+	gtk_css_provider_load_from_data(provider, css, -1, NULL);
+	GtkStyleContext *context = gtk_widget_get_style_context(notebook);
+	gtk_style_context_add_provider(context, GTK_STYLE_PROVIDER(provider),
+		GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+	g_free(css);
+
+	/* Adding mask, for handle scroll events */
+	gtk_widget_add_events(notebook, GDK_SCROLL_MASK);
+
+	/* Figure out if we have rgba capabilities. FIXME: Is this really needed? */
+	GdkScreen *screen = main_window->get_screen()->gobj();
+	GdkVisual *visual = gdk_screen_get_rgba_visual(screen);
+	if (visual != NULL && gdk_screen_is_composited(screen)) {
+		gtk_widget_set_visual(GTK_WIDGET(main_window->gobj()), visual);
+	}
+
+	/* Command line optionsNULL initialization */
+
+	/* Set argv for forked childs. Real argv vector starts at argv[1] because we're
+	   using G_SPAWN_FILE_AND_ARGV_ZERO to be able to launch login shells */
+	argv[0] = g_strdup(g_getenv("SHELL"));
+	if (option_login) {
+		argv[1] = g_strdup_printf("-%s", g_getenv("SHELL"));
+	} else {
+		argv[1] = g_strdup(g_getenv("SHELL"));
+	}
+	argv[2] = NULL;
+
+	if (option_title) {
+		main_window->set_title(option_title);
+	}
+
+	if (option_columns) {
+		columns = option_columns;
+	}
+
+	if (option_rows) {
+		rows = option_rows;
+	}
+
+	/* Add datadir path to icon name and set icon */
+	std::string icon_path;
+	if (option_icon) {
+		icon_path.append(option_icon);
+	} else {
+		icon_path.append(DATADIR).append("/pixmaps/").append(config.icon);
+	}
+	main_window->set_icon_from_file(std::string(icon_path));
+
+	if (option_font) {
+		config.font = pango_font_description_from_string(option_font);
+	}
+
+	if (option_colorset && option_colorset > 0 && option_colorset <= NUM_COLORSETS) {
+		config.last_colorset = option_colorset;
+	}
+
+	/* These options are exclusive */
+	if (option_fullscreen) {
+		sakura_fullscreen(nullptr, this);
+	} else if (option_maximize) {
+		main_window->maximize();
+	}
+
+	GError *error = nullptr;
+	http_vteregexp = vte_regex_new_for_match(HTTP_REGEXP, strlen(HTTP_REGEXP), 0, &error);
+	if (!http_vteregexp) {
+		SAY("http_regexp: %s", error->message);
+		g_error_free(error);
+	}
+
+	error = nullptr;
+	mail_vteregexp = vte_regex_new_for_match(MAIL_REGEXP, strlen(MAIL_REGEXP), 0, &error);
+	if (!mail_vteregexp) {
+		SAY("mail_regexp: %s", error->message);
+		g_error_free(error);
+	}
+
+	gtk_container_add(GTK_CONTAINER(main_window->gobj()), notebook);
+
+	sakura_init_popup();
+
+	g_signal_connect(G_OBJECT(main_window->gobj()), "delete_event",
+		G_CALLBACK(sakura_delete_event), NULL);
+	g_signal_connect(G_OBJECT(main_window->gobj()), "destroy",
+		G_CALLBACK(sakura_destroy_window), this);
+	g_signal_connect(G_OBJECT(main_window->gobj()), "key-press-event",
+		G_CALLBACK(sakura_on_key_press), this);
+	g_signal_connect(G_OBJECT(main_window->gobj()), "configure-event",
+		G_CALLBACK(sakura_resized_window), NULL);
+	g_signal_connect(G_OBJECT(main_window->gobj()), "focus-out-event",
+		G_CALLBACK(sakura_focus_out), this);
+	g_signal_connect(G_OBJECT(main_window->gobj()), "focus-in-event",
+		G_CALLBACK(sakura_focus_in), this);
+	g_signal_connect(G_OBJECT(main_window->gobj()), "show",
+		G_CALLBACK(sakura_window_show_event), NULL);
+	// g_signal_connect(G_OBJECT(notebook), "focus-in-event",
+	// G_CALLBACK(sakura_notebook_focus_in), NULL);
+	g_signal_connect(notebook, "scroll-event", G_CALLBACK(sakura_notebook_scroll), this);
+
+	/* Add initial tabs (1 by default) */
+	for (int i = 0; i < option_ntabs; i++)
+		sakura_add_tab();
+
+	sanitize_working_directory();
+}
+
+Sakura::~Sakura()
+{
+	for (uint8_t i=0; i < 3; i++) {
+		if (argv[i]) {
+			free(argv[i]);
+		}
+	}
+
+	if (http_vteregexp) {
+		vte_regex_unref(http_vteregexp);
+	}
+
+	if (mail_vteregexp) {
+		vte_regex_unref(mail_vteregexp);
+	}
+}
+
+static const gint BACKWARDS = 2;
+
 static guint sakura_tokeycode(guint key)
 {
 	GdkKeymap *keymap;
@@ -150,144 +270,6 @@ static guint sakura_tokeycode(guint key)
 	}
 
 	return res;
-}
-
-void Sakura::init()
-{
-	term_data_id = g_quark_from_static_string("sakura_term");
-
-	/* Use always GTK header bar*/
-	g_object_set(gtk_settings_get_default(), "gtk-dialogs-use-header", TRUE, NULL);
-
-	sakura->provider = gtk_css_provider_new();
-
-	sakura->main_window = new Gtk::Window(Gtk::WINDOW_TOPLEVEL);
-	sakura->main_window->set_title("sakura");
-
-	/* Create notebook and set style */
-	sakura->notebook = gtk_notebook_new();
-	gtk_notebook_set_scrollable(
-			(GtkNotebook *)sakura->notebook, sakura->config.scrollable_tabs);
-
-	gchar *css = g_strdup_printf(NOTEBOOK_CSS);
-	gtk_css_provider_load_from_data(sakura->provider, css, -1, NULL);
-	GtkStyleContext *context = gtk_widget_get_style_context(sakura->notebook);
-	gtk_style_context_add_provider(context, GTK_STYLE_PROVIDER(sakura->provider),
-			GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
-	g_free(css);
-
-	/* Adding mask, for handle scroll events */
-	gtk_widget_add_events(sakura->notebook, GDK_SCROLL_MASK);
-
-	/* Figure out if we have rgba capabilities. FIXME: Is this really needed? */
-	GdkScreen *screen = sakura->main_window->get_screen()->gobj();
-	GdkVisual *visual = gdk_screen_get_rgba_visual(screen);
-	if (visual != NULL && gdk_screen_is_composited(screen)) {
-		gtk_widget_set_visual(GTK_WIDGET(sakura->main_window->gobj()), visual);
-	}
-
-	/* Command line optionsNULL initialization */
-
-	/* Set argv for forked childs. Real argv vector starts at argv[1] because we're
-	   using G_SPAWN_FILE_AND_ARGV_ZERO to be able to launch login shells */
-	sakura->argv[0] = g_strdup(g_getenv("SHELL"));
-	if (option_login) {
-		sakura->argv[1] = g_strdup_printf("-%s", g_getenv("SHELL"));
-	} else {
-		sakura->argv[1] = g_strdup(g_getenv("SHELL"));
-	}
-	sakura->argv[2] = NULL;
-
-	if (option_title) {
-		sakura->main_window->set_title(option_title);
-	}
-
-	if (option_columns) {
-		sakura->columns = option_columns;
-	}
-
-	if (option_rows) {
-		sakura->rows = option_rows;
-	}
-
-	/* Add datadir path to icon name and set icon */
-	std::string icon_path;
-	if (option_icon) {
-		icon_path.append(option_icon);
-	} else {
-		icon_path.append(DATADIR).append("/pixmaps/").append(sakura->config.icon);
-	}
-	sakura->main_window->set_icon_from_file(std::string(icon_path));
-
-	if (option_font) {
-		sakura->config.font = pango_font_description_from_string(option_font);
-	}
-
-	if (option_colorset && option_colorset > 0 && option_colorset <= NUM_COLORSETS) {
-		sakura->config.last_colorset = option_colorset;
-	}
-
-	/* These options are exclusive */
-	if (option_fullscreen) {
-		sakura_fullscreen(nullptr, sakura);
-	} else if (option_maximize) {
-		sakura->main_window->maximize();
-	}
-
-	sakura->label_count = 1;
-	sakura->resized = FALSE;
-	sakura->keep_fc = false;
-	sakura->externally_modified = false;
-
-	GError *error = nullptr;
-	sakura->http_vteregexp =
-			vte_regex_new_for_match(HTTP_REGEXP, strlen(HTTP_REGEXP), 0, &error);
-	if (!sakura->http_vteregexp) {
-		SAY("http_regexp: %s", error->message);
-		g_error_free(error);
-	}
-	error = nullptr;
-	sakura->mail_vteregexp =
-			vte_regex_new_for_match(MAIL_REGEXP, strlen(MAIL_REGEXP), 0, &error);
-	if (!sakura->mail_vteregexp) {
-		SAY("mail_regexp: %s", error->message);
-		g_error_free(error);
-	}
-
-	gtk_container_add(GTK_CONTAINER(sakura->main_window->gobj()), sakura->notebook);
-
-	/* Adding mask to see wheter sakura window is focused or not */
-	// gtk_widget_add_events(sakura->main_window, GDK_FOCUS_CHANGE_MASK);
-	sakura->focused = true;
-	sakura->first_focus = true;
-	sakura->faded = false;
-
-	sakura_init_popup();
-
-	g_signal_connect(G_OBJECT(sakura->main_window->gobj()), "delete_event",
-			G_CALLBACK(sakura_delete_event), NULL);
-	g_signal_connect(G_OBJECT(sakura->main_window->gobj()), "destroy",
-			G_CALLBACK(sakura_destroy_window), sakura);
-	g_signal_connect(G_OBJECT(sakura->main_window->gobj()), "key-press-event",
-			G_CALLBACK(sakura_on_key_press), sakura);
-	g_signal_connect(G_OBJECT(sakura->main_window->gobj()), "configure-event",
-			G_CALLBACK(sakura_resized_window), NULL);
-	g_signal_connect(G_OBJECT(sakura->main_window->gobj()), "focus-out-event",
-			G_CALLBACK(sakura_focus_out), sakura);
-	g_signal_connect(G_OBJECT(sakura->main_window->gobj()), "focus-in-event",
-			G_CALLBACK(sakura_focus_in), sakura);
-	g_signal_connect(G_OBJECT(sakura->main_window->gobj()), "show",
-			G_CALLBACK(sakura_window_show_event), NULL);
-	// g_signal_connect(G_OBJECT(sakura->notebook), "focus-in-event",
-	// G_CALLBACK(sakura_notebook_focus_in), NULL);
-	g_signal_connect(sakura->notebook, "scroll-event", G_CALLBACK(sakura_notebook_scroll),
-			sakura);
-
-	/* Add initial tabs (1 by default) */
-	for (int i = 0; i < option_ntabs; i++)
-		sakura_add_tab();
-
-	sanitize_working_directory();
 }
 
 void Sakura::destroy(GtkWidget *)
@@ -767,10 +749,10 @@ void Sakura::beep(GtkWidget *widget)
 {
 	// Remove the urgency hint. This is necessary to signal the window manager
 	// that a new urgent event happened when the urgent hint is set after this.
-	gtk_window_set_urgency_hint(GTK_WINDOW(main_window), FALSE);
+	main_window->set_urgency_hint(false);
 
 	if (config.urgent_bell) {
-		gtk_window_set_urgency_hint(GTK_WINDOW(main_window), TRUE);
+		main_window->set_urgency_hint(true);
 	}
 }
 
