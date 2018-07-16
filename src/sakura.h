@@ -11,7 +11,7 @@ class Window;
 
 class Sakura {
 public:
-	Sakura() = default;
+	Sakura();
 	~Sakura();
 	static void init();
 	void destroy(GtkWidget *);
@@ -45,7 +45,7 @@ public:
 	glong rows = DEFAULT_ROWS;
 	gint label_count;
 	bool keep_fc;                    /* Global flag to indicate that we don't want changes in the files and columns values */
-	bool config_modified;            /* Configuration has been modified */
+	bool config_modified = false;            /* Configuration has been modified */
 	bool externally_modified;        /* Configuration file has been modified by another process */
 	bool resized;
 	bool focused;                    /* For fading feature */

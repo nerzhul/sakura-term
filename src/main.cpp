@@ -86,10 +86,10 @@ int main(int argc, char **argv)
 	Gtk::Main app(&nargc, &nargv);
 	g_strfreev(nargv);
 
-	sakura = new Sakura();
+	Sakura *me = new Sakura();
 	Sakura::init();
 	Gtk::Main::run();
 
-	delete sakura;
+	delete me;
 	return 0;
 }

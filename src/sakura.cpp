@@ -22,6 +22,25 @@
 #define HTTP_REGEXP "(ftp|http)s?://[^ \t\n\b()<>{}«»\\[\\]\'\"]+[^.]"
 #define MAIL_REGEXP "[^ \t\n\b]+@([^ \t\n\b]+\\.)+([a-zA-Z]{2,4})"
 
+Sakura::Sakura()
+{
+	// This object is a singleton
+	assert(sakura == nullptr);
+	sakura = this;
+
+	/* Config file initialization*/
+	cfg = g_key_file_new();
+
+	if (!config.read()) {
+		exit(EXIT_FAILURE);
+	}
+
+	config.monitor();
+
+	/* set default title pattern from config or NULL */
+	tab_default_title = g_key_file_get_string(cfg, cfg_group, "tab_default_title", NULL);
+}
+
 Sakura::~Sakura()
 {
 	for (uint8_t i=0; i < 3; i++) {
@@ -135,23 +154,7 @@ static guint sakura_tokeycode(guint key)
 
 void Sakura::init()
 {
-	int i;
-
 	term_data_id = g_quark_from_static_string("sakura_term");
-
-	/* Config file initialization*/
-	sakura->cfg = g_key_file_new();
-	sakura->config_modified = false;
-
-	if (!sakura->config.read()) {
-		exit(EXIT_FAILURE);
-	}
-
-	sakura->config.monitor();
-
-	/* set default title pattern from config or NULL */
-	sakura->tab_default_title =
-			g_key_file_get_string(sakura->cfg, cfg_group, "tab_default_title", NULL);
 
 	/* Use always GTK header bar*/
 	g_object_set(gtk_settings_get_default(), "gtk-dialogs-use-header", TRUE, NULL);
@@ -281,7 +284,7 @@ void Sakura::init()
 			sakura);
 
 	/* Add initial tabs (1 by default) */
-	for (i = 0; i < option_ntabs; i++)
+	for (int i = 0; i < option_ntabs; i++)
 		sakura_add_tab();
 
 	sanitize_working_directory();
