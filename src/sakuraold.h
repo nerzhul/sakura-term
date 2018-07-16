@@ -95,5 +95,25 @@ void     sakura_search_dialog (GtkWidget *, void *);
 void     sakura_fullscreen (GtkWidget *, void *);
 void     sakura_set_colorset (int);
 
-// Functions
-void     sakura_init_popup();
+/* Menuitem callbacks */
+void sakura_font_dialog(GtkWidget *, void *);
+void sakura_color_dialog(GtkWidget *, void *);
+void sakura_set_title_dialog(GtkWidget *, void *);
+void sakura_new_tab(GtkWidget *, void *);
+void sakura_open_url(GtkWidget *, void *);
+void sakura_show_first_tab(GtkWidget *widget, void *data);
+void sakura_tabs_on_bottom(GtkWidget *widget, void *data);
+void sakura_less_questions(GtkWidget *widget, void *data);
+void sakura_show_close_button(GtkWidget *widget, void *data);
+void sakura_disable_numbered_tabswitch(GtkWidget *, void *);
+void sakura_use_fading(GtkWidget *, void *);
+void sakura_setname_entry_changed(GtkWidget *, void *);
+void sakura_urgent_bell(GtkWidget *widget, void *data);
+void sakura_audible_bell(GtkWidget *widget, void *data);
+void sakura_blinking_cursor(GtkWidget *widget, void *data);
+void sakura_allow_bold(GtkWidget *widget, void *data);
+void sakura_stop_tab_cycling_at_end_tabs(GtkWidget *widget, void *data);
+void sakura_set_cursor(GtkWidget *widget, void *data);
+void sakura_set_palette(GtkWidget *widget, void *data);
+void sakura_open_mail(GtkWidget *widget, void *data);
+void sakura_copy_url(GtkWidget *widget, void *data);

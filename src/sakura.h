@@ -14,6 +14,7 @@ public:
 	Sakura();
 	~Sakura();
 	void destroy(GtkWidget *);
+	void init_popup();
 
 	gboolean on_key_press(GtkWidget *widget, GdkEventKey *event);
 	gboolean on_focus_in(GtkWidget *widget, GdkEvent *event);
