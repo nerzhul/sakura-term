@@ -8,8 +8,7 @@ SakuraWindow::SakuraWindow(Gtk::WindowType type, Config * cfg) :
 {
 	signal_focus_in_event().connect(sigc::mem_fun(*this, &SakuraWindow::on_focus_in));
 	signal_focus_out_event().connect(sigc::mem_fun(*this, &SakuraWindow::on_focus_out));
-//	signal_check_resize().connect(sigc::mem_fun(*this, &SakuraWindow::on_resize));
-	signal_configure_event().connect(sigc::mem_fun(*this, &SakuraWindow::on_resize));
+	signal_check_resize().connect(sigc::mem_fun(*this, &SakuraWindow::on_resize));
 }
 
 bool SakuraWindow::on_focus_in(GdkEventFocus *event)
@@ -56,12 +55,11 @@ bool SakuraWindow::on_focus_out(GdkEventFocus *event)
 	return false;
 }
 
-bool SakuraWindow::on_resize(GdkEventConfigure *event)
+void SakuraWindow::on_resize()
 {
-	if (event->width != sakura->width || event->height != sakura->height) {
-		resized = TRUE;
+	if (get_width() != sakura->width || get_height() != sakura->height) {
+		resized = true;
 	}
 
 	std::cout << __FUNCTION__ << std::endl;
-	return false;
 }

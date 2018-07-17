@@ -12,7 +12,7 @@ public:
 
 	bool on_focus_in(GdkEventFocus *event);
 	bool on_focus_out(GdkEventFocus *event);
-	bool on_resize(GdkEventConfigure *event);
+	void on_resize();
 
 	bool resized = false;
 private:
