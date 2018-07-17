@@ -67,6 +67,7 @@ link_directories(
 add_executable(sakura
 	src/config.cpp
 	src/main.cpp
+	src/notebook.cpp
 	src/sakura.cpp
 	src/sakuraold.cpp
 	src/terminal.cpp

@@ -29,7 +29,6 @@ public:
 	void set_colors();
 
 	SakuraWindow *main_window = nullptr;
-	GtkWidget *notebook;
 	GtkWidget *menu;
 	GdkRGBA forecolors[NUM_COLORSETS];
 	GdkRGBA backcolors[NUM_COLORSETS];
@@ -50,7 +49,6 @@ public:
 	GtkWidget *open_link_separator;
 	GKeyFile *cfg;
 	GtkCssProvider *provider;
-	gchar *tab_default_title;
 	VteRegex *http_vteregexp, *mail_vteregexp;
 	char *argv[3];
 	Config config;

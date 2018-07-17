@@ -3,20 +3,22 @@
 #include <gtkmm.h>
 
 class Config;
+class SakuraNotebook;
 
 class SakuraWindow : public Gtk::Window
 {
 public:
-	SakuraWindow(Gtk::WindowType type, Config *cfg);
-	~SakuraWindow() = default;
+	SakuraWindow(Gtk::WindowType type, const Config *cfg);
+	~SakuraWindow();
 
 	bool on_focus_in(GdkEventFocus *event);
 	bool on_focus_out(GdkEventFocus *event);
 	void on_resize();
 
+	SakuraNotebook *notebook = nullptr;
 	bool resized = false;
 private:
-	const Config *config;
-	bool focused = true;                    /* For fading feature */
-	bool first_focus = true;                /* First time gtkwindow recieve focus when is created */
+	const Config *m_config;
+	bool m_focused = true;                    /* For fading feature */
+	bool m_first_focus = true;                /* First time gtkwindow recieve focus when is created */
 };

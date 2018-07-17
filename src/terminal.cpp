@@ -3,13 +3,15 @@
 #include <iostream>
 #include <libintl.h>
 
+gchar *Terminal::tab_default_title = nullptr;
+
 Terminal::Terminal()
 {
 	gchar *_label_text = _("Terminal %d");
 	/* appling tab title pattern from config
 	 * (https://answers.launchpad.net/sakura/+question/267951) */
-	if (sakura->tab_default_title != NULL) {
-		_label_text = sakura->tab_default_title;
+	if (tab_default_title != NULL) {
+		_label_text = tab_default_title;
 		label_set_byuser = true;
 	}
 

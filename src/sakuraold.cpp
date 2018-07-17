@@ -45,6 +45,7 @@
 #include <vte/vte.h>
 #include "debug.h"
 #include "gettext.h"
+#include "notebook.h"
 #include "palettes.h"
 #include "sakura.h"
 #include "sakuraold.h"
@@ -121,7 +122,7 @@ static gboolean sakura_button_press(
 	if (button_event->type != GDK_BUTTON_PRESS)
 		return FALSE;
 
-	page = gtk_notebook_get_current_page(GTK_NOTEBOOK(sakura->notebook));
+	page = gtk_notebook_get_current_page(sakura->main_window->notebook->gobj());
 	term = sakura_get_page_term(sakura, page);
 
 	/* Find out if cursor it's over a matched expression...*/
@@ -185,7 +186,7 @@ static gboolean sakura_button_press(
 //	Terminal *term;
 //	int index;
 //
-//	index = gtk_notebook_get_current_page(GTK_NOTEBOOK(sakura->notebook));
+//	index = gtk_notebook_get_current_page(sakura->main_window->notebook->gobj());
 //	term = sakura_get_page_term(sakura, index);
 //
 //	/* If term is found stop event propagation */
@@ -266,7 +267,7 @@ static void sakura_title_changed(GtkWidget *widget, void *data)
 	VteTerminal *vte_term = (VteTerminal *)widget;
 
 	modified_page = sakura_find_tab(vte_term);
-	n_pages = gtk_notebook_get_n_pages(GTK_NOTEBOOK(sakura->notebook));
+	n_pages = gtk_notebook_get_n_pages(sakura->main_window->notebook->gobj());
 	term = sakura_get_page_term(sakura, modified_page);
 
 	title = vte_terminal_get_window_title(VTE_TERMINAL(term->vte));
@@ -369,7 +370,7 @@ void sakura_set_name_dialog(GtkWidget *widget, void *data)
 	Terminal *term;
 	const gchar *text;
 
-	page = gtk_notebook_get_current_page(GTK_NOTEBOOK(sakura->notebook));
+	page = gtk_notebook_get_current_page(sakura->main_window->notebook->gobj());
 	term = sakura_get_page_term(sakura, page);
 
 	input_dialog = gtk_dialog_new_with_buttons(_("Set tab name"),
@@ -395,7 +396,7 @@ void sakura_set_name_dialog(GtkWidget *widget, void *data)
 	label = gtk_label_new(_("New text"));
 	/* Set tab label as entry default text (when first tab is not displayed, get_tab_label_text
 	   returns a null value, so check accordingly */
-	text = gtk_notebook_get_tab_label_text(GTK_NOTEBOOK(sakura->notebook), term->hbox);
+	text = gtk_notebook_get_tab_label_text(sakura->main_window->notebook->gobj(), term->hbox);
 	if (text) {
 		gtk_entry_set_text(GTK_ENTRY(entry), text);
 	}
@@ -430,7 +431,7 @@ void sakura_set_colorset(int cs)
 	if (cs < 0 || cs >= NUM_COLORSETS)
 		return;
 
-	page = gtk_notebook_get_current_page(GTK_NOTEBOOK(sakura->notebook));
+	page = gtk_notebook_get_current_page(sakura->main_window->notebook->gobj());
 	term = sakura_get_page_term(sakura, page);
 	term->colorset = cs;
 
@@ -503,7 +504,7 @@ void sakura_color_dialog(GtkWidget *widget, void *data)
 	GdkRGBA temp_back[NUM_COLORSETS];
 	GdkRGBA temp_curs[NUM_COLORSETS];
 
-	page = gtk_notebook_get_current_page(GTK_NOTEBOOK(sakura->notebook));
+	page = gtk_notebook_get_current_page(sakura->main_window->notebook->gobj());
 	term = sakura_get_page_term(sakura, page);
 
 	color_dialog = gtk_dialog_new_with_buttons(_("Select colors"),
@@ -648,7 +649,7 @@ void sakura_fade_out()
 	gint page;
 	Terminal *term;
 
-	page = gtk_notebook_get_current_page(GTK_NOTEBOOK(sakura->notebook));
+	page = gtk_notebook_get_current_page(sakura->main_window->notebook->gobj());
 	term = sakura_get_page_term(sakura, page);
 
 	if (!sakura->faded) {
@@ -672,7 +673,7 @@ void sakura_fade_in()
 	gint page;
 	Terminal *term;
 
-	page = gtk_notebook_get_current_page(GTK_NOTEBOOK(sakura->notebook));
+	page = gtk_notebook_get_current_page(sakura->main_window->notebook->gobj());
 	term = sakura_get_page_term(sakura, page);
 
 	if (sakura->faded) {
@@ -735,7 +736,7 @@ void sakura_search_dialog(GtkWidget *widget, void *data)
 	if (response == GTK_RESPONSE_ACCEPT) {
 		gint page;
 		Terminal *term;
-		page = gtk_notebook_get_current_page(GTK_NOTEBOOK(sakura->notebook));
+		page = gtk_notebook_get_current_page(sakura->main_window->notebook->gobj());
 		term = sakura_get_page_term(sakura, page);
 		search(VTE_TERMINAL(term->vte), gtk_entry_get_text(GTK_ENTRY(entry)), 0);
 	}
@@ -848,13 +849,13 @@ void sakura_open_mail(GtkWidget *widget, void *data)
 void sakura_show_first_tab(GtkWidget *widget, void *data)
 {
 	if (gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(widget))) {
-		gtk_notebook_set_show_tabs(GTK_NOTEBOOK(sakura->notebook), TRUE);
+		gtk_notebook_set_show_tabs(sakura->main_window->notebook->gobj(), TRUE);
 		sakura_set_config_string("show_always_first_tab", "Yes");
 		sakura->config.first_tab = true;
 	} else {
 		/* Only hide tabs if the notebook has one page */
-		if (gtk_notebook_get_n_pages(GTK_NOTEBOOK(sakura->notebook)) == 1) {
-			gtk_notebook_set_show_tabs(GTK_NOTEBOOK(sakura->notebook), FALSE);
+		if (gtk_notebook_get_n_pages(sakura->main_window->notebook->gobj()) == 1) {
+			gtk_notebook_set_show_tabs(sakura->main_window->notebook->gobj(), FALSE);
 		}
 		sakura_set_config_string("show_always_first_tab", "No");
 		sakura->config.first_tab = false;
@@ -866,10 +867,10 @@ void sakura_tabs_on_bottom(GtkWidget *widget, void *data)
 {
 
 	if (gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(widget))) {
-		gtk_notebook_set_tab_pos(GTK_NOTEBOOK(sakura->notebook), GTK_POS_BOTTOM);
+		gtk_notebook_set_tab_pos(sakura->main_window->notebook->gobj(), GTK_POS_BOTTOM);
 		sakura_set_config_boolean("tabs_on_bottom", TRUE);
 	} else {
-		gtk_notebook_set_tab_pos(GTK_NOTEBOOK(sakura->notebook), GTK_POS_TOP);
+		gtk_notebook_set_tab_pos(sakura->main_window->notebook->gobj(), GTK_POS_TOP);
 		sakura_set_config_boolean("tabs_on_bottom", FALSE);
 	}
 }
@@ -904,8 +905,8 @@ void sakura_show_scrollbar(GtkWidget *widget, void *data)
 
 	sakura->keep_fc = 1;
 
-	n_pages = gtk_notebook_get_n_pages(GTK_NOTEBOOK(sakura->notebook));
-	page = gtk_notebook_get_current_page(GTK_NOTEBOOK(sakura->notebook));
+	n_pages = gtk_notebook_get_n_pages(sakura->main_window->notebook->gobj());
+	page = gtk_notebook_get_current_page(sakura->main_window->notebook->gobj());
 	term = sakura_get_page_term(sakura, page);
 
 	if (!g_key_file_get_boolean(sakura->cfg, cfg_group, "scrollbar", NULL)) {
@@ -942,7 +943,7 @@ void sakura_audible_bell(GtkWidget *widget, void *data)
 	gint page;
 	Terminal *term;
 
-	page = gtk_notebook_get_current_page(GTK_NOTEBOOK(sakura->notebook));
+	page = gtk_notebook_get_current_page(sakura->main_window->notebook->gobj());
 	term = sakura_get_page_term(sakura, page);
 
 	if (gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(widget))) {
@@ -959,7 +960,7 @@ void sakura_blinking_cursor(GtkWidget *widget, void *data)
 	gint page;
 	Terminal *term;
 
-	page = gtk_notebook_get_current_page(GTK_NOTEBOOK(sakura->notebook));
+	page = gtk_notebook_get_current_page(sakura->main_window->notebook->gobj());
 	term = sakura_get_page_term(sakura, page);
 
 	if (gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(widget))) {
@@ -976,7 +977,7 @@ void sakura_allow_bold(GtkWidget *widget, void *data)
 	gint page;
 	Terminal *term;
 
-	page = gtk_notebook_get_current_page(GTK_NOTEBOOK(sakura->notebook));
+	page = gtk_notebook_get_current_page(GTK_NOTEBOOK(sakura->main_window->notebook->gobj()));
 	term = sakura_get_page_term(sakura, page);
 
 	if (gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(widget))) {
@@ -1006,7 +1007,7 @@ void sakura_set_cursor(GtkWidget *widget, void *data)
 	int n_pages, i;
 
 	char *cursor_string = (char *)data;
-	n_pages = gtk_notebook_get_n_pages(GTK_NOTEBOOK(sakura->notebook));
+	n_pages = gtk_notebook_get_n_pages(sakura->main_window->notebook->gobj());
 
 	if (gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(widget))) {
 
@@ -1115,7 +1116,7 @@ void sakura_copy(GtkWidget *widget, void *data)
 	gint page;
 	Terminal *term;
 
-	page = gtk_notebook_get_current_page(GTK_NOTEBOOK(sakura->notebook));
+	page = gtk_notebook_get_current_page(sakura->main_window->notebook->gobj());
 	term = sakura_get_page_term(sakura, page);
 
 	vte_terminal_copy_clipboard_format(VTE_TERMINAL(term->vte), VTE_FORMAT_TEXT);
@@ -1127,7 +1128,7 @@ void sakura_paste(GtkWidget *widget, void *data)
 	gint page;
 	Terminal *term;
 
-	page = gtk_notebook_get_current_page(GTK_NOTEBOOK(sakura->notebook));
+	page = gtk_notebook_get_current_page(sakura->main_window->notebook->gobj());
 	term = sakura_get_page_term(sakura, page);
 
 	vte_terminal_paste_clipboard(VTE_TERMINAL(term->vte));
@@ -1160,9 +1161,9 @@ static void sakura_closebutton_clicked(GtkWidget *widget, void *data)
 	GtkWidget *dialog;
 	gint npages, response;
 
-	page = gtk_notebook_page_num(GTK_NOTEBOOK(sakura->notebook), hbox);
+	page = gtk_notebook_page_num(sakura->main_window->notebook->gobj(), hbox);
 	term = sakura_get_page_term(sakura, page);
-	npages = gtk_notebook_get_n_pages(GTK_NOTEBOOK(sakura->notebook));
+	npages = gtk_notebook_get_n_pages(sakura->main_window->notebook->gobj());
 
 	/* Only write configuration to disk if it's the last tab */
 	if (npages == 1) {
@@ -1227,7 +1228,7 @@ void sakura_set_size()
 	gint page;
 
 	term = sakura_get_page_term(sakura, 0);
-	npages = gtk_notebook_get_n_pages(GTK_NOTEBOOK(sakura->notebook));
+	npages = gtk_notebook_get_n_pages(sakura->main_window->notebook->gobj());
 
 	/* Mayhaps an user resize happened. Check if row and columns have changed */
 	if (sakura->main_window->resized) {
@@ -1263,7 +1264,7 @@ void sakura_set_size()
 		sakura->width += /* (hb*2)+*/ (pad_x * 2);
 	}
 
-	page = gtk_notebook_get_current_page(GTK_NOTEBOOK(sakura->notebook));
+	page = gtk_notebook_get_current_page(sakura->main_window->notebook->gobj());
 	term = sakura_get_page_term(sakura, page);
 
 	gtk_widget_get_preferred_width(term->scrollbar, &min_width, &natural_width);
@@ -1292,7 +1293,7 @@ static void sakura_set_font()
 	Terminal *term;
 	int i;
 
-	n_pages = gtk_notebook_get_n_pages(GTK_NOTEBOOK(sakura->notebook));
+	n_pages = gtk_notebook_get_n_pages(sakura->main_window->notebook->gobj());
 
 	/* Set the font for all tabs */
 	for (i = (n_pages - 1); i >= 0; i--) {
@@ -1306,16 +1307,16 @@ void sakura_move_tab(gint direction)
 	gint page, n_pages;
 	GtkWidget *child;
 
-	page = gtk_notebook_get_current_page(GTK_NOTEBOOK(sakura->notebook));
-	n_pages = gtk_notebook_get_n_pages(GTK_NOTEBOOK(sakura->notebook));
-	child = gtk_notebook_get_nth_page(GTK_NOTEBOOK(sakura->notebook), page);
+	page = gtk_notebook_get_current_page(sakura->main_window->notebook->gobj());
+	n_pages = gtk_notebook_get_n_pages(sakura->main_window->notebook->gobj());
+	child = gtk_notebook_get_nth_page(sakura->main_window->notebook->gobj(), page);
 
 	if (direction == FORWARD) {
 		if (page != n_pages - 1)
-			gtk_notebook_reorder_child(GTK_NOTEBOOK(sakura->notebook), child, page + 1);
+			gtk_notebook_reorder_child(sakura->main_window->notebook->gobj(), child, page + 1);
 	} else {
 		if (page != 0)
-			gtk_notebook_reorder_child(GTK_NOTEBOOK(sakura->notebook), child, page - 1);
+			gtk_notebook_reorder_child(sakura->main_window->notebook->gobj(), child, page - 1);
 	}
 }
 
@@ -1325,7 +1326,7 @@ static gint sakura_find_tab(VteTerminal *vte_term)
 	gint matched_page, page, n_pages;
 	Terminal *term;
 
-	n_pages = gtk_notebook_get_n_pages(GTK_NOTEBOOK(sakura->notebook));
+	n_pages = gtk_notebook_get_n_pages(sakura->main_window->notebook->gobj());
 
 	matched_page = -1;
 	page = 0;
@@ -1413,7 +1414,7 @@ void sakura_add_tab()
 	}
 
 	if (sakura->config.tabs_on_bottom) {
-		gtk_notebook_set_tab_pos(GTK_NOTEBOOK(sakura->notebook), GTK_POS_BOTTOM);
+		gtk_notebook_set_tab_pos(GTK_NOTEBOOK(sakura->main_window->notebook->gobj()), GTK_POS_BOTTOM);
 	}
 
 	/* Set tab title style */
@@ -1427,7 +1428,7 @@ void sakura_add_tab()
 	gtk_widget_show_all(tab_label_hbox);
 
 	/* Select the directory to use for the new tab */
-	index = gtk_notebook_get_current_page(GTK_NOTEBOOK(sakura->notebook));
+	index = gtk_notebook_get_current_page(GTK_NOTEBOOK(sakura->main_window->notebook->gobj()));
 	if (index >= 0) {
 		Terminal *prev_term;
 		prev_term = sakura_get_page_term(sakura, index);
@@ -1442,17 +1443,17 @@ void sakura_add_tab()
 	sakura->keep_fc = true;
 
 	if ((index = gtk_notebook_append_page(
-			     GTK_NOTEBOOK(sakura->notebook), term->hbox, tab_label_hbox)) == -1) {
+			     GTK_NOTEBOOK(sakura->main_window->notebook->gobj()), term->hbox, tab_label_hbox)) == -1) {
 		sakura_error("Cannot create a new tab");
 		exit(1);
 	}
 
-	gtk_notebook_set_tab_reorderable(GTK_NOTEBOOK(sakura->notebook), term->hbox, TRUE);
+	gtk_notebook_set_tab_reorderable(GTK_NOTEBOOK(sakura->main_window->notebook->gobj()), term->hbox, TRUE);
 	// TODO: Set group id to support detached tabs
-	// gtk_notebook_set_tab_detachable(GTK_NOTEBOOK(sakura->notebook), term->hbox, TRUE);
+	// gtk_notebook_set_tab_detachable(sakura->main_window->notebook->gobj(), term->hbox, TRUE);
 
 	g_object_set_qdata_full(G_OBJECT(gtk_notebook_get_nth_page(
-		(GtkNotebook *)sakura->notebook, index)), term_data_id, term, (GDestroyNotify)Terminal::free);
+		(GtkNotebook *)sakura->main_window->notebook->gobj(), index)), term_data_id, term, (GDestroyNotify)Terminal::free);
 
 
 	/* vte signals */
@@ -1470,7 +1471,7 @@ void sakura_add_tab()
 			G_CALLBACK(sakura_button_press), sakura->menu);
 
 	/* Notebook signals */
-	g_signal_connect(G_OBJECT(sakura->notebook), "page-removed",
+	g_signal_connect(G_OBJECT(sakura->main_window->notebook->gobj()), "page-removed",
 			G_CALLBACK(sakura_page_removed), sakura);
 	if (sakura->config.show_closebutton) {
 		g_signal_connect(G_OBJECT(close_button), "clicked",
@@ -1480,21 +1481,21 @@ void sakura_add_tab()
 	/* Since vte-2.91 env is properly overwritten */
 	char *command_env[2] = {const_cast<char *>("TERM=xterm-256color"), nullptr};
 	/* First tab */
-	npages = gtk_notebook_get_n_pages(GTK_NOTEBOOK(sakura->notebook));
+	npages = gtk_notebook_get_n_pages(GTK_NOTEBOOK(sakura->main_window->notebook->gobj()));
 	if (npages == 1) {
 		if (sakura->config.first_tab) {
-			gtk_notebook_set_show_tabs(GTK_NOTEBOOK(sakura->notebook), TRUE);
+			gtk_notebook_set_show_tabs(GTK_NOTEBOOK(sakura->main_window->notebook->gobj()), TRUE);
 		} else {
-			gtk_notebook_set_show_tabs(GTK_NOTEBOOK(sakura->notebook), FALSE);
+			gtk_notebook_set_show_tabs(GTK_NOTEBOOK(sakura->main_window->notebook->gobj()), FALSE);
 		}
 
-		gtk_notebook_set_show_border(GTK_NOTEBOOK(sakura->notebook), FALSE);
+		gtk_notebook_set_show_border(GTK_NOTEBOOK(sakura->main_window->notebook->gobj()), FALSE);
 		sakura_set_font();
 		sakura->set_colors();
 		/* Set size before showing the widgets but after setting the font */
 		sakura_set_size();
 
-		gtk_widget_show_all(sakura->notebook);
+		gtk_widget_show_all(GTK_WIDGET(sakura->main_window->notebook->gobj()));
 		if (!sakura->config.show_scrollbar) {
 			gtk_widget_hide(term->scrollbar);
 		}
@@ -1614,13 +1615,13 @@ void sakura_add_tab()
 		}
 
 		if (npages == 2) {
-			gtk_notebook_set_show_tabs(GTK_NOTEBOOK(sakura->notebook), TRUE);
+			gtk_notebook_set_show_tabs(GTK_NOTEBOOK(sakura->main_window->notebook->gobj()), TRUE);
 			sakura_set_size();
 		}
 		/* Call set_current page after showing the widget: gtk ignores this
 		 * function in the window is not visible *sigh*. Gtk documentation
 		 * says this is for "historical" reasons. Me arse */
-		gtk_notebook_set_current_page(GTK_NOTEBOOK(sakura->notebook), index);
+		gtk_notebook_set_current_page(GTK_NOTEBOOK(sakura->main_window->notebook->gobj()), index);
 		vte_terminal_spawn_async(VTE_TERMINAL(term->vte), VTE_PTY_NO_HELPER, cwd,
 				sakura->argv, command_env,
 				(GSpawnFlags)(G_SPAWN_SEARCH_PATH | G_SPAWN_FILE_AND_ARGV_ZERO),
