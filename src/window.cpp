@@ -8,6 +8,7 @@ SakuraWindow::SakuraWindow(Gtk::WindowType type, Config * cfg) :
 {
 	signal_focus_in_event().connect(sigc::mem_fun(*this, &SakuraWindow::on_focus_in));
 	signal_focus_out_event().connect(sigc::mem_fun(*this, &SakuraWindow::on_focus_out));
+//	signal_check_resize().connect(sigc::mem_fun(*this, &SakuraWindow::on_resize));
 	signal_configure_event().connect(sigc::mem_fun(*this, &SakuraWindow::on_resize));
 }
 
