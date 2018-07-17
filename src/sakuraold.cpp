@@ -49,6 +49,7 @@
 #include "sakura.h"
 #include "sakuraold.h"
 #include "terminal.h"
+#include "window.h"
 
 #define HIG_DIALOG_CSS                                                                             \
 	"* {\n"                                                                                    \
@@ -175,18 +176,6 @@ static gboolean sakura_button_press(
 	}
 
 	return FALSE;
-}
-
-gboolean sakura_focus_in(GtkWidget *widget, GdkEvent *event, void *data)
-{
-	auto *obj = (Sakura *)data;
-	return sakura->on_focus_in(widget, event);
-}
-
-gboolean sakura_focus_out(GtkWidget *widget, GdkEvent *event, void *data)
-{
-	auto *obj = (Sakura *)data;
-	return sakura->on_focus_out(widget, event);
 }
 
 /* Handler for notebook focus-in-event */

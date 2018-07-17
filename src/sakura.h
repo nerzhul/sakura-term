@@ -2,9 +2,7 @@
 
 #include "config.h"
 
-namespace Gtk {
-class Window;
-}
+class SakuraWindow;
 
 #define DEFAULT_COLUMNS 80
 #define DEFAULT_ROWS 24
@@ -17,8 +15,6 @@ public:
 	void init_popup();
 
 	gboolean on_key_press(GtkWidget *widget, GdkEventKey *event);
-	gboolean on_focus_in(GtkWidget *widget, GdkEvent *event);
-	gboolean on_focus_out(GtkWidget *widget, GdkEvent *event);
 	void on_child_exited(GtkWidget *widget);
 	void on_eof(GtkWidget *widget);
 	void on_page_removed(GtkWidget *widget);
@@ -32,7 +28,7 @@ public:
 
 	void set_colors();
 
-	Gtk::Window *main_window = nullptr;
+	SakuraWindow *main_window = nullptr;
 	GtkWidget *notebook;
 	GtkWidget *menu;
 	GdkRGBA forecolors[NUM_COLORSETS];
@@ -48,8 +44,6 @@ public:
 	bool config_modified = false;            /* Configuration has been modified */
 	bool externally_modified = false;        /* Configuration file has been modified by another process */
 	bool resized = FALSE;
-	bool focused = true;                    /* For fading feature */
-	bool first_focus = true;                /* First time gtkwindow recieve focus when is created */
 	bool faded = false;			 /* Fading state */
 	GtkWidget *item_copy_link;       /* We include here only the items which need to be hidden */
 	GtkWidget *item_open_link;

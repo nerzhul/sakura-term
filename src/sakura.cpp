@@ -11,6 +11,7 @@
 #include "palettes.h"
 #include "sakuraold.h"
 #include "terminal.h"
+#include "window.h"
 
 static gboolean sakura_delete_event(GtkWidget *widget, void *data)
 {
@@ -99,7 +100,7 @@ void sanitize_working_directory()
 
 Sakura::Sakura() :
 	cfg(g_key_file_new()),
-	main_window(new Gtk::Window(Gtk::WINDOW_TOPLEVEL)),
+	main_window(new SakuraWindow(Gtk::WINDOW_TOPLEVEL, &config)),
 	provider(gtk_css_provider_new()),
 	notebook(gtk_notebook_new())
 {
@@ -217,10 +218,6 @@ Sakura::Sakura() :
 		G_CALLBACK(sakura_on_key_press), this);
 	g_signal_connect(G_OBJECT(main_window->gobj()), "configure-event",
 		G_CALLBACK(sakura_resized_window), NULL);
-	g_signal_connect(G_OBJECT(main_window->gobj()), "focus-out-event",
-		G_CALLBACK(sakura_focus_out), this);
-	g_signal_connect(G_OBJECT(main_window->gobj()), "focus-in-event",
-		G_CALLBACK(sakura_focus_in), this);
 	g_signal_connect(G_OBJECT(main_window->gobj()), "show",
 		G_CALLBACK(sakura_window_show_event), NULL);
 	// g_signal_connect(G_OBJECT(notebook), "focus-in-event",
@@ -653,64 +650,19 @@ void Sakura::set_colors()
 			gtk_widget_queue_draw(GTK_WIDGET(term->hbox));
 		}
 
-		sakura->backcolors[term->colorset].alpha = config.get_background_alpha();
+		backcolors[term->colorset].alpha = config.get_background_alpha();
 
 		vte_terminal_set_colors(VTE_TERMINAL(term->vte),
-			&sakura->forecolors[term->colorset],
-			&sakura->backcolors[term->colorset], sakura->config.palette,
+			&forecolors[term->colorset], &backcolors[term->colorset], config.palette,
 			PALETTE_SIZE);
 		vte_terminal_set_color_cursor(
-			VTE_TERMINAL(term->vte), &sakura->curscolors[term->colorset]);
+			VTE_TERMINAL(term->vte), &curscolors[term->colorset]);
 
 
 	}
 
 	/* Main window opacity must be set. Otherwise vte widget will remain opaque */
-	sakura->main_window->set_opacity(sakura->backcolors[term->colorset].alpha);
-}
-
-gboolean Sakura::on_focus_in(GtkWidget *widget, GdkEvent *event)
-{
-	if (event->type != GDK_FOCUS_CHANGE)
-		return FALSE;
-
-	/* Ignore first focus event */
-	if (first_focus) {
-		first_focus = false;
-		return FALSE;
-	}
-
-	if (!focused) {
-		focused = true;
-
-		if (!first_focus && config.use_fading) {
-			sakura_fade_in();
-		}
-
-		set_colors();
-		return TRUE;
-	}
-
-	return FALSE;
-}
-
-gboolean Sakura::on_focus_out(GtkWidget *widget, GdkEvent *event)
-{
-	if (event->type != GDK_FOCUS_CHANGE)
-		return FALSE;
-
-	if (focused) {
-		focused = false;
-
-		if (!first_focus && config.use_fading) {
-			sakura_fade_out();
-		}
-
-		set_colors();
-		return TRUE;
-	}
-
-	return FALSE;
+	sakura->main_window->set_opacity(backcolors[term->colorset].alpha);
 }
 
 gboolean Sakura::on_key_press(GtkWidget *widget, GdkEventKey *event)
