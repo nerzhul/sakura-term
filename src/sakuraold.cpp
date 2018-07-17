@@ -317,10 +317,7 @@ void sakura_config_done()
 			response = gtk_dialog_run(GTK_DIALOG(dialog));
 			gtk_widget_destroy(dialog);
 
-			if (response == GTK_RESPONSE_YES) {
-				overwrite = true;
-			} else
-				overwrite = false;
+			overwrite = response == GTK_RESPONSE_YES;
 		}
 
 		if (overwrite) {

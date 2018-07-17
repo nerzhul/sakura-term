@@ -34,35 +34,25 @@ SakuraWindow::~SakuraWindow()
 
 bool SakuraWindow::on_delete(GdkEventAny *event)
 {
-	Terminal *term;
-	GtkWidget *dialog;
-	gint response;
-	gint npages;
-	gint i;
-	pid_t pgid;
-
 	if (!sakura->config.less_questions) {
-		npages = gtk_notebook_get_n_pages(GTK_NOTEBOOK(sakura->main_window->notebook->gobj()));
+		gint npages = notebook->get_n_pages();
 
 		/* Check for each tab if there are running processes. Use tcgetpgrp to compare to
 		 * the shell PGID */
-		for (i = 0; i < npages; i++) {
-			term = sakura_get_page_term(sakura, i);
-			pgid = tcgetpgrp(vte_pty_get_fd(
+		for (gint i = 0; i < npages; i++) {
+			Terminal *term = sakura_get_page_term(sakura, i);
+			pid_t pgid = tcgetpgrp(vte_pty_get_fd(
 				vte_terminal_get_pty(VTE_TERMINAL(term->vte))));
 
 			/* If running processes are found, we ask one time and exit */
 			if ((pgid != -1) && (pgid != term->pid)) {
-				dialog = gtk_message_dialog_new(GTK_WINDOW(sakura->main_window->gobj()),
-					GTK_DIALOG_MODAL, GTK_MESSAGE_QUESTION,
-					GTK_BUTTONS_YES_NO,
-					_("There are running processes.\n\nDo you really "
-					  "want to close Sakura?"));
+				std::unique_ptr<Gtk::MessageDialog> dialog(new Gtk::MessageDialog(*this,
+					_("There are running processes.\n\nDo you really want to close "
+					"Sakura?"), false, Gtk::MESSAGE_QUESTION, Gtk::BUTTONS_YES_NO,
+					Gtk::DIALOG_MODAL));
 
-				response = gtk_dialog_run(GTK_DIALOG(dialog));
-				gtk_widget_destroy(dialog);
-
-				if (response == GTK_RESPONSE_YES) {
+				int response = dialog->run();
+				if (response == Gtk::RESPONSE_YES) {
 					sakura_config_done();
 					return false;
 				} else {
