@@ -12,7 +12,9 @@ public:
 
 	bool on_focus_in(GdkEventFocus *event);
 	bool on_focus_out(GdkEventFocus *event);
+	bool on_resize(GdkEventConfigure *event);
 
+	bool resized = false;
 private:
 	const Config *config;
 	bool focused = true;                    /* For fading feature */

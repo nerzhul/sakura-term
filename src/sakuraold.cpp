@@ -1096,17 +1096,6 @@ static char *sakura_get_term_cwd(Terminal *term)
 	return cwd;
 }
 
-gboolean sakura_resized_window(GtkWidget *widget, GdkEventConfigure *event, void *data)
-{
-	if (event->width != sakura->width || event->height != sakura->height) {
-		// SAY("Configure event received. Current w %d h %d ConfigureEvent w %d h %d",
-		// sakura->width, sakura->height, event->width, event->height);
-		sakura->resized = TRUE;
-	}
-
-	return FALSE;
-}
-
 void sakura_setname_entry_changed(GtkWidget *widget, void *data)
 {
 	GtkDialog *title_dialog = (GtkDialog *)data;
@@ -1228,11 +1217,6 @@ void sakura_use_fading(GtkWidget *widget, void *data)
 
 /******* Functions ********/
 
-void sakura_init_popup()
-{
-
-}
-
 void sakura_set_size()
 {
 	Terminal *term;
@@ -1246,11 +1230,11 @@ void sakura_set_size()
 	npages = gtk_notebook_get_n_pages(GTK_NOTEBOOK(sakura->notebook));
 
 	/* Mayhaps an user resize happened. Check if row and columns have changed */
-	if (sakura->resized) {
+	if (sakura->main_window->resized) {
 		sakura->columns = vte_terminal_get_column_count(VTE_TERMINAL(term->vte));
 		sakura->rows = vte_terminal_get_row_count(VTE_TERMINAL(term->vte));
 		SAY("New columns %ld and rows %ld", sakura->columns, sakura->rows);
-		sakura->resized = FALSE;
+		sakura->main_window->resized = false;
 	}
 
 	gtk_style_context_get_padding(gtk_widget_get_style_context(term->vte),

@@ -43,7 +43,6 @@ public:
 	bool keep_fc = false;                    /* Global flag to indicate that we don't want changes in the files and columns values */
 	bool config_modified = false;            /* Configuration has been modified */
 	bool externally_modified = false;        /* Configuration file has been modified by another process */
-	bool resized = FALSE;
 	bool faded = false;			 /* Fading state */
 	GtkWidget *item_copy_link;       /* We include here only the items which need to be hidden */
 	GtkWidget *item_open_link;
