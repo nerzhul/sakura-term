@@ -14,51 +14,6 @@
 #include "terminal.h"
 #include "window.h"
 
-static gboolean sakura_delete_event(GtkWidget *widget, void *data)
-{
-	Terminal *term;
-	GtkWidget *dialog;
-	gint response;
-	gint npages;
-	gint i;
-	pid_t pgid;
-
-	if (!sakura->config.less_questions) {
-		npages = gtk_notebook_get_n_pages(GTK_NOTEBOOK(sakura->main_window->notebook->gobj()));
-
-		/* Check for each tab if there are running processes. Use tcgetpgrp to compare to
-		 * the shell PGID */
-		for (i = 0; i < npages; i++) {
-
-			term = sakura_get_page_term(sakura, i);
-			pgid = tcgetpgrp(vte_pty_get_fd(
-				vte_terminal_get_pty(VTE_TERMINAL(term->vte))));
-
-			/* If running processes are found, we ask one time and exit */
-			if ((pgid != -1) && (pgid != term->pid)) {
-				dialog = gtk_message_dialog_new(GTK_WINDOW(sakura->main_window->gobj()),
-					GTK_DIALOG_MODAL, GTK_MESSAGE_QUESTION,
-					GTK_BUTTONS_YES_NO,
-					_("There are running processes.\n\nDo you really "
-					  "want to close Sakura?"));
-
-				response = gtk_dialog_run(GTK_DIALOG(dialog));
-				gtk_widget_destroy(dialog);
-
-				if (response == GTK_RESPONSE_YES) {
-					sakura_config_done();
-					return FALSE;
-				} else {
-					return TRUE;
-				}
-			}
-		}
-	}
-
-	sakura_config_done();
-	return FALSE;
-}
-
 static void sakura_on_key_press(GtkWidget *widget, GdkEventKey *event, gpointer data)
 {
 	auto *obj = (Sakura *)data;
@@ -196,12 +151,8 @@ Sakura::Sakura() :
 		g_error_free(error);
 	}
 
-	gtk_container_add(GTK_CONTAINER(main_window->gobj()), GTK_WIDGET(main_window->notebook->gobj()));
-
 	init_popup();
 
-	g_signal_connect(G_OBJECT(main_window->gobj()), "delete_event",
-		G_CALLBACK(sakura_delete_event), NULL);
 	g_signal_connect(G_OBJECT(main_window->gobj()), "destroy",
 		G_CALLBACK(sakura_destroy_window), this);
 	g_signal_connect(G_OBJECT(main_window->gobj()), "key-press-event",

@@ -13,6 +13,7 @@ public:
 
 	bool on_focus_in(GdkEventFocus *event);
 	bool on_focus_out(GdkEventFocus *event);
+	bool on_delete(GdkEventAny *event);
 	void on_resize();
 
 	SakuraNotebook *notebook = nullptr;

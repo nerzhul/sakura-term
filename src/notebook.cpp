@@ -10,7 +10,7 @@ SakuraNotebook::SakuraNotebook(const Config *cfg) :
 SakuraNotebook::~SakuraNotebook()
 {
 	/* Delete all existing tabs */
-	while (gtk_notebook_get_n_pages(gobj()) >= 1) {
+	while (get_n_pages() >= 1) {
 		sakura->del_tab(-1);
 	}
 }
