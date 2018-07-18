@@ -375,9 +375,10 @@ void sakura_set_name_dialog(GtkWidget *widget, void *data)
 
 	/* Set style */
 	gchar *css = g_strdup_printf(HIG_DIALOG_CSS);
-	gtk_css_provider_load_from_data(sakura->provider, css, -1, NULL);
+	sakura->provider->load_from_data(std::string(css));
 	GtkStyleContext *context = gtk_widget_get_style_context(input_dialog);
-	gtk_style_context_add_provider(context, GTK_STYLE_PROVIDER(sakura->provider),
+
+	gtk_style_context_add_provider(context, GTK_STYLE_PROVIDER(sakura->provider->gobj()),
 			GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
 	g_free(css);
 
@@ -509,9 +510,9 @@ void sakura_color_dialog(GtkWidget *widget, void *data)
 
 	/* Set style */
 	gchar *css = g_strdup_printf(HIG_DIALOG_CSS);
-	gtk_css_provider_load_from_data(sakura->provider, css, -1, NULL);
+	sakura->provider->load_from_data(std::string(css));
 	GtkStyleContext *context = gtk_widget_get_style_context(color_dialog);
-	gtk_style_context_add_provider(context, GTK_STYLE_PROVIDER(sakura->provider),
+	gtk_style_context_add_provider(context, GTK_STYLE_PROVIDER(sakura->provider->gobj()),
 			GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
 	g_free(css);
 
@@ -700,9 +701,9 @@ void sakura_search_dialog(GtkWidget *widget, void *data)
 
 	/* Set style */
 	gchar *css = g_strdup_printf(HIG_DIALOG_CSS);
-	gtk_css_provider_load_from_data(sakura->provider, css, -1, NULL);
+	sakura->provider->load_from_data(std::string(css));
 	GtkStyleContext *context = gtk_widget_get_style_context(title_dialog);
-	gtk_style_context_add_provider(context, GTK_STYLE_PROVIDER(sakura->provider),
+	gtk_style_context_add_provider(context, GTK_STYLE_PROVIDER(sakura->provider->gobj()),
 			GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
 	g_free(css);
 
@@ -752,9 +753,9 @@ void sakura_set_title_dialog(GtkWidget *widget, void *data)
 
 	/* Set style */
 	gchar *css = g_strdup_printf(HIG_DIALOG_CSS);
-	gtk_css_provider_load_from_data(sakura->provider, css, -1, NULL);
+	sakura->provider->load_from_data(std::string(css));
 	GtkStyleContext *context = gtk_widget_get_style_context(title_dialog);
-	gtk_style_context_add_provider(context, GTK_STYLE_PROVIDER(sakura->provider),
+	gtk_style_context_add_provider(context, GTK_STYLE_PROVIDER(sakura->provider->gobj()),
 			GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
 	g_free(css);
 
@@ -1409,9 +1410,9 @@ void sakura_add_tab()
 
 	/* Set tab title style */
 	gchar *css = g_strdup_printf(TAB_TITLE_CSS);
-	gtk_css_provider_load_from_data(sakura->provider, css, -1, NULL);
+	sakura->provider->load_from_data(std::string(css));
 	GtkStyleContext *context = gtk_widget_get_style_context(tab_label_hbox);
-	gtk_style_context_add_provider(context, GTK_STYLE_PROVIDER(sakura->provider),
+	gtk_style_context_add_provider(context, GTK_STYLE_PROVIDER(sakura->provider->gobj()),
 			GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
 	g_free(css);
 

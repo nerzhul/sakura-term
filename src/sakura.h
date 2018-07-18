@@ -1,6 +1,7 @@
 #pragma once
 
 #include "config.h"
+#include <gtkmm.h>
 
 class SakuraWindow;
 
@@ -47,7 +48,7 @@ public:
 	GtkWidget *item_open_mail;
 	GtkWidget *open_link_separator;
 	GKeyFile *cfg;
-	GtkCssProvider *provider;
+	Glib::RefPtr<Gtk::CssProvider> provider;
 	VteRegex *http_vteregexp, *mail_vteregexp;
 	char *argv[3];
 	Config config;

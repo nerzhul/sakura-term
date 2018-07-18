@@ -56,7 +56,7 @@ void sanitize_working_directory()
 
 Sakura::Sakura() :
 	cfg(g_key_file_new()),
-	provider(gtk_css_provider_new())
+	provider(Gtk::CssProvider::create())
 {
 	// This object is a singleton
 	assert(sakura == nullptr);
@@ -80,10 +80,9 @@ Sakura::Sakura() :
 	g_object_set(gtk_settings_get_default(), "gtk-dialogs-use-header", TRUE, NULL);
 
 	gchar *css = g_strdup_printf(NOTEBOOK_CSS);
-	gtk_css_provider_load_from_data(provider, css, -1, NULL);
-	GtkStyleContext *context = gtk_widget_get_style_context(GTK_WIDGET(main_window->notebook->gobj()));
-	gtk_style_context_add_provider(context, GTK_STYLE_PROVIDER(provider),
-		GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+	provider->load_from_data(std::string(css));
+	auto context = main_window->notebook->get_style_context();
+	context->add_provider(provider, GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
 	g_free(css);
 
 	/* Adding mask, for handle scroll events */
