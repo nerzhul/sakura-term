@@ -6,6 +6,9 @@ SakuraNotebook::SakuraNotebook(const Config *cfg) :
 {
 	set_scrollable(cfg->scrollable_tabs);
 
+	/* Adding mask, for handle scroll events */
+	add_events(Gdk::SCROLL_MASK);
+
 	signal_scroll_event().connect(sigc::mem_fun(*this, &SakuraNotebook::on_scroll_event));
 }
 

@@ -1405,7 +1405,7 @@ void sakura_add_tab()
 	}
 
 	if (sakura->config.tabs_on_bottom) {
-		gtk_notebook_set_tab_pos(GTK_NOTEBOOK(sakura->main_window->notebook->gobj()), GTK_POS_BOTTOM);
+		sakura->main_window->notebook->set_tab_pos(Gtk::POS_BOTTOM);
 	}
 
 	/* Set tab title style */
@@ -1419,7 +1419,7 @@ void sakura_add_tab()
 	gtk_widget_show_all(tab_label_hbox);
 
 	/* Select the directory to use for the new tab */
-	index = gtk_notebook_get_current_page(GTK_NOTEBOOK(sakura->main_window->notebook->gobj()));
+	index = sakura->main_window->notebook->get_current_page();
 	if (index >= 0) {
 		Terminal *prev_term;
 		prev_term = sakura_get_page_term(sakura, index);

@@ -19,7 +19,16 @@ SakuraWindow::SakuraWindow(Gtk::WindowType type, const Config *cfg) :
 		gtk_widget_set_visual(GTK_WIDGET(gobj()), visual->gobj());
 	}
 
-	gtk_container_add(GTK_CONTAINER(gobj()), GTK_WIDGET(notebook->gobj()));
+	/* Add datadir path to icon name and set icon */
+	std::string icon_path;
+	if (option_icon) {
+		icon_path.append(option_icon);
+	} else {
+		icon_path.append(DATADIR).append("/pixmaps/").append(cfg->icon);
+	}
+	set_icon_from_file(std::string(icon_path));
+
+	add(*notebook);
 
 	signal_focus_in_event().connect(sigc::mem_fun(*this, &SakuraWindow::on_focus_in));
 	signal_focus_out_event().connect(sigc::mem_fun(*this, &SakuraWindow::on_focus_out));
