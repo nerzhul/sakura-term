@@ -85,7 +85,6 @@ void     sakura_set_name_dialog (GtkWidget *, void *);
 void     sakura_conf_changed (GtkWidget *, void *);
 void     sakura_window_show_event (GtkWidget *, gpointer);
 //static gboolean sakura_notebook_focus_in (GtkWidget *, void *);
-gboolean sakura_notebook_scroll (GtkWidget *, GdkEventScroll *);
 
 void     sakura_show_scrollbar(GtkWidget *, void *);
 void     sakura_search_dialog (GtkWidget *, void *);

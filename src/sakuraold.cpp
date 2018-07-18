@@ -198,13 +198,6 @@ static gboolean sakura_button_press(
 //	return FALSE;
 //}
 
-/* Handler for notebook scroll-event - switches tabs by scroll direction
-   TODO: let scroll directions configurable */
-gboolean sakura_notebook_scroll(GtkWidget *widget, GdkEventScroll *event)
-{
-	return sakura->notebook_scoll(widget, event);
-}
-
 static void sakura_page_removed(GtkWidget *widget, void *data)
 {
 	// auto *obj = (Sakura *)data;

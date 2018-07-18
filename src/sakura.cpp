@@ -161,7 +161,6 @@ Sakura::Sakura() :
 		G_CALLBACK(sakura_window_show_event), NULL);
 	// g_signal_connect(G_OBJECT(notebook), "focus-in-event",
 	// G_CALLBACK(sakura_notebook_focus_in), NULL);
-	g_signal_connect(main_window->notebook->gobj(), "scroll-event", G_CALLBACK(sakura_notebook_scroll), this);
 
 	/* Add initial tabs (1 by default) */
 	for (int i = 0; i < option_ntabs; i++)
@@ -935,39 +934,4 @@ void Sakura::beep(GtkWidget *widget)
 	if (config.urgent_bell) {
 		main_window->set_urgency_hint(true);
 	}
-}
-
-gboolean Sakura::notebook_scoll(GtkWidget *widget, GdkEventScroll *event)
-{
-	gint page = gtk_notebook_get_current_page(main_window->notebook->gobj());
-	gint npages = gtk_notebook_get_n_pages(main_window->notebook->gobj());
-
-	switch (event->direction) {
-	case GDK_SCROLL_DOWN: {
-		if (config.stop_tab_cycling_at_end_tabs == 1) {
-			gtk_notebook_set_current_page(
-					main_window->notebook->gobj(), --page >= 0 ? page : 0);
-		} else {
-			gtk_notebook_set_current_page(
-					main_window->notebook->gobj(), --page >= 0 ? page : npages - 1);
-		}
-		break;
-	}
-	case GDK_SCROLL_UP: {
-		if (config.stop_tab_cycling_at_end_tabs == 1) {
-			gtk_notebook_set_current_page(main_window->notebook->gobj(),
-					++page < npages ? page : npages - 1);
-		} else {
-			gtk_notebook_set_current_page(
-					main_window->notebook->gobj(), ++page < npages ? page : 0);
-		}
-		break;
-	}
-	case GDK_SCROLL_LEFT:
-	case GDK_SCROLL_RIGHT:
-	case GDK_SCROLL_SMOOTH:
-		break;
-	}
-
-	return FALSE;
 }

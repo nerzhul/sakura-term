@@ -24,7 +24,6 @@ public:
 	void del_tab(gint, bool exit_if_needed = false);
 	void toggle_fullscreen(GtkWidget *);
 	void toggle_numbered_tabswitch_option(GtkWidget *widget);
-	gboolean notebook_scoll(GtkWidget *widget, GdkEventScroll *event);
 
 	void set_colors();
 
