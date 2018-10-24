@@ -150,12 +150,10 @@ void SakuraWindow::add_tab()
 	gchar *cwd = NULL;
 
 	auto *term = new Terminal();
+	auto *tab_label_hbox = new Gtk::Box(Gtk::ORIENTATION_HORIZONTAL, 2);
+	tab_label_hbox->set_hexpand(true);
 
-	GtkWidget *tab_label_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 2);
-	//GtkBox *tab_label_hbox = new Gtk::Box(Gtk::ORIENTATION_HORIZONTAL, 2);
-	gtk_widget_set_hexpand(tab_label_hbox, TRUE);
-
-	gtk_box_pack_start(GTK_BOX(tab_label_hbox), term->label, TRUE, FALSE, 0);
+	gtk_box_pack_start(GTK_BOX(tab_label_hbox->gobj()), term->label, TRUE, FALSE, 0);
 
 	/* If the tab close button is enabled, create and add it to the tab */
 	if (sakura->config.show_closebutton) {
@@ -169,7 +167,7 @@ void SakuraWindow::add_tab()
 
 		GtkWidget *image = gtk_image_new_from_icon_name("window-close", GTK_ICON_SIZE_MENU);
 		gtk_container_add(GTK_CONTAINER(close_button), image);
-		gtk_box_pack_start(GTK_BOX(tab_label_hbox), close_button, FALSE, FALSE, 0);
+		gtk_box_pack_start(GTK_BOX(tab_label_hbox->gobj()), close_button, FALSE, FALSE, 0);
 	}
 
 	if (sakura->config.tabs_on_bottom) {
@@ -177,14 +175,12 @@ void SakuraWindow::add_tab()
 	}
 
 	/* Set tab title style */
-	gchar *css = g_strdup_printf(TAB_TITLE_CSS);
-	sakura->provider->load_from_data(std::string(css));
-	GtkStyleContext *context = gtk_widget_get_style_context(tab_label_hbox);
-	gtk_style_context_add_provider(context, GTK_STYLE_PROVIDER(sakura->provider->gobj()),
-			GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
-	g_free(css);
+	sakura->provider->load_from_data(TAB_TITLE_CSS);
 
-	gtk_widget_show_all(tab_label_hbox);
+	auto context = tab_label_hbox->get_style_context();
+	context->add_provider(sakura->provider, GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+
+	tab_label_hbox->show_all();
 
 	/* Select the directory to use for the new tab */
 	int index = notebook->get_current_page();
@@ -201,21 +197,18 @@ void SakuraWindow::add_tab()
 	/* Keep values when adding tabs */
 	sakura->keep_fc = true;
 
-	if ((index = gtk_notebook_append_page(GTK_NOTEBOOK(notebook->gobj()),
-			     term->hbox, tab_label_hbox)) == -1) {
+	if ((index = gtk_notebook_append_page(
+			     GTK_NOTEBOOK(notebook->gobj()), term->hbox, GTK_WIDGET(tab_label_hbox->gobj()))) == -1) {
 		sakura_error("Cannot create a new tab");
 		exit(1);
 	}
 
-	gtk_notebook_set_tab_reorderable(
-			GTK_NOTEBOOK(notebook->gobj()), term->hbox, TRUE);
+	gtk_notebook_set_tab_reorderable(GTK_NOTEBOOK(notebook->gobj()), term->hbox, TRUE);
 	// TODO: Set group id to support detached tabs
 	// gtk_notebook_set_tab_detachable(notebook->gobj(), term->hbox, TRUE);
 
 	g_object_set_qdata_full(
-			G_OBJECT(gtk_notebook_get_nth_page(
-					(GtkNotebook *)notebook->gobj(),
-					index)),
+			G_OBJECT(gtk_notebook_get_nth_page((GtkNotebook *)notebook->gobj(), index)),
 			term_data_id, term, (GDestroyNotify)Terminal::free);
 
 	/* vte signals */
