@@ -27,6 +27,8 @@ Terminal::Terminal()
 	gtk_box_pack_start(GTK_BOX(hbox), scrollbar, FALSE, FALSE, 0);
 
 	colorset = sakura->config.last_colorset - 1;
+
+	gtk_label_set_ellipsize(GTK_LABEL(label), PANGO_ELLIPSIZE_END);
 }
 
 Terminal::~Terminal()

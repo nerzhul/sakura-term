@@ -5,6 +5,9 @@
 #include <iostream>
 #include <yaml-cpp/yaml.h>
 #include <cassert>
+#include <filesystem>
+
+namespace fs = std::filesystem;
 
 #define DEFAULT_CONFIGFILE "sakura.yml"
 #define DEFAULT_FONT "Ubuntu Mono,monospace 12"
@@ -16,10 +19,12 @@ static int cs_keys[NUM_COLORSETS] = {
 Config::Config()
 {
 	gchar *configdir = g_build_filename(g_get_user_config_dir(), "sakura", NULL);
-	if (!g_file_test(g_get_user_config_dir(), G_FILE_TEST_EXISTS))
-		g_mkdir(g_get_user_config_dir(), 0755);
-	if (!g_file_test(configdir, G_FILE_TEST_EXISTS))
-		g_mkdir(configdir, 0755);
+	const std::string user_config_dir(configdir);
+	if (!fs::exists(user_config_dir)) {
+		fs::create_directories(user_config_dir);
+		fs::permissions(user_config_dir, fs::perms::owner_all);
+	}
+
 	if (option_config_file) {
 		gchar *tmpfile = g_build_filename(configdir, option_config_file, NULL);
 		m_file = tmpfile;
@@ -57,6 +62,13 @@ void Config::write()
 
 bool Config::read()
 {
+	if (!fs::exists(m_file)) {
+		std::cout << "Unable to find local configuration file, loading defaults."
+			   << std::endl;
+		loadDefaults();
+		return true;
+	}
+
 	try {
 		YAML::Node config = YAML::LoadFile(m_file);
 
@@ -235,15 +247,20 @@ bool Config::read()
 	} catch (const YAML::BadFile &e) {
 		std::cout << "Failed to read configuration file: " << e.what() << ", using defaults"
 			  << std::endl;
-		for (uint8_t i = 0; i < NUM_COLORSETS; i++) {
-			char temp_name[64];
-			memset(temp_name, 0, sizeof(temp_name));
-			sprintf(temp_name, "colorset%d", i + 1);
-			loadColorset(nullptr, i);
-		}
+		loadDefaults();
 	}
 
 	return true;
+}
+
+void Config::loadDefaults()
+{
+	for (uint8_t i = 0; i < NUM_COLORSETS; i++) {
+		char temp_name[64];
+		memset(temp_name, 0, sizeof(temp_name));
+		sprintf(temp_name, "colorset%d", i + 1);
+		loadColorset(nullptr, i);
+	}
 }
 
 guint sakura_get_keybind(const gchar *key)

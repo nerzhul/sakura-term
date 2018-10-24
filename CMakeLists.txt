@@ -79,7 +79,8 @@ target_link_libraries (sakura
 	${VTE_LIBRARIES}
 	${X11_LIBRARIES}
 	${YAMLCPP_LIBRARIES}
-	m)
+	m
+	stdc++fs)
 
 #ADD_SUBDIRECTORY (po)
 

@@ -4,6 +4,7 @@
 #include "gettext.h"
 #include "sakura.h"
 
+class Terminal;
 /* Globals for command line parameters */
 static const char *option_workdir;
 static const char *option_font;
@@ -72,7 +73,6 @@ static const char cfg_group[] = "sakura";
 void sakura_fade_in();
 void sakura_fade_out();
 void sakura_set_size();
-void sakura_add_tab();
 void     sakura_config_done();
 void     sakura_close_tab (GtkWidget *, void *);
 void     sakura_move_tab(gint);
@@ -113,3 +113,16 @@ void sakura_set_cursor(GtkWidget *widget, void *data);
 void sakura_set_palette(GtkWidget *widget, void *data);
 void sakura_open_mail(GtkWidget *widget, void *data);
 void sakura_copy_url(GtkWidget *widget, void *data);
+char *sakura_get_term_cwd(Terminal *term);
+void sakura_set_font();
+/* Misc */
+void sakura_error(const char *, ...);
+
+/* Callbacks */
+gboolean sakura_button_press(GtkWidget *, GdkEventButton *, gpointer);
+void sakura_child_exited(GtkWidget *, void *);
+void sakura_eof(GtkWidget *, void *);
+void sakura_title_changed(GtkWidget *, void *);
+void sakura_closebutton_clicked(GtkWidget *, void *);
+void sakura_page_removed(GtkWidget *widget, void *data);
+void sakura_spawn_callback(VteTerminal *vte, GPid pid, GError *error, gpointer user_data);

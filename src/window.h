@@ -18,6 +18,9 @@ public:
 
 	SakuraNotebook *notebook = nullptr;
 	bool resized = false;
+
+	void add_tab();
+
 private:
 	const Config *m_config;
 	bool m_focused = true;                    /* For fading feature */

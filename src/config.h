@@ -85,6 +85,7 @@ public:
 private:
 	void loadKeymap(const YAML::Node &keymap_node);
 	void loadColorset(const YAML::Node *colorset_node, uint8_t index);
+	void loadDefaults();
 
 	std::string m_background_image;
 	double m_background_alpha = 0.9;

@@ -43,6 +43,8 @@
 #include <gtk/gtk.h>
 #include <pango/pango.h>
 #include <vte/vte.h>
+#define PCRE2_CODE_UNIT_WIDTH 8
+#include <pcre2.h>
 #include "debug.h"
 #include "gettext.h"
 #include "notebook.h"
@@ -58,13 +60,6 @@
 	"-GtkDialog-button-spacing : 12;\n"                                                        \
 	"}"
 
-#define TAB_TITLE_CSS                                                                              \
-	"* {\n"                                                                                    \
-	"padding : 0px;\n"                                                                         \
-	"}"
-#define PCRE2_CODE_UNIT_WIDTH 8
-#include <pcre2.h>
-
 #define FONT_MINIMAL_SIZE (PANGO_SCALE * 6)
 #define TAB_MAX_SIZE 40
 #define TAB_MIN_SIZE 6
@@ -72,19 +67,8 @@
 
 #define ERROR_BUFFER_LENGTH 256
 
-/* Callbacks */
-static gboolean sakura_button_press(GtkWidget *, GdkEventButton *, gpointer);
-static void sakura_child_exited(GtkWidget *, void *);
-static void sakura_eof(GtkWidget *, void *);
-static void sakura_title_changed(GtkWidget *, void *);
-static void sakura_closebutton_clicked(GtkWidget *, void *);
-
-/* Misc */
-static void sakura_error(const char *, ...);
-
 /* Functions */
 static gint sakura_find_tab(VteTerminal *);
-static void sakura_set_font();
 static void sakura_set_tab_label_text(const gchar *, gint page);
 
 void search(VteTerminal *vte, const char *pattern, bool reverse)
@@ -113,7 +97,7 @@ void search(VteTerminal *vte, const char *pattern, bool reverse)
 	}
 }
 
-static gboolean sakura_button_press(
+gboolean sakura_button_press(
 		GtkWidget *widget, GdkEventButton *button_event, gpointer user_data)
 {
 	Terminal *term;
@@ -198,7 +182,7 @@ static gboolean sakura_button_press(
 //	return FALSE;
 //}
 
-static void sakura_page_removed(GtkWidget *widget, void *data)
+void sakura_page_removed(GtkWidget *widget, void *data)
 {
 	// auto *obj = (Sakura *)data;
 	// Strangely data is not sakura global pointer here...
@@ -235,7 +219,7 @@ void sakura_decrease_font(GtkWidget *widget, void *data)
 	}
 }
 
-static void sakura_child_exited(GtkWidget *widget, void *data)
+void sakura_child_exited(GtkWidget *widget, void *data)
 {
 	//auto *obj = (Sakura *)data;
 	// Strangely the obj pointer is null here... use the globally defined pointed
@@ -243,7 +227,7 @@ static void sakura_child_exited(GtkWidget *widget, void *data)
 	sakura->on_child_exited(widget);
 }
 
-static void sakura_eof(GtkWidget *widget, void *data)
+void sakura_eof(GtkWidget *widget, void *data)
 {
 	auto *obj = (Sakura *)data;
 	obj->on_eof(widget);
@@ -251,7 +235,7 @@ static void sakura_eof(GtkWidget *widget, void *data)
 
 /* This handler is called when window title changes, and is used to change window and notebook pages
  * titles */
-static void sakura_title_changed(GtkWidget *widget, void *data)
+void sakura_title_changed(GtkWidget *widget, void *data)
 {
 	Terminal *term;
 	const char *title;
@@ -1051,7 +1035,7 @@ void sakura_set_palette(GtkWidget *widget, void *data)
 /* Retrieve the cwd of the specified term page.
  * Original function was from terminal-screen.c of gnome-terminal, copyright (C) 2001 Havoc
  * Pennington Adapted by Hong Jen Yee, non-linux shit removed by David Gómez */
-static char *sakura_get_term_cwd(Terminal *term)
+char *sakura_get_term_cwd(Terminal *term)
 {
 	char *cwd = NULL;
 
@@ -1127,7 +1111,8 @@ void sakura_paste(GtkWidget *widget, void *data)
 
 void sakura_new_tab(GtkWidget *widget, void *data)
 {
-	sakura_add_tab();
+	SakuraWindow *window = static_cast<SakuraWindow *>(data);
+	window->add_tab();
 }
 
 void sakura_close_tab(GtkWidget *widget, void *data)
@@ -1143,7 +1128,7 @@ void sakura_fullscreen(GtkWidget *widget, void *data)
 }
 
 /* Callback for the tabs close buttons */
-static void sakura_closebutton_clicked(GtkWidget *widget, void *data)
+void sakura_closebutton_clicked(GtkWidget *widget, void *data)
 {
 	gint page;
 	GtkWidget *hbox = (GtkWidget *)data;
@@ -1278,7 +1263,7 @@ void sakura_set_size()
 	SAY("Resized to %d %d", sakura->width, sakura->height);
 }
 
-static void sakura_set_font()
+void sakura_set_font()
 {
 	gint n_pages;
 	Terminal *term;
@@ -1368,286 +1353,7 @@ void sakura_spawn_callback(VteTerminal *vte, GPid pid, GError *error, gpointer u
 	}
 }
 
-static void sakura_beep(GtkWidget *w, void *data)
-{
-	Sakura *obj = (Sakura *)data;
-	obj->beep(w);
-}
-
-void sakura_add_tab()
-{
-	GtkWidget *tab_label_hbox;
-	GtkWidget *close_button;
-	int index;
-	int npages;
-	gchar *cwd = NULL;
-
-	Terminal *term = new Terminal();
-
-	tab_label_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 2);
-	gtk_widget_set_hexpand(tab_label_hbox, TRUE);
-	gtk_label_set_ellipsize(GTK_LABEL(term->label), PANGO_ELLIPSIZE_END);
-	gtk_box_pack_start(GTK_BOX(tab_label_hbox), term->label, TRUE, FALSE, 0);
-
-	/* If the tab close button is enabled, create and add it to the tab */
-	if (sakura->config.show_closebutton) {
-		close_button = gtk_button_new();
-		/* Adding scroll-event to button, to propagate it to notebook (fix for scroll event
-		 * when pointer is above the button) */
-		gtk_widget_add_events(close_button, GDK_SCROLL_MASK);
-
-		gtk_widget_set_name(close_button, "closebutton");
-		gtk_button_set_relief(GTK_BUTTON(close_button), GTK_RELIEF_NONE);
-
-		GtkWidget *image = gtk_image_new_from_icon_name("window-close", GTK_ICON_SIZE_MENU);
-		gtk_container_add(GTK_CONTAINER(close_button), image);
-		gtk_box_pack_start(GTK_BOX(tab_label_hbox), close_button, FALSE, FALSE, 0);
-	}
-
-	if (sakura->config.tabs_on_bottom) {
-		sakura->main_window->notebook->set_tab_pos(Gtk::POS_BOTTOM);
-	}
-
-	/* Set tab title style */
-	gchar *css = g_strdup_printf(TAB_TITLE_CSS);
-	sakura->provider->load_from_data(std::string(css));
-	GtkStyleContext *context = gtk_widget_get_style_context(tab_label_hbox);
-	gtk_style_context_add_provider(context, GTK_STYLE_PROVIDER(sakura->provider->gobj()),
-			GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
-	g_free(css);
-
-	gtk_widget_show_all(tab_label_hbox);
-
-	/* Select the directory to use for the new tab */
-	index = sakura->main_window->notebook->get_current_page();
-	if (index >= 0) {
-		Terminal *prev_term;
-		prev_term = sakura_get_page_term(sakura, index);
-		cwd = sakura_get_term_cwd(prev_term);
-
-		term->colorset = prev_term->colorset;
-	}
-	if (!cwd)
-		cwd = g_get_current_dir();
-
-	/* Keep values when adding tabs */
-	sakura->keep_fc = true;
-
-	if ((index = gtk_notebook_append_page(
-			     GTK_NOTEBOOK(sakura->main_window->notebook->gobj()), term->hbox, tab_label_hbox)) == -1) {
-		sakura_error("Cannot create a new tab");
-		exit(1);
-	}
-
-	gtk_notebook_set_tab_reorderable(GTK_NOTEBOOK(sakura->main_window->notebook->gobj()), term->hbox, TRUE);
-	// TODO: Set group id to support detached tabs
-	// gtk_notebook_set_tab_detachable(sakura->main_window->notebook->gobj(), term->hbox, TRUE);
-
-	g_object_set_qdata_full(G_OBJECT(gtk_notebook_get_nth_page(
-		(GtkNotebook *)sakura->main_window->notebook->gobj(), index)), term_data_id, term, (GDestroyNotify)Terminal::free);
-
-
-	/* vte signals */
-	g_signal_connect(G_OBJECT(term->vte), "bell", G_CALLBACK(sakura_beep), sakura);
-	g_signal_connect(G_OBJECT(term->vte), "increase-font-size",
-			G_CALLBACK(sakura_increase_font), NULL);
-	g_signal_connect(G_OBJECT(term->vte), "decrease-font-size",
-			G_CALLBACK(sakura_decrease_font), NULL);
-	g_signal_connect(G_OBJECT(term->vte), "child-exited", G_CALLBACK(sakura_child_exited),
-			sakura);
-	g_signal_connect(G_OBJECT(term->vte), "eof", G_CALLBACK(sakura_eof), sakura);
-	g_signal_connect(G_OBJECT(term->vte), "window-title-changed",
-			G_CALLBACK(sakura_title_changed), NULL);
-	g_signal_connect_swapped(G_OBJECT(term->vte), "button-press-event",
-			G_CALLBACK(sakura_button_press), sakura->menu);
-
-	/* Notebook signals */
-	g_signal_connect(G_OBJECT(sakura->main_window->notebook->gobj()), "page-removed",
-			G_CALLBACK(sakura_page_removed), sakura);
-	if (sakura->config.show_closebutton) {
-		g_signal_connect(G_OBJECT(close_button), "clicked",
-				G_CALLBACK(sakura_closebutton_clicked), term->hbox);
-	}
-
-	/* Since vte-2.91 env is properly overwritten */
-	char *command_env[2] = {const_cast<char *>("TERM=xterm-256color"), nullptr};
-	/* First tab */
-	npages = gtk_notebook_get_n_pages(GTK_NOTEBOOK(sakura->main_window->notebook->gobj()));
-	if (npages == 1) {
-		if (sakura->config.first_tab) {
-			gtk_notebook_set_show_tabs(GTK_NOTEBOOK(sakura->main_window->notebook->gobj()), TRUE);
-		} else {
-			gtk_notebook_set_show_tabs(GTK_NOTEBOOK(sakura->main_window->notebook->gobj()), FALSE);
-		}
-
-		gtk_notebook_set_show_border(GTK_NOTEBOOK(sakura->main_window->notebook->gobj()), FALSE);
-		sakura_set_font();
-		sakura->set_colors();
-		/* Set size before showing the widgets but after setting the font */
-		sakura_set_size();
-
-		gtk_widget_show_all(GTK_WIDGET(sakura->main_window->notebook->gobj()));
-		if (!sakura->config.show_scrollbar) {
-			gtk_widget_hide(term->scrollbar);
-		}
-
-		sakura->main_window->show();
-
-#ifdef GDK_WINDOWING_X11
-		/* Set WINDOWID env variable */
-		auto display = Gdk::Display::get_default();
-
-		if (GDK_IS_X11_DISPLAY(display->gobj())) {
-			GdkWindow *gwin = sakura->main_window->get_window()->gobj();
-			if (gwin != NULL) {
-				guint winid = gdk_x11_window_get_xid(gwin);
-				gchar *winidstr = g_strdup_printf("%d", winid);
-				g_setenv("WINDOWID", winidstr, FALSE);
-				g_free(winidstr);
-			}
-		}
-#endif
-
-		int command_argc = 0;
-		char **command_argv;
-		if (option_execute || option_xterm_execute) {
-			GError *gerror = NULL;
-			gchar *path;
-
-			if (option_execute) {
-				/* -x option */
-				if (!g_shell_parse_argv(option_execute, &command_argc,
-						    &command_argv, &gerror)) {
-					switch (gerror->code) {
-					case G_SHELL_ERROR_EMPTY_STRING:
-						sakura_error("Empty exec string");
-						exit(1);
-						break;
-					case G_SHELL_ERROR_BAD_QUOTING:
-						sakura_error("Cannot parse command line arguments: "
-							     "mangled quoting");
-						exit(1);
-						break;
-					case G_SHELL_ERROR_FAILED:
-						sakura_error("Error in exec option command line "
-							     "arguments");
-						exit(1);
-					}
-					g_error_free(gerror);
-				}
-			} else {
-				/* -e option - last in the command line, takes all extra arguments
-				 */
-				if (option_xterm_args) {
-					gchar *command_joined;
-					command_joined = g_strjoinv(" ", option_xterm_args);
-					if (!g_shell_parse_argv(command_joined, &command_argc,
-							    &command_argv, &gerror)) {
-						switch (gerror->code) {
-						case G_SHELL_ERROR_EMPTY_STRING:
-							sakura_error("Empty exec string");
-							exit(1);
-							break;
-						case G_SHELL_ERROR_BAD_QUOTING:
-							sakura_error("Cannot parse command line "
-								     "arguments: mangled quoting");
-							exit(1);
-						case G_SHELL_ERROR_FAILED:
-							sakura_error("Error in exec option command "
-								     "line arguments");
-							exit(1);
-						}
-					}
-					if (gerror != NULL)
-						g_error_free(gerror);
-					g_free(command_joined);
-				}
-			}
-
-			/* Check if the command is valid */
-			if (command_argc > 0) {
-				path = g_find_program_in_path(command_argv[0]);
-				if (path) {
-					vte_terminal_spawn_async(VTE_TERMINAL(term->vte),
-							VTE_PTY_NO_HELPER, NULL, command_argv,
-							command_env, G_SPAWN_SEARCH_PATH, NULL,
-							NULL, NULL, -1, NULL, sakura_spawn_callback,
-							term);
-				} else {
-					sakura_error("%s command not found", command_argv[0]);
-					command_argc = 0;
-					// exit(1);
-				}
-				free(path);
-				g_strfreev(command_argv);
-				g_strfreev(option_xterm_args);
-			}
-		} // else { /* No execute option */
-
-		/* Only fork if there is no execute option or if it has failed */
-		if ((!option_execute && !option_xterm_args) || (command_argc == 0)) {
-			if (option_hold == TRUE) {
-				sakura_error("Hold option given without any command");
-				option_hold = FALSE;
-			}
-			vte_terminal_spawn_async(VTE_TERMINAL(term->vte), VTE_PTY_NO_HELPER, cwd,
-					sakura->argv, command_env,
-					(GSpawnFlags)(G_SPAWN_SEARCH_PATH |
-							G_SPAWN_FILE_AND_ARGV_ZERO),
-					NULL, NULL, NULL, -1, NULL, sakura_spawn_callback, term);
-		}
-		/* Not the first tab */
-	} else {
-		sakura_set_font();
-		sakura->set_colors();
-		gtk_widget_show_all(term->hbox);
-		if (!sakura->config.show_scrollbar) {
-			gtk_widget_hide(term->scrollbar);
-		}
-
-		if (npages == 2) {
-			gtk_notebook_set_show_tabs(GTK_NOTEBOOK(sakura->main_window->notebook->gobj()), TRUE);
-			sakura_set_size();
-		}
-		/* Call set_current page after showing the widget: gtk ignores this
-		 * function in the window is not visible *sigh*. Gtk documentation
-		 * says this is for "historical" reasons. Me arse */
-		gtk_notebook_set_current_page(GTK_NOTEBOOK(sakura->main_window->notebook->gobj()), index);
-		vte_terminal_spawn_async(VTE_TERMINAL(term->vte), VTE_PTY_NO_HELPER, cwd,
-				sakura->argv, command_env,
-				(GSpawnFlags)(G_SPAWN_SEARCH_PATH | G_SPAWN_FILE_AND_ARGV_ZERO),
-				NULL, NULL, NULL, -1, NULL, sakura_spawn_callback, term);
-	}
-
-	free(cwd);
-
-	/* Init vte terminal */
-	vte_terminal_set_scrollback_lines(VTE_TERMINAL(term->vte), sakura->config.scroll_lines);
-	vte_terminal_match_add_regex(
-			VTE_TERMINAL(term->vte), sakura->http_vteregexp, PCRE2_CASELESS);
-	vte_terminal_match_add_regex(
-			VTE_TERMINAL(term->vte), sakura->mail_vteregexp, PCRE2_CASELESS);
-	vte_terminal_set_mouse_autohide(VTE_TERMINAL(term->vte), TRUE);
-	vte_terminal_set_backspace_binding(VTE_TERMINAL(term->vte), VTE_ERASE_ASCII_DELETE);
-	vte_terminal_set_word_char_exceptions(
-			VTE_TERMINAL(term->vte), sakura->config.word_chars.c_str());
-	vte_terminal_set_audible_bell(
-			VTE_TERMINAL(term->vte), sakura->config.audible_bell ? TRUE : FALSE);
-	vte_terminal_set_cursor_blink_mode(VTE_TERMINAL(term->vte),
-			sakura->config.blinking_cursor ? VTE_CURSOR_BLINK_ON
-						       : VTE_CURSOR_BLINK_OFF);
-	vte_terminal_set_allow_bold(
-			VTE_TERMINAL(term->vte), sakura->config.allow_bold ? TRUE : FALSE);
-	vte_terminal_set_cursor_shape(VTE_TERMINAL(term->vte), sakura->config.cursor_type);
-
-	// sakura->set_colors();
-
-	/* FIXME: Possible race here. Find some way to force to process all configure
-	 * events before setting keep_fc again to false */
-	sakura->keep_fc = false;
-}
-
-static void sakura_error(const char *format, ...)
+void sakura_error(const char *format, ...)
 {
 	GtkWidget *dialog;
 	va_list args;

@@ -79,11 +79,9 @@ Sakura::Sakura() :
 	/* Use always GTK header bar*/
 	g_object_set(gtk_settings_get_default(), "gtk-dialogs-use-header", TRUE, NULL);
 
-	gchar *css = g_strdup_printf(NOTEBOOK_CSS);
-	provider->load_from_data(std::string(css));
+	provider->load_from_data(NOTEBOOK_CSS);
 	auto context = main_window->notebook->get_style_context();
 	context->add_provider(provider, GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
-	g_free(css);
 
 	/* Command line optionsNULL initialization */
 
@@ -150,8 +148,9 @@ Sakura::Sakura() :
 	// G_CALLBACK(sakura_notebook_focus_in), NULL);
 
 	/* Add initial tabs (1 by default) */
-	for (int i = 0; i < option_ntabs; i++)
-		sakura_add_tab();
+	for (int i = 0; i < option_ntabs; i++) {
+		main_window->add_tab();
+	}
 
 	sanitize_working_directory();
 }
@@ -430,7 +429,7 @@ void Sakura::init_popup()
 	gtk_menu_item_set_submenu(GTK_MENU_ITEM(item_palette), palette_menu);
 
 	/* ... and finally assign callbacks to menuitems */
-	g_signal_connect(G_OBJECT(item_new_tab), "activate", G_CALLBACK(sakura_new_tab), NULL);
+	g_signal_connect(G_OBJECT(item_new_tab), "activate", G_CALLBACK(sakura_new_tab), main_window);
 	g_signal_connect(G_OBJECT(item_set_name), "activate", G_CALLBACK(sakura_set_name_dialog),
 		NULL);
 	g_signal_connect(G_OBJECT(item_close_tab), "activate", G_CALLBACK(sakura_close_tab), NULL);
@@ -601,7 +600,7 @@ gboolean Sakura::on_key_press(GtkWidget *widget, GdkEventKey *event)
 	/* Add/delete tab keybinding pressed */
 	if ((event->state & config.add_tab_accelerator) == config.add_tab_accelerator &&
 			keycode == sakura_tokeycode(config.keymap.add_tab_key)) {
-		sakura_add_tab();
+		main_window->add_tab();
 		return TRUE;
 	} else if ((event->state & sakura->config.del_tab_accelerator) ==
 					config.del_tab_accelerator &&
