@@ -5,7 +5,8 @@
 
 gchar *Terminal::tab_default_title = nullptr;
 
-Terminal::Terminal()
+Terminal::Terminal():
+	hbox(new Gtk::Box(Gtk::ORIENTATION_HORIZONTAL, 0))
 {
 	gchar *_label_text = _("Terminal %d");
 	/* appling tab title pattern from config
@@ -16,19 +17,19 @@ Terminal::Terminal()
 	}
 
 	label_text = g_strdup_printf(_label_text, sakura->label_count++);
-	label = gtk_label_new(label_text);
+	label = Glib::RefPtr<Gtk::Label>(new Gtk::Label(label_text));
 
 	/* Create new vte terminal, scrollbar, and pack it */
 	vte = vte_terminal_new();
 	scrollbar = gtk_scrollbar_new(GTK_ORIENTATION_VERTICAL,
 		gtk_scrollable_get_vadjustment(GTK_SCROLLABLE(vte)));
-	hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
-	gtk_box_pack_start(GTK_BOX(hbox), vte, TRUE, TRUE, 0);
-	gtk_box_pack_start(GTK_BOX(hbox), scrollbar, FALSE, FALSE, 0);
+
+	gtk_box_pack_start(GTK_BOX(hbox->gobj()), vte, TRUE, TRUE, 0);
+	gtk_box_pack_start(GTK_BOX(hbox->gobj()), scrollbar, FALSE, FALSE, 0);
 
 	colorset = sakura->config.last_colorset - 1;
 
-	gtk_label_set_ellipsize(GTK_LABEL(label), PANGO_ELLIPSIZE_END);
+	label->set_ellipsize(Pango::ELLIPSIZE_END);
 }
 
 Terminal::~Terminal()

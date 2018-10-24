@@ -152,8 +152,7 @@ void SakuraWindow::add_tab()
 	auto *term = new Terminal();
 	auto *tab_label_hbox = new Gtk::Box(Gtk::ORIENTATION_HORIZONTAL, 2);
 	tab_label_hbox->set_hexpand(true);
-
-	gtk_box_pack_start(GTK_BOX(tab_label_hbox->gobj()), term->label, TRUE, FALSE, 0);
+	tab_label_hbox->pack_start(*term->label.get(), true, false, 0);
 
 	/* If the tab close button is enabled, create and add it to the tab */
 	if (sakura->config.show_closebutton) {
@@ -197,13 +196,13 @@ void SakuraWindow::add_tab()
 	/* Keep values when adding tabs */
 	sakura->keep_fc = true;
 
-	if ((index = gtk_notebook_append_page(
-			     GTK_NOTEBOOK(notebook->gobj()), term->hbox, GTK_WIDGET(tab_label_hbox->gobj()))) == -1) {
+
+	if ((index = notebook->append_page(*term->hbox.get(), *tab_label_hbox)) == -1) {
 		sakura_error("Cannot create a new tab");
 		exit(1);
 	}
 
-	gtk_notebook_set_tab_reorderable(GTK_NOTEBOOK(notebook->gobj()), term->hbox, TRUE);
+	notebook->set_tab_reorderable(*term->hbox.get());
 	// TODO: Set group id to support detached tabs
 	// gtk_notebook_set_tab_detachable(notebook->gobj(), term->hbox, TRUE);
 
@@ -230,7 +229,7 @@ void SakuraWindow::add_tab()
 			G_CALLBACK(sakura_page_removed), sakura);
 	if (sakura->config.show_closebutton) {
 		g_signal_connect(G_OBJECT(close_button), "clicked",
-				G_CALLBACK(sakura_closebutton_clicked), term->hbox);
+				G_CALLBACK(sakura_closebutton_clicked), term->hbox.get()->gobj());
 	}
 
 	/* Since vte-2.91 env is properly overwritten */
@@ -359,7 +358,7 @@ void SakuraWindow::add_tab()
 	} else {
 		sakura_set_font();
 		sakura->set_colors();
-		gtk_widget_show_all(term->hbox);
+		term->hbox->show_all();
 		if (!sakura->config.show_scrollbar) {
 			gtk_widget_hide(term->scrollbar);
 		}

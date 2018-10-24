@@ -553,7 +553,7 @@ void Sakura::set_colors()
 
 		if (!config.get_background_image().empty()) {
 			if (!term->bg_image_callback_id) {
-				term->bg_image_callback_id = g_signal_connect (term->hbox, "draw",
+				term->bg_image_callback_id = g_signal_connect (term->hbox->gobj(), "draw",
 					G_CALLBACK(terminal_screen_image_draw_cb), term);
 			}
 
@@ -566,7 +566,7 @@ void Sakura::set_colors()
 				g_clear_error(&error);
 			}
 
-			gtk_widget_queue_draw(GTK_WIDGET(term->hbox));
+			term->hbox->queue_draw();
 		}
 
 		backcolors[term->colorset].alpha = config.get_background_alpha();
@@ -855,8 +855,10 @@ void Sakura::del_tab(gint page, bool exit_if_needed)
 	if (npages == 2) {
 		term = sakura_get_page_term(this, 0);
 		const char *title = vte_terminal_get_window_title(VTE_TERMINAL(term->vte));
-		if (title)
-			gtk_window_set_title(GTK_WINDOW(main_window), title);
+		if (title) {
+			main_window->set_title(title);
+		}
+
 	}
 
 	term = sakura_get_page_term(this, page);
@@ -864,15 +866,11 @@ void Sakura::del_tab(gint page, bool exit_if_needed)
 	/* Do the first tab checks BEFORE deleting the tab, to ensure correct
 	 * sizes are calculated when the tab is deleted */
 	if (npages == 2) {
-		if (config.first_tab) {
-			main_window->notebook->set_show_tabs(true);
-		} else {
-			main_window->notebook->set_show_tabs(false);
-		}
+		main_window->notebook->set_show_tabs(config.first_tab);
 		sakura->keep_fc = true;
 	}
 
-	gtk_widget_hide(term->hbox);
+	term->hbox->hide();
 	main_window->notebook->remove_page(page);
 
 	/* Find the next page, if it exists, and grab focus */

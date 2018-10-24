@@ -1,6 +1,8 @@
 #pragma once
 
 #include <gtk/gtk.h>
+#include <gtkmm/label.h>
+#include <gtkmm/box.h>
 
 #define  sakura_get_page_term( sakura, page_idx )  \
     (Terminal *)g_object_get_qdata(  \
@@ -17,11 +19,11 @@ public:
 	 */
 	static void free(Terminal *term);
 
-	GtkWidget *hbox;
+	Glib::RefPtr<Gtk::Box> hbox;
 	GtkWidget *vte;     /* Reference to VTE terminal */
 	GPid pid = 0;          /* pid of the forked process */
 	GtkWidget *scrollbar;
-	GtkWidget *label;
+	Glib::RefPtr<Gtk::Label> label;
 	gchar *label_text;
 	bool label_set_byuser = false;
 	GtkBorder padding;   /* inner-property data */

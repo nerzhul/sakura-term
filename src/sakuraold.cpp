@@ -342,7 +342,6 @@ void sakura_set_name_dialog(GtkWidget *widget, void *data)
 	gint response;
 	gint page;
 	Terminal *term;
-	const gchar *text;
 
 	page = gtk_notebook_get_current_page(sakura->main_window->notebook->gobj());
 	term = sakura_get_page_term(sakura, page);
@@ -371,9 +370,9 @@ void sakura_set_name_dialog(GtkWidget *widget, void *data)
 	label = gtk_label_new(_("New text"));
 	/* Set tab label as entry default text (when first tab is not displayed, get_tab_label_text
 	   returns a null value, so check accordingly */
-	text = gtk_notebook_get_tab_label_text(sakura->main_window->notebook->gobj(), term->hbox);
-	if (text) {
-		gtk_entry_set_text(GTK_ENTRY(entry), text);
+	auto text = sakura->main_window->notebook->get_tab_label_text(*term->hbox.get());
+	if (text.empty()) {
+		gtk_entry_set_text(GTK_ENTRY(entry), text.c_str());
 	}
 	gtk_entry_set_activates_default(GTK_ENTRY(entry), TRUE);
 	gtk_box_pack_start(GTK_BOX(name_hbox), label, TRUE, TRUE, 12);
@@ -1334,10 +1333,10 @@ static void sakura_set_tab_label_text(const gchar *title, gint page)
 			chopped_title = g_strconcat(chopped_title, " ", NULL);
 			free(old_ptr);
 		}
-		gtk_label_set_text(GTK_LABEL(term->label), chopped_title);
+		gtk_label_set_text(GTK_LABEL(term->label->gobj()), chopped_title);
 		free(chopped_title);
 	} else { /* Use the default values */
-		gtk_label_set_text(GTK_LABEL(term->label), term->label_text);
+		gtk_label_set_text(GTK_LABEL(term->label->gobj()), term->label_text);
 	}
 }
 
