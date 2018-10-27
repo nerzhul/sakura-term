@@ -19,11 +19,11 @@ public:
 	 */
 	static void free(Terminal *term);
 
-	Glib::RefPtr<Gtk::Box> hbox;
+	Gtk::Box hbox;
 	GtkWidget *vte;     /* Reference to VTE terminal */
 	GPid pid = 0;          /* pid of the forked process */
 	GtkWidget *scrollbar;
-	Glib::RefPtr<Gtk::Label> label;
+	Gtk::Label label;
 	gchar *label_text;
 	bool label_set_byuser = false;
 	GtkBorder padding;   /* inner-property data */

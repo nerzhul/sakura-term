@@ -152,7 +152,7 @@ void SakuraWindow::add_tab()
 	auto *term = new Terminal();
 	auto *tab_label_hbox = new Gtk::Box(Gtk::ORIENTATION_HORIZONTAL, 2);
 	tab_label_hbox->set_hexpand(true);
-	tab_label_hbox->pack_start(*term->label.get(), true, false, 0);
+	tab_label_hbox->pack_start(term->label, true, false, 0);
 
 	/* If the tab close button is enabled, create and add it to the tab */
 	if (sakura->config.show_closebutton) {
@@ -197,12 +197,12 @@ void SakuraWindow::add_tab()
 	sakura->keep_fc = true;
 
 
-	if ((index = notebook->append_page(*term->hbox.get(), *tab_label_hbox)) == -1) {
+	if ((index = notebook->append_page(term->hbox, *tab_label_hbox)) == -1) {
 		sakura_error("Cannot create a new tab");
 		exit(1);
 	}
 
-	notebook->set_tab_reorderable(*term->hbox.get());
+	notebook->set_tab_reorderable(term->hbox);
 	// TODO: Set group id to support detached tabs
 	// gtk_notebook_set_tab_detachable(notebook->gobj(), term->hbox, TRUE);
 
@@ -229,7 +229,7 @@ void SakuraWindow::add_tab()
 			G_CALLBACK(sakura_page_removed), sakura);
 	if (sakura->config.show_closebutton) {
 		g_signal_connect(G_OBJECT(close_button), "clicked",
-				G_CALLBACK(sakura_closebutton_clicked), term->hbox.get()->gobj());
+				G_CALLBACK(sakura_closebutton_clicked), term->hbox.gobj());
 	}
 
 	/* Since vte-2.91 env is properly overwritten */
@@ -358,7 +358,8 @@ void SakuraWindow::add_tab()
 	} else {
 		sakura_set_font();
 		sakura->set_colors();
-		term->hbox->show_all();
+		term->hbox.show_all();
+
 		if (!sakura->config.show_scrollbar) {
 			gtk_widget_hide(term->scrollbar);
 		}
