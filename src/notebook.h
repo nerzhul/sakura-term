@@ -10,6 +10,7 @@ public:
 	~SakuraNotebook();
 
 	bool on_scroll_event(GdkEventScroll *scroll);
+	void on_page_removed_event(Gtk::Widget *, guint);
 private:
 
 	const Config *m_cfg = nullptr;

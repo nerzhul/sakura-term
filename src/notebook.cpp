@@ -10,6 +10,7 @@ SakuraNotebook::SakuraNotebook(const Config *cfg) :
 	add_events(Gdk::SCROLL_MASK);
 
 	signal_scroll_event().connect(sigc::mem_fun(*this, &SakuraNotebook::on_scroll_event));
+	signal_page_removed().connect(sigc::mem_fun(*this, &SakuraNotebook::on_page_removed_event));
 }
 
 SakuraNotebook::~SakuraNotebook()
@@ -49,4 +50,13 @@ bool SakuraNotebook::on_scroll_event(GdkEventScroll *scroll)
 	}
 
 	return false;
+}
+
+void SakuraNotebook::on_page_removed_event(Gtk::Widget *, guint)
+{
+	if (get_n_pages() == 1) {
+		/* If the first tab is disabled, window size changes and we need
+		 * to recalculate its size */
+		sakura_set_size();
+	}
 }

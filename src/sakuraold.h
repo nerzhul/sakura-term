@@ -124,5 +124,4 @@ void sakura_child_exited(GtkWidget *, void *);
 void sakura_eof(GtkWidget *, void *);
 void sakura_title_changed(GtkWidget *, void *);
 void sakura_closebutton_clicked(GtkWidget *, void *);
-void sakura_page_removed(GtkWidget *widget, void *data);
 void sakura_spawn_callback(VteTerminal *vte, GPid pid, GError *error, gpointer user_data);

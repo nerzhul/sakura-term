@@ -791,15 +791,6 @@ void Sakura::on_eof(GtkWidget *widget)
 	}
 }
 
-void Sakura::on_page_removed(GtkWidget *widget)
-{
-	if (main_window->notebook->get_n_pages() == 1) {
-		/* If the first tab is disabled, window size changes and we need
-		 * to recalculate its size */
-		sakura_set_size();
-	}
-}
-
 void Sakura::close_tab(GtkWidget *)
 {
 	pid_t pgid;

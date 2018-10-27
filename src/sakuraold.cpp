@@ -182,13 +182,6 @@ gboolean sakura_button_press(
 //	return FALSE;
 //}
 
-void sakura_page_removed(GtkWidget *widget, void *data)
-{
-	// auto *obj = (Sakura *)data;
-	// Strangely data is not sakura global pointer here...
-	sakura->on_page_removed(widget);
-}
-
 void sakura_increase_font(GtkWidget *widget, void *data)
 {
 	gint new_size;

@@ -225,8 +225,6 @@ void SakuraWindow::add_tab()
 			G_CALLBACK(sakura_button_press), sakura->menu);
 
 	/* Notebook signals */
-	g_signal_connect(G_OBJECT(notebook->gobj()), "page-removed",
-			G_CALLBACK(sakura_page_removed), sakura);
 	if (sakura->config.show_closebutton) {
 		g_signal_connect(G_OBJECT(close_button), "clicked",
 				G_CALLBACK(sakura_closebutton_clicked), term->hbox.gobj());
