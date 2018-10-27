@@ -640,7 +640,7 @@ void sakura_fade_in()
 	gint page;
 	Terminal *term;
 
-	page = gtk_notebook_get_current_page(sakura->main_window->notebook->gobj());
+	page = sakura->main_window->notebook->get_current_page();
 	term = sakura_get_page_term(sakura, page);
 
 	if (sakura->faded) {
@@ -1188,15 +1188,13 @@ void sakura_use_fading(GtkWidget *widget, void *data)
 
 void sakura_set_size()
 {
-	Terminal *term;
 	gint pad_x, pad_y;
 	gint char_width, char_height;
-	guint npages;
 	gint min_width, natural_width;
 	gint page;
 
-	term = sakura_get_page_term(sakura, 0);
-	npages = gtk_notebook_get_n_pages(sakura->main_window->notebook->gobj());
+	auto *term = sakura_get_page_term(sakura, 0);
+	int npages = sakura->main_window->notebook->get_n_pages();
 
 	/* Mayhaps an user resize happened. Check if row and columns have changed */
 	if (sakura->main_window->resized) {

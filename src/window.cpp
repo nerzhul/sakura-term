@@ -196,7 +196,6 @@ void SakuraWindow::add_tab()
 	/* Keep values when adding tabs */
 	sakura->keep_fc = true;
 
-
 	if ((index = notebook->append_page(term->hbox, *tab_label_hbox)) == -1) {
 		sakura_error("Cannot create a new tab");
 		exit(1);
@@ -206,8 +205,9 @@ void SakuraWindow::add_tab()
 	// TODO: Set group id to support detached tabs
 	// gtk_notebook_set_tab_detachable(notebook->gobj(), term->hbox, TRUE);
 
+
 	g_object_set_qdata_full(
-			G_OBJECT(gtk_notebook_get_nth_page((GtkNotebook *)notebook->gobj(), index)),
+			G_OBJECT(notebook->get_nth_page(index)->gobj()),
 			term_data_id, term, (GDestroyNotify)Terminal::free);
 
 	/* vte signals */
