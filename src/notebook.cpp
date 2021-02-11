@@ -62,6 +62,21 @@ void SakuraNotebook::on_page_removed_event(Gtk::Widget *, guint)
 	}
 }
 
+void SakuraNotebook::move_tab(gint direction)
+{
+	gint page = get_current_page();
+	gint n_pages = get_n_pages();
+	auto *child = get_nth_page(page);
+
+	if (direction == FORWARD) {
+		if (page != n_pages - 1)
+			reorder_child(*child, page + 1);
+	} else {
+		if (page != 0)
+			reorder_child(*child, page - 1);
+	}
+}
+
 /* Find the notebook page for the vte terminal passed as a parameter */
 gint SakuraNotebook::find_tab(VteTerminal *vte_term)
 {

@@ -1267,23 +1267,6 @@ void sakura_set_font()
 	}
 }
 
-void sakura_move_tab(gint direction)
-{
-	gint page, n_pages;
-
-	page = sakura->main_window->notebook->get_current_page();
-	n_pages = sakura->main_window->notebook->get_n_pages();
-	auto *child = sakura->main_window->notebook->get_nth_page(page);
-
-	if (direction == FORWARD) {
-		if (page != n_pages - 1)
-			sakura->main_window->notebook->reorder_child(*child, page + 1);
-	} else {
-		if (page != 0)
-			sakura->main_window->notebook->reorder_child(*child, page - 1);
-	}
-}
-
 static void sakura_set_tab_label_text(const gchar *title, gint page)
 {
 	Terminal *term;

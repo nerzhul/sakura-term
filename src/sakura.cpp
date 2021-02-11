@@ -665,10 +665,10 @@ gboolean Sakura::on_key_press(GtkWidget *widget, GdkEventKey *event)
 	/* Move tab keybinding pressed */
 	if (((event->state & config.move_tab_accelerator) == config.move_tab_accelerator)) {
 		if (keycode == sakura_tokeycode(config.keymap.prev_tab_key)) {
-			sakura_move_tab(BACKWARDS);
+			main_window->notebook->move_tab(BACKWARDS);
 			return TRUE;
 		} else if (keycode == sakura_tokeycode(config.keymap.next_tab_key)) {
-			sakura_move_tab(FORWARD);
+			main_window->notebook->move_tab(FORWARD);
 			return TRUE;
 		}
 	}
