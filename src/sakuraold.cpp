@@ -948,10 +948,10 @@ void sakura_allow_bold(GtkWidget *widget, void *data)
 	term = sakura_get_page_term(sakura, page);
 
 	if (gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(widget))) {
-		vte_terminal_set_allow_bold(VTE_TERMINAL(term->vte), TRUE);
+		vte_terminal_set_bold_is_bright(VTE_TERMINAL(term->vte), TRUE);
 		sakura_set_config_string("allow_bold", "Yes");
 	} else {
-		vte_terminal_set_allow_bold(VTE_TERMINAL(term->vte), FALSE);
+		vte_terminal_set_bold_is_bright(VTE_TERMINAL(term->vte), FALSE);
 		sakura_set_config_string("allow_bold", "No");
 	}
 }
