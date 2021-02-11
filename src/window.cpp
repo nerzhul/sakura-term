@@ -47,7 +47,11 @@ SakuraWindow::SakuraWindow(Gtk::WindowType type, const Config *cfg) :
 
 SakuraWindow::~SakuraWindow()
 {
-	delete notebook;
+}
+
+GtkWindow *SakuraWindow::as_gtk_c()
+{
+	return GTK_WINDOW(this);
 }
 
 bool SakuraWindow::on_delete(GdkEventAny *event)
@@ -393,7 +397,7 @@ void SakuraWindow::add_tab()
 	vte_terminal_set_cursor_blink_mode(VTE_TERMINAL(term->vte),
 			sakura->config.blinking_cursor ? VTE_CURSOR_BLINK_ON
 						       : VTE_CURSOR_BLINK_OFF);
-	vte_terminal_set_allow_bold(
+	vte_terminal_set_bold_is_bright(
 			VTE_TERMINAL(term->vte), sakura->config.allow_bold ? TRUE : FALSE);
 	vte_terminal_set_cursor_shape(VTE_TERMINAL(term->vte), sakura->config.cursor_type);
 

@@ -27,7 +27,7 @@ public:
 
 	void set_colors();
 
-	SakuraWindow *main_window = nullptr;
+	std::unique_ptr<SakuraWindow> main_window;
 	GtkWidget *menu;
 	GdkRGBA forecolors[NUM_COLORSETS];
 	GdkRGBA backcolors[NUM_COLORSETS];

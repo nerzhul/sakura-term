@@ -16,10 +16,12 @@ public:
 	bool on_delete(GdkEventAny *event);
 	void on_resize();
 
-	SakuraNotebook *notebook = nullptr;
-	bool resized = false;
-
 	void add_tab();
+
+	GtkWindow *as_gtk_c();
+
+	std::unique_ptr<SakuraNotebook> notebook;
+	bool resized = false;
 
 private:
 	const Config *m_config;
