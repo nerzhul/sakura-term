@@ -236,7 +236,7 @@ void sakura_title_changed(GtkWidget *widget, void *data)
 	VteTerminal *vte_term = (VteTerminal *)widget;
 
 	modified_page = sakura->main_window->notebook->find_tab(vte_term);
-	n_pages = gtk_notebook_get_n_pages(sakura->main_window->notebook->gobj());
+	n_pages = sakura->main_window->notebook->get_n_pages();
 	term = sakura->get_page_term(modified_page);
 
 	title = vte_terminal_get_window_title(VTE_TERMINAL(term->vte));
@@ -820,7 +820,7 @@ void sakura_show_first_tab(GtkWidget *widget, void *data)
 		sakura->config.first_tab = true;
 	} else {
 		/* Only hide tabs if the notebook has one page */
-		if (gtk_notebook_get_n_pages(sakura->main_window->notebook->gobj()) == 1) {
+		if (sakura->main_window->notebook->get_n_pages() == 1) {
 			gtk_notebook_set_show_tabs(sakura->main_window->notebook->gobj(), FALSE);
 		}
 		sakura_set_config_string("show_always_first_tab", "No");
@@ -871,8 +871,8 @@ void sakura_show_scrollbar(GtkWidget *widget, void *data)
 
 	sakura->keep_fc = 1;
 
-	n_pages = gtk_notebook_get_n_pages(sakura->main_window->notebook->gobj());
-	page = gtk_notebook_get_current_page(sakura->main_window->notebook->gobj());
+	n_pages = sakura->main_window->notebook->get_n_pages();
+	page = sakura->main_window->notebook->get_current_page();
 	term = sakura->get_page_term(page);
 
 	if (!g_key_file_get_boolean(sakura->cfg, cfg_group, "scrollbar", NULL)) {
@@ -973,7 +973,7 @@ void sakura_set_cursor(GtkWidget *widget, void *data)
 	int n_pages, i;
 
 	char *cursor_string = (char *)data;
-	n_pages = gtk_notebook_get_n_pages(sakura->main_window->notebook->gobj());
+	n_pages = sakura->main_window->notebook->get_n_pages();
 
 	if (gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(widget))) {
 
@@ -1130,7 +1130,7 @@ void sakura_closebutton_clicked(GtkWidget *widget, void *data)
 
 	page = gtk_notebook_page_num(sakura->main_window->notebook->gobj(), hbox);
 	term = sakura->get_page_term(page);
-	npages = gtk_notebook_get_n_pages(sakura->main_window->notebook->gobj());
+	npages = sakura->main_window->notebook->get_n_pages();
 
 	/* Only write configuration to disk if it's the last tab */
 	if (npages == 1) {
@@ -1258,7 +1258,7 @@ void sakura_set_font()
 	Terminal *term;
 	int i;
 
-	n_pages = gtk_notebook_get_n_pages(sakura->main_window->notebook->gobj());
+	n_pages = sakura->main_window->notebook->get_n_pages();
 
 	/* Set the font for all tabs */
 	for (i = (n_pages - 1); i >= 0; i--) {
@@ -1270,18 +1270,17 @@ void sakura_set_font()
 void sakura_move_tab(gint direction)
 {
 	gint page, n_pages;
-	GtkWidget *child;
 
-	page = gtk_notebook_get_current_page(sakura->main_window->notebook->gobj());
-	n_pages = gtk_notebook_get_n_pages(sakura->main_window->notebook->gobj());
-	child = gtk_notebook_get_nth_page(sakura->main_window->notebook->gobj(), page);
+	page = sakura->main_window->notebook->get_current_page();
+	n_pages = sakura->main_window->notebook->get_n_pages();
+	auto *child = sakura->main_window->notebook->get_nth_page(page);
 
 	if (direction == FORWARD) {
 		if (page != n_pages - 1)
-			gtk_notebook_reorder_child(sakura->main_window->notebook->gobj(), child, page + 1);
+			sakura->main_window->notebook->reorder_child(*child, page + 1);
 	} else {
 		if (page != 0)
-			gtk_notebook_reorder_child(sakura->main_window->notebook->gobj(), child, page - 1);
+			sakura->main_window->notebook->reorder_child(*child, page - 1);
 	}
 }
 

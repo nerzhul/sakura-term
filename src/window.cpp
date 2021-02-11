@@ -232,7 +232,7 @@ void SakuraWindow::add_tab()
 	/* Since vte-2.91 env is properly overwritten */
 	char *command_env[2] = {const_cast<char *>("TERM=xterm-256color"), nullptr};
 	/* First tab */
-	int npages = gtk_notebook_get_n_pages(GTK_NOTEBOOK(notebook->gobj()));
+	int npages = notebook->get_n_pages();
 	if (npages == 1) {
 		notebook->set_show_tabs(sakura->config.first_tab);
 		notebook->set_show_border(false);
