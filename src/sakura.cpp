@@ -202,69 +202,57 @@ void Sakura::destroy(GtkWidget *)
 
 void Sakura::init_popup()
 {
-	GtkWidget *item_new_tab, *item_set_name, *item_close_tab, *item_copy, *item_paste,
-			*item_select_font, *item_select_colors, *item_set_title, *item_fullscreen,
-			*item_toggle_scrollbar, *item_options, *item_show_first_tab,
-			*item_urgent_bell, *item_audible_bell, *item_blinking_cursor,
-			*item_allow_bold, *item_other_options, *item_cursor, *item_cursor_block,
-			*item_cursor_underline, *item_cursor_ibeam, *item_palette,
-			*item_palette_tango, *item_palette_linux, *item_palette_xterm,
-			*item_palette_rxvt, *item_palette_solarized_dark,
-			*item_palette_solarized_light, *item_palette_gruvbox,
-			*item_show_close_button, *item_tabs_on_bottom, *item_less_questions,
-			*item_disable_numbered_tabswitch, *item_use_fading,
-			*item_stop_tab_cycling_at_end_tabs;
 	GtkWidget *options_menu, *other_options_menu, *cursor_menu, *palette_menu;
 
-	item_open_mail = gtk_menu_item_new_with_label(_("Open mail"));
-	item_open_link = gtk_menu_item_new_with_label(_("Open link"));
-	item_copy_link = gtk_menu_item_new_with_label(_("Copy link"));
-	item_new_tab = gtk_menu_item_new_with_label(_("New tab"));
-	item_set_name = gtk_menu_item_new_with_label(_("Set tab name..."));
-	item_close_tab = gtk_menu_item_new_with_label(_("Close tab"));
-	item_fullscreen = gtk_menu_item_new_with_label(_("Full screen"));
-	item_copy = gtk_menu_item_new_with_label(_("Copy"));
-	item_paste = gtk_menu_item_new_with_label(_("Paste"));
-	item_select_font = gtk_menu_item_new_with_label(_("Select font..."));
-	item_select_colors = gtk_menu_item_new_with_label(_("Select colors..."));
-	item_set_title = gtk_menu_item_new_with_label(_("Set window title..."));
+	auto *item_open_mail = new Gtk::MenuItem(_("Open mail"));
+	auto *item_open_link = new Gtk::MenuItem(_("Open link"));
+	auto *item_copy_link = new Gtk::MenuItem(_("Copy link"));
+	auto *item_new_tab = new Gtk::MenuItem(_("New tab"));
+	auto *item_set_name = new Gtk::MenuItem(_("Set tab name..."));
+	auto *item_close_tab = new Gtk::MenuItem(_("Close tab"));
+	auto *item_fullscreen = new Gtk::MenuItem(_("Full screen"));
+	auto *item_copy = new Gtk::MenuItem(_("Copy"));
+	auto *item_paste = new Gtk::MenuItem(_("Paste"));
+	auto *item_select_font = new Gtk::MenuItem(_("Select font..."));
+	auto *item_select_colors = new Gtk::MenuItem(_("Select colors..."));
+	auto *item_set_title = new Gtk::MenuItem(_("Set window title..."));
 
-	item_options = gtk_menu_item_new_with_label(_("Options"));
+	auto *item_options = new Gtk::MenuItem(_("Options"));
 
-	item_other_options = gtk_menu_item_new_with_label(_("More"));
-	item_show_first_tab = gtk_check_menu_item_new_with_label(_("Always show tab bar"));
-	item_tabs_on_bottom = gtk_check_menu_item_new_with_label(_("Tabs at bottom"));
-	item_show_close_button = gtk_check_menu_item_new_with_label(_("Show close button on tabs"));
-	item_toggle_scrollbar = gtk_check_menu_item_new_with_label(_("Show scrollbar"));
-	item_less_questions = gtk_check_menu_item_new_with_label(_("Don't show exit dialog"));
-	item_urgent_bell = gtk_check_menu_item_new_with_label(_("Set urgent bell"));
-	item_audible_bell = gtk_check_menu_item_new_with_label(_("Set audible bell"));
-	item_blinking_cursor = gtk_check_menu_item_new_with_label(_("Set blinking cursor"));
-	item_allow_bold = gtk_check_menu_item_new_with_label(_("Enable bold font"));
-	item_stop_tab_cycling_at_end_tabs =
+	auto *item_other_options = new Gtk::MenuItem(_("More"));
+	auto *item_show_first_tab = gtk_check_menu_item_new_with_label(_("Always show tab bar"));
+	auto *item_tabs_on_bottom = gtk_check_menu_item_new_with_label(_("Tabs at bottom"));
+	auto *item_show_close_button = gtk_check_menu_item_new_with_label(_("Show close button on tabs"));
+	auto *item_toggle_scrollbar = gtk_check_menu_item_new_with_label(_("Show scrollbar"));
+	auto *item_less_questions = gtk_check_menu_item_new_with_label(_("Don't show exit dialog"));
+	auto *item_urgent_bell = gtk_check_menu_item_new_with_label(_("Set urgent bell"));
+	auto *item_audible_bell = gtk_check_menu_item_new_with_label(_("Set audible bell"));
+	auto *item_blinking_cursor = gtk_check_menu_item_new_with_label(_("Set blinking cursor"));
+	auto *item_allow_bold = gtk_check_menu_item_new_with_label(_("Enable bold font"));
+	auto *item_stop_tab_cycling_at_end_tabs =
 			gtk_check_menu_item_new_with_label(_("Stop tab cycling at end tabs"));
-	item_disable_numbered_tabswitch =
+	auto *item_disable_numbered_tabswitch =
 			gtk_check_menu_item_new_with_label(_("Disable numbered tabswitch"));
-	item_use_fading = gtk_check_menu_item_new_with_label(_("Enable focus fade"));
-	item_cursor = gtk_menu_item_new_with_label(_("Set cursor type"));
-	item_cursor_block = gtk_radio_menu_item_new_with_label(NULL, _("Block"));
-	item_cursor_underline = gtk_radio_menu_item_new_with_label_from_widget(
+	auto *item_use_fading = gtk_check_menu_item_new_with_label(_("Enable focus fade"));
+	auto *item_cursor = new Gtk::MenuItem(_("Set cursor type"));
+	auto *item_cursor_block = gtk_radio_menu_item_new_with_label(NULL, _("Block"));
+	auto *item_cursor_underline = gtk_radio_menu_item_new_with_label_from_widget(
 			GTK_RADIO_MENU_ITEM(item_cursor_block), _("Underline"));
-	item_cursor_ibeam = gtk_radio_menu_item_new_with_label_from_widget(
+	auto *item_cursor_ibeam = gtk_radio_menu_item_new_with_label_from_widget(
 			GTK_RADIO_MENU_ITEM(item_cursor_block), _("IBeam"));
-	item_palette = gtk_menu_item_new_with_label(_("Set palette"));
-	item_palette_tango = gtk_radio_menu_item_new_with_label(NULL, "Tango");
-	item_palette_linux = gtk_radio_menu_item_new_with_label_from_widget(
+	auto *item_palette = new Gtk::MenuItem(_("Set palette"));
+	auto *item_palette_tango = gtk_radio_menu_item_new_with_label(NULL, "Tango");
+	auto *item_palette_linux = gtk_radio_menu_item_new_with_label_from_widget(
 			GTK_RADIO_MENU_ITEM(item_palette_tango), "Linux");
-	item_palette_gruvbox = gtk_radio_menu_item_new_with_label_from_widget(
+	auto *item_palette_gruvbox = gtk_radio_menu_item_new_with_label_from_widget(
 			GTK_RADIO_MENU_ITEM(item_palette_tango), "Gruvbox");
-	item_palette_xterm = gtk_radio_menu_item_new_with_label_from_widget(
+	auto *item_palette_xterm = gtk_radio_menu_item_new_with_label_from_widget(
 			GTK_RADIO_MENU_ITEM(item_palette_tango), "Xterm");
-	item_palette_rxvt = gtk_radio_menu_item_new_with_label_from_widget(
+	auto *item_palette_rxvt = gtk_radio_menu_item_new_with_label_from_widget(
 			GTK_RADIO_MENU_ITEM(item_palette_tango), "rxvt");
-	item_palette_solarized_dark = gtk_radio_menu_item_new_with_label_from_widget(
+	auto *item_palette_solarized_dark = gtk_radio_menu_item_new_with_label_from_widget(
 			GTK_RADIO_MENU_ITEM(item_palette_tango), "Solarized dark");
-	item_palette_solarized_light = gtk_radio_menu_item_new_with_label_from_widget(
+	auto *item_palette_solarized_light = gtk_radio_menu_item_new_with_label_from_widget(
 			GTK_RADIO_MENU_ITEM(item_palette_tango), "Solarized light");
 
 	if (config.first_tab) {
@@ -367,31 +355,31 @@ void Sakura::init_popup()
 	// sakura->labels_menu=gtk_menu_new();
 
 	/* Add items to popup menu */
-	gtk_menu_shell_append(GTK_MENU_SHELL(menu), item_open_mail);
-	gtk_menu_shell_append(GTK_MENU_SHELL(menu), item_open_link);
-	gtk_menu_shell_append(GTK_MENU_SHELL(menu), item_copy_link);
+	gtk_menu_shell_append(GTK_MENU_SHELL(menu), (GtkWidget*)item_open_mail->gobj());
+	gtk_menu_shell_append(GTK_MENU_SHELL(menu), (GtkWidget*)item_open_link->gobj());
+	gtk_menu_shell_append(GTK_MENU_SHELL(menu), (GtkWidget*)item_copy_link->gobj());
 	gtk_menu_shell_append(GTK_MENU_SHELL(menu), open_link_separator);
-	gtk_menu_shell_append(GTK_MENU_SHELL(menu), item_new_tab);
-	gtk_menu_shell_append(GTK_MENU_SHELL(menu), item_set_name);
-	gtk_menu_shell_append(GTK_MENU_SHELL(menu), item_close_tab);
+	gtk_menu_shell_append(GTK_MENU_SHELL(menu), (GtkWidget*)item_new_tab->gobj());
+	gtk_menu_shell_append(GTK_MENU_SHELL(menu), (GtkWidget*)item_set_name->gobj());
+	gtk_menu_shell_append(GTK_MENU_SHELL(menu), (GtkWidget*)item_close_tab->gobj());
 	gtk_menu_shell_append(GTK_MENU_SHELL(menu), gtk_separator_menu_item_new());
-	gtk_menu_shell_append(GTK_MENU_SHELL(menu), item_fullscreen);
+	gtk_menu_shell_append(GTK_MENU_SHELL(menu), (GtkWidget*)item_fullscreen->gobj());
 	gtk_menu_shell_append(GTK_MENU_SHELL(menu), gtk_separator_menu_item_new());
-	gtk_menu_shell_append(GTK_MENU_SHELL(menu), item_copy);
-	gtk_menu_shell_append(GTK_MENU_SHELL(menu), item_paste);
+	gtk_menu_shell_append(GTK_MENU_SHELL(menu), (GtkWidget*)item_copy->gobj());
+	gtk_menu_shell_append(GTK_MENU_SHELL(menu), (GtkWidget*)item_paste->gobj());
 	gtk_menu_shell_append(GTK_MENU_SHELL(menu), gtk_separator_menu_item_new());
-	gtk_menu_shell_append(GTK_MENU_SHELL(menu), item_options);
+	gtk_menu_shell_append(GTK_MENU_SHELL(menu), (GtkWidget*)item_options->gobj());
 
 	options_menu = gtk_menu_new();
 	other_options_menu = gtk_menu_new();
 	cursor_menu = gtk_menu_new();
 	palette_menu = gtk_menu_new();
 
-	gtk_menu_shell_append(GTK_MENU_SHELL(options_menu), item_set_title);
-	gtk_menu_shell_append(GTK_MENU_SHELL(options_menu), item_select_colors);
-	gtk_menu_shell_append(GTK_MENU_SHELL(options_menu), item_select_font);
+	gtk_menu_shell_append(GTK_MENU_SHELL(options_menu), (GtkWidget*)item_set_title->gobj());
+	gtk_menu_shell_append(GTK_MENU_SHELL(options_menu), (GtkWidget*)item_select_colors->gobj());
+	gtk_menu_shell_append(GTK_MENU_SHELL(options_menu), (GtkWidget*)item_select_font->gobj());
 	gtk_menu_shell_append(GTK_MENU_SHELL(options_menu), gtk_separator_menu_item_new());
-	gtk_menu_shell_append(GTK_MENU_SHELL(options_menu), item_other_options);
+	gtk_menu_shell_append(GTK_MENU_SHELL(options_menu), (GtkWidget*)item_other_options->gobj());
 	gtk_menu_shell_append(GTK_MENU_SHELL(other_options_menu), item_show_first_tab);
 	gtk_menu_shell_append(GTK_MENU_SHELL(other_options_menu), item_tabs_on_bottom);
 	gtk_menu_shell_append(GTK_MENU_SHELL(other_options_menu), item_show_close_button);
@@ -406,11 +394,11 @@ void Sakura::init_popup()
 	gtk_menu_shell_append(GTK_MENU_SHELL(other_options_menu), item_allow_bold);
 	gtk_menu_shell_append(
 			GTK_MENU_SHELL(other_options_menu), item_stop_tab_cycling_at_end_tabs);
-	gtk_menu_shell_append(GTK_MENU_SHELL(other_options_menu), item_cursor);
+	gtk_menu_shell_append(GTK_MENU_SHELL(other_options_menu), (GtkWidget*)item_cursor->gobj());
 	gtk_menu_shell_append(GTK_MENU_SHELL(cursor_menu), item_cursor_block);
 	gtk_menu_shell_append(GTK_MENU_SHELL(cursor_menu), item_cursor_underline);
 	gtk_menu_shell_append(GTK_MENU_SHELL(cursor_menu), item_cursor_ibeam);
-	gtk_menu_shell_append(GTK_MENU_SHELL(other_options_menu), item_palette);
+	gtk_menu_shell_append(GTK_MENU_SHELL(other_options_menu), (GtkWidget*)item_palette->gobj());
 	gtk_menu_shell_append(GTK_MENU_SHELL(palette_menu), item_palette_tango);
 	gtk_menu_shell_append(GTK_MENU_SHELL(palette_menu), item_palette_linux);
 	gtk_menu_shell_append(GTK_MENU_SHELL(palette_menu), item_palette_gruvbox);
@@ -419,22 +407,22 @@ void Sakura::init_popup()
 	gtk_menu_shell_append(GTK_MENU_SHELL(palette_menu), item_palette_solarized_dark);
 	gtk_menu_shell_append(GTK_MENU_SHELL(palette_menu), item_palette_solarized_light);
 
-	gtk_menu_item_set_submenu(GTK_MENU_ITEM(item_options), options_menu);
+	gtk_menu_item_set_submenu(GTK_MENU_ITEM(item_options->gobj()), options_menu);
 	gtk_menu_item_set_submenu(GTK_MENU_ITEM(item_other_options), other_options_menu);
 	gtk_menu_item_set_submenu(GTK_MENU_ITEM(item_cursor), cursor_menu);
 	gtk_menu_item_set_submenu(GTK_MENU_ITEM(item_palette), palette_menu);
 
 	/* ... and finally assign callbacks to menuitems */
-	g_signal_connect(G_OBJECT(item_new_tab), "activate", G_CALLBACK(sakura_new_tab),
+	g_signal_connect(G_OBJECT(item_new_tab->gobj()), "activate", G_CALLBACK(sakura_new_tab),
 			main_window->gobj());
-	g_signal_connect(G_OBJECT(item_set_name), "activate", G_CALLBACK(sakura_set_name_dialog),
+	g_signal_connect(G_OBJECT(item_set_name->gobj()), "activate", G_CALLBACK(sakura_set_name_dialog),
 			NULL);
-	g_signal_connect(G_OBJECT(item_close_tab), "activate", G_CALLBACK(sakura_close_tab), NULL);
-	g_signal_connect(G_OBJECT(item_select_font), "activate", G_CALLBACK(sakura_font_dialog),
+	item_close_tab->signal_activate().connect(sigc::mem_fun(*this, &Sakura::close_tab));
+	g_signal_connect(G_OBJECT(item_select_font->gobj()), "activate", G_CALLBACK(sakura_font_dialog),
 			NULL);
-	g_signal_connect(G_OBJECT(item_copy), "activate", G_CALLBACK(sakura_copy), NULL);
-	g_signal_connect(G_OBJECT(item_paste), "activate", G_CALLBACK(sakura_paste), NULL);
-	g_signal_connect(G_OBJECT(item_select_colors), "activate", G_CALLBACK(sakura_color_dialog),
+	g_signal_connect(G_OBJECT(item_copy->gobj()), "activate", G_CALLBACK(sakura_copy), NULL);
+	g_signal_connect(G_OBJECT(item_paste->gobj()), "activate", G_CALLBACK(sakura_paste), NULL);
+	g_signal_connect(G_OBJECT(item_select_colors->gobj()), "activate", G_CALLBACK(sakura_color_dialog),
 			NULL);
 
 	g_signal_connect(G_OBJECT(item_show_first_tab), "activate",
@@ -461,7 +449,7 @@ void Sakura::init_popup()
 			G_CALLBACK(sakura_disable_numbered_tabswitch), sakura);
 	g_signal_connect(
 			G_OBJECT(item_use_fading), "activate", G_CALLBACK(sakura_use_fading), NULL);
-	g_signal_connect(G_OBJECT(item_set_title), "activate", G_CALLBACK(sakura_set_title_dialog),
+	g_signal_connect(G_OBJECT(item_set_title->gobj()), "activate", G_CALLBACK(sakura_set_title_dialog),
 			NULL);
 	g_signal_connect(G_OBJECT(item_cursor_block), "activate", G_CALLBACK(sakura_set_cursor),
 			(gpointer) "block");
@@ -484,11 +472,11 @@ void Sakura::init_popup()
 	g_signal_connect(G_OBJECT(item_palette_solarized_light), "activate",
 			G_CALLBACK(sakura_set_palette), (gpointer) "solarized_light");
 
-	g_signal_connect(G_OBJECT(item_open_mail), "activate", G_CALLBACK(sakura_open_mail), NULL);
-	g_signal_connect(G_OBJECT(item_open_link), "activate", G_CALLBACK(sakura_open_url), NULL);
-	g_signal_connect(G_OBJECT(item_copy_link), "activate", G_CALLBACK(sakura_copy_url), NULL);
+	g_signal_connect(G_OBJECT(item_open_mail->gobj()), "activate", G_CALLBACK(sakura_open_mail), NULL);
+	g_signal_connect(G_OBJECT(item_open_link->gobj()), "activate", G_CALLBACK(sakura_open_url), NULL);
+	g_signal_connect(G_OBJECT(item_copy_link->gobj()), "activate", G_CALLBACK(sakura_copy_url), NULL);
 	g_signal_connect(
-			G_OBJECT(item_fullscreen), "activate", G_CALLBACK(sakura_fullscreen), this);
+			G_OBJECT(item_fullscreen->gobj()), "activate", G_CALLBACK(sakura_fullscreen), this);
 
 	gtk_widget_show_all(menu);
 }
@@ -601,7 +589,7 @@ gboolean Sakura::on_key_press(GtkWidget *widget, GdkEventKey *event)
 					config.del_tab_accelerator &&
 			keycode == sakura_tokeycode(config.keymap.del_tab_key)) {
 		/* Delete current tab */
-		close_tab(nullptr);
+		close_tab();
 		return TRUE;
 	}
 
@@ -796,7 +784,7 @@ void Sakura::on_eof(GtkWidget *widget)
 	}
 }
 
-void Sakura::close_tab(GtkWidget *)
+void Sakura::close_tab()
 {
 	pid_t pgid;
 	GtkWidget *dialog;

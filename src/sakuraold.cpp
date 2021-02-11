@@ -1106,12 +1106,6 @@ void sakura_new_tab(GtkWidget *widget, void *data)
 	window->add_tab();
 }
 
-void sakura_close_tab(GtkWidget *widget, void *data)
-{
-	auto *obj = (Sakura *)data;
-	obj->close_tab(widget);
-}
-
 void sakura_fullscreen(GtkWidget *widget, void *data)
 {
 	auto *obj = (Sakura *)data;

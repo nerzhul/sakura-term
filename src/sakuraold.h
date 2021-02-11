@@ -74,7 +74,6 @@ void sakura_fade_in();
 void sakura_fade_out();
 void sakura_set_size();
 void     sakura_config_done();
-void     sakura_close_tab (GtkWidget *, void *);
 void     sakura_copy (GtkWidget *, void *);
 void     sakura_paste (GtkWidget *, void *);
 // Callbacks
