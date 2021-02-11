@@ -68,7 +68,6 @@
 #define ERROR_BUFFER_LENGTH 256
 
 /* Functions */
-static gint sakura_find_tab(VteTerminal *);
 static void sakura_set_tab_label_text(const gchar *, gint page);
 
 void search(VteTerminal *vte, const char *pattern, bool reverse)
@@ -236,7 +235,7 @@ void sakura_title_changed(GtkWidget *widget, void *data)
 	gint modified_page;
 	VteTerminal *vte_term = (VteTerminal *)widget;
 
-	modified_page = sakura_find_tab(vte_term);
+	modified_page = sakura->main_window->notebook->find_tab(vte_term);
 	n_pages = gtk_notebook_get_n_pages(sakura->main_window->notebook->gobj());
 	term = sakura->get_page_term(modified_page);
 
@@ -1284,28 +1283,6 @@ void sakura_move_tab(gint direction)
 		if (page != 0)
 			gtk_notebook_reorder_child(sakura->main_window->notebook->gobj(), child, page - 1);
 	}
-}
-
-/* Find the notebook page for the vte terminal passed as a parameter */
-static gint sakura_find_tab(VteTerminal *vte_term)
-{
-	gint matched_page, page, n_pages;
-	Terminal *term;
-
-	n_pages = gtk_notebook_get_n_pages(sakura->main_window->notebook->gobj());
-
-	matched_page = -1;
-	page = 0;
-
-	do {
-		term = sakura->get_page_term(page);
-		if ((VteTerminal *)term->vte == vte_term) {
-			matched_page = page;
-		}
-		page++;
-	} while (page < n_pages);
-
-	return (matched_page);
 }
 
 static void sakura_set_tab_label_text(const gchar *title, gint page)

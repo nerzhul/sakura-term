@@ -1,4 +1,5 @@
 #include "notebook.h"
+#include "terminal.h"
 #include "sakuraold.h"
 
 SakuraNotebook::SakuraNotebook(const Config *cfg) :
@@ -59,4 +60,22 @@ void SakuraNotebook::on_page_removed_event(Gtk::Widget *, guint)
 		 * to recalculate its size */
 		sakura_set_size();
 	}
+}
+
+/* Find the notebook page for the vte terminal passed as a parameter */
+gint SakuraNotebook::find_tab(VteTerminal *vte_term)
+{
+	gint n_pages = get_n_pages();
+	gint matched_page = -1;
+	gint page = 0;
+
+	do {
+		auto *term = sakura->get_page_term(page);
+		if ((VteTerminal *)term->vte == vte_term) {
+			matched_page = page;
+		}
+		page++;
+	} while (page < n_pages);
+
+	return (matched_page);
 }
