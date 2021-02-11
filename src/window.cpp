@@ -49,11 +49,6 @@ SakuraWindow::~SakuraWindow()
 {
 }
 
-GtkWindow *SakuraWindow::as_gtk_c()
-{
-	return GTK_WINDOW(this);
-}
-
 bool SakuraWindow::on_delete(GdkEventAny *event)
 {
 	if (!sakura->config.less_questions) {

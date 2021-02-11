@@ -18,8 +18,6 @@ public:
 
 	void add_tab();
 
-	GtkWindow *as_gtk_c();
-
 	std::unique_ptr<SakuraNotebook> notebook;
 	bool resized = false;
 

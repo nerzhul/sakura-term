@@ -426,7 +426,7 @@ void Sakura::init_popup()
 
 	/* ... and finally assign callbacks to menuitems */
 	g_signal_connect(G_OBJECT(item_new_tab), "activate", G_CALLBACK(sakura_new_tab),
-			main_window->as_gtk_c());
+			main_window->gobj());
 	g_signal_connect(G_OBJECT(item_set_name), "activate", G_CALLBACK(sakura_set_name_dialog),
 			NULL);
 	g_signal_connect(G_OBJECT(item_close_tab), "activate", G_CALLBACK(sakura_close_tab), NULL);
@@ -812,7 +812,7 @@ void Sakura::close_tab(GtkWidget *)
 	pgid = tcgetpgrp(vte_pty_get_fd(vte_terminal_get_pty(VTE_TERMINAL(term->vte))));
 
 	if ((pgid != -1) && (pgid != term->pid) && (!config.less_questions)) {
-		dialog = gtk_message_dialog_new(main_window->as_gtk_c(), GTK_DIALOG_MODAL,
+		dialog = gtk_message_dialog_new(main_window->gobj(), GTK_DIALOG_MODAL,
 				GTK_MESSAGE_QUESTION, GTK_BUTTONS_YES_NO,
 				_("There is a running process in this terminal.\n\nDo you really "
 				  "want to close it?"));
