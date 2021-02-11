@@ -4,6 +4,7 @@
 #include <gtkmm.h>
 
 class SakuraWindow;
+class Terminal;
 
 #define DEFAULT_COLUMNS 80
 #define DEFAULT_ROWS 24
@@ -26,6 +27,8 @@ public:
 	void toggle_numbered_tabswitch_option(GtkWidget *widget);
 
 	void set_colors();
+
+	Terminal *get_page_term(gint page_id);
 
 	std::unique_ptr<SakuraWindow> main_window;
 	GtkWidget *menu;

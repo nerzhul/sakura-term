@@ -534,6 +534,11 @@ static gboolean terminal_screen_image_draw_cb(GtkWidget *widget, cairo_t *cr, vo
 	return TRUE;
 }
 
+Terminal *Sakura::get_page_term(gint page_id)
+{
+    return (Terminal *)g_object_get_qdata(G_OBJECT(main_window->notebook->get_nth_page(page_id)->gobj()), term_data_id);
+}
+
 /* Set the terminal colors for all notebook tabs */
 void Sakura::set_colors()
 {
@@ -542,7 +547,7 @@ void Sakura::set_colors()
 	Terminal *term;
 
 	for (i = (n_pages - 1); i >= 0; i--) {
-		term = sakura_get_page_term(this, i);
+		term = get_page_term(i);
 
 		if (!config.get_background_image().empty()) {
 			if (!term->bg_image_callback_id) {
@@ -738,7 +743,7 @@ void Sakura::on_child_exited(GtkWidget *widget)
 	gint page = gtk_notebook_page_num(
 			main_window->notebook->gobj(), gtk_widget_get_parent(widget));
 	gint npages = main_window->notebook->get_n_pages();
-	auto *term = sakura_get_page_term(this, page);
+	auto *term = get_page_term(page);
 
 	/* Only write configuration to disk if it's the last tab */
 	if (npages == 1) {
@@ -773,7 +778,7 @@ void Sakura::on_eof(GtkWidget *widget)
 	   child-exited/eof signals */
 	if (main_window->notebook->get_current_page() == 0) {
 
-		auto *term = sakura_get_page_term(this, 0);
+		auto *term = get_page_term(0);
 
 		if (option_hold == TRUE) {
 			SAY("hold option has been activated");
@@ -800,7 +805,7 @@ void Sakura::close_tab(GtkWidget *)
 
 	gint page = main_window->notebook->get_current_page();
 	gint npages = main_window->notebook->get_n_pages();
-	term = sakura_get_page_term(this, page);
+	term = get_page_term(page);
 
 	/* Only write configuration to disk if it's the last tab */
 	if (npages == 1) {
@@ -830,19 +835,19 @@ void Sakura::close_tab(GtkWidget *)
 /* Delete the notebook tab passed as a parameter */
 void Sakura::del_tab(gint page, bool exit_if_needed)
 {
-	auto *term = sakura_get_page_term(this, page);
+	auto *term = get_page_term(page);
 	gint npages = main_window->notebook->get_n_pages();
 
 	/* When there's only one tab use the shell title, if provided */
 	if (npages == 2) {
-		term = sakura_get_page_term(this, 0);
+		term = get_page_term(0);
 		const char *title = vte_terminal_get_window_title(VTE_TERMINAL(term->vte));
 		if (title) {
 			main_window->set_title(title);
 		}
 	}
 
-	term = sakura_get_page_term(this, page);
+	term = get_page_term(page);
 
 	/* Do the first tab checks BEFORE deleting the tab, to ensure correct
 	 * sizes are calculated when the tab is deleted */
@@ -857,7 +862,7 @@ void Sakura::del_tab(gint page, bool exit_if_needed)
 	/* Find the next page, if it exists, and grab focus */
 	if (main_window->notebook->get_n_pages() > 0) {
 		page = main_window->notebook->get_current_page();
-		term = sakura_get_page_term(this, page);
+		term = get_page_term(page);
 		gtk_widget_grab_focus(term->vte);
 	}
 

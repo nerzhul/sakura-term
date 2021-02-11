@@ -4,10 +4,6 @@
 #include <gtkmm/label.h>
 #include <gtkmm/box.h>
 
-#define  sakura_get_page_term( sakura, page_idx )  \
-    (Terminal *)g_object_get_qdata(  \
-            G_OBJECT(sakura->main_window->notebook->get_nth_page(page_idx)->gobj()), term_data_id);
-
 class Terminal
 {
 public:

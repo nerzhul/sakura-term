@@ -57,7 +57,7 @@ bool SakuraWindow::on_delete(GdkEventAny *event)
 		/* Check for each tab if there are running processes. Use tcgetpgrp to compare to
 		 * the shell PGID */
 		for (gint i = 0; i < npages; i++) {
-			Terminal *term = sakura_get_page_term(sakura, i);
+			Terminal *term = sakura->get_page_term(i);
 			pid_t pgid = tcgetpgrp(vte_pty_get_fd(
 					vte_terminal_get_pty(VTE_TERMINAL(term->vte))));
 
@@ -184,7 +184,7 @@ void SakuraWindow::add_tab()
 	int index = notebook->get_current_page();
 	if (index >= 0) {
 		Terminal *prev_term;
-		prev_term = sakura_get_page_term(sakura, index);
+		prev_term = sakura->get_page_term(index);
 		cwd = sakura_get_term_cwd(prev_term);
 
 		term->colorset = prev_term->colorset;

@@ -107,7 +107,7 @@ gboolean sakura_button_press(
 		return FALSE;
 
 	page = gtk_notebook_get_current_page(sakura->main_window->notebook->gobj());
-	term = sakura_get_page_term(sakura, page);
+	term = sakura->get_page_term(page);
 
 	/* Find out if cursor it's over a matched expression...*/
 	sakura->current_match = vte_terminal_match_check_event(
@@ -171,7 +171,7 @@ gboolean sakura_button_press(
 //	int index;
 //
 //	index = gtk_notebook_get_current_page(sakura->main_window->notebook->gobj());
-//	term = sakura_get_page_term(sakura, index);
+//	term = sakura->get_page_term(index);
 //
 //	/* If term is found stop event propagation */
 //	if(term != NULL) {
@@ -238,7 +238,7 @@ void sakura_title_changed(GtkWidget *widget, void *data)
 
 	modified_page = sakura_find_tab(vte_term);
 	n_pages = gtk_notebook_get_n_pages(sakura->main_window->notebook->gobj());
-	term = sakura_get_page_term(sakura, modified_page);
+	term = sakura->get_page_term(modified_page);
 
 	title = vte_terminal_get_window_title(VTE_TERMINAL(term->vte));
 
@@ -337,7 +337,7 @@ void sakura_set_name_dialog(GtkWidget *widget, void *data)
 	Terminal *term;
 
 	page = gtk_notebook_get_current_page(sakura->main_window->notebook->gobj());
-	term = sakura_get_page_term(sakura, page);
+	term = sakura->get_page_term(page);
 
 	input_dialog = gtk_dialog_new_with_buttons(_("Set tab name"),
 			GTK_WINDOW(sakura->main_window->gobj()),
@@ -399,7 +399,7 @@ void sakura_set_colorset(int cs)
 		return;
 
 	page = gtk_notebook_get_current_page(sakura->main_window->notebook->gobj());
-	term = sakura_get_page_term(sakura, page);
+	term = sakura->get_page_term(page);
 	term->colorset = cs;
 
 	sakura_set_config_integer("last_colorset", term->colorset + 1);
@@ -472,7 +472,7 @@ void sakura_color_dialog(GtkWidget *widget, void *data)
 	GdkRGBA temp_curs[NUM_COLORSETS];
 
 	page = gtk_notebook_get_current_page(sakura->main_window->notebook->gobj());
-	term = sakura_get_page_term(sakura, page);
+	term = sakura->get_page_term(page);
 
 	color_dialog = gtk_dialog_new_with_buttons(_("Select colors"),
 			GTK_WINDOW(sakura->main_window->gobj()),
@@ -617,7 +617,7 @@ void sakura_fade_out()
 	Terminal *term;
 
 	page = gtk_notebook_get_current_page(sakura->main_window->notebook->gobj());
-	term = sakura_get_page_term(sakura, page);
+	term = sakura->get_page_term(page);
 
 	if (!sakura->faded) {
 		sakura->faded = true;
@@ -641,7 +641,7 @@ void sakura_fade_in()
 	Terminal *term;
 
 	page = sakura->main_window->notebook->get_current_page();
-	term = sakura_get_page_term(sakura, page);
+	term = sakura->get_page_term(page);
 
 	if (sakura->faded) {
 		sakura->faded = false;
@@ -704,7 +704,7 @@ void sakura_search_dialog(GtkWidget *widget, void *data)
 		gint page;
 		Terminal *term;
 		page = gtk_notebook_get_current_page(sakura->main_window->notebook->gobj());
-		term = sakura_get_page_term(sakura, page);
+		term = sakura->get_page_term(page);
 		search(VTE_TERMINAL(term->vte), gtk_entry_get_text(GTK_ENTRY(entry)), 0);
 	}
 	gtk_widget_destroy(title_dialog);
@@ -874,7 +874,7 @@ void sakura_show_scrollbar(GtkWidget *widget, void *data)
 
 	n_pages = gtk_notebook_get_n_pages(sakura->main_window->notebook->gobj());
 	page = gtk_notebook_get_current_page(sakura->main_window->notebook->gobj());
-	term = sakura_get_page_term(sakura, page);
+	term = sakura->get_page_term(page);
 
 	if (!g_key_file_get_boolean(sakura->cfg, cfg_group, "scrollbar", NULL)) {
 		sakura->config.show_scrollbar = true;
@@ -886,7 +886,7 @@ void sakura_show_scrollbar(GtkWidget *widget, void *data)
 
 	/* Toggle/Untoggle the scrollbar for all tabs */
 	for (i = (n_pages - 1); i >= 0; i--) {
-		term = sakura_get_page_term(sakura, i);
+		term = sakura->get_page_term(i);
 		if (!sakura->config.show_scrollbar)
 			gtk_widget_hide(term->scrollbar);
 		else
@@ -911,7 +911,7 @@ void sakura_audible_bell(GtkWidget *widget, void *data)
 	Terminal *term;
 
 	page = gtk_notebook_get_current_page(sakura->main_window->notebook->gobj());
-	term = sakura_get_page_term(sakura, page);
+	term = sakura->get_page_term(page);
 
 	if (gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(widget))) {
 		vte_terminal_set_audible_bell(VTE_TERMINAL(term->vte), TRUE);
@@ -928,7 +928,7 @@ void sakura_blinking_cursor(GtkWidget *widget, void *data)
 	Terminal *term;
 
 	page = gtk_notebook_get_current_page(sakura->main_window->notebook->gobj());
-	term = sakura_get_page_term(sakura, page);
+	term = sakura->get_page_term(page);
 
 	if (gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(widget))) {
 		vte_terminal_set_cursor_blink_mode(VTE_TERMINAL(term->vte), VTE_CURSOR_BLINK_ON);
@@ -945,7 +945,7 @@ void sakura_allow_bold(GtkWidget *widget, void *data)
 	Terminal *term;
 
 	page = gtk_notebook_get_current_page(GTK_NOTEBOOK(sakura->main_window->notebook->gobj()));
-	term = sakura_get_page_term(sakura, page);
+	term = sakura->get_page_term(page);
 
 	if (gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(widget))) {
 		vte_terminal_set_bold_is_bright(VTE_TERMINAL(term->vte), TRUE);
@@ -987,7 +987,7 @@ void sakura_set_cursor(GtkWidget *widget, void *data)
 		}
 
 		for (i = (n_pages - 1); i >= 0; i--) {
-			term = sakura_get_page_term(sakura, i);
+			term = sakura->get_page_term(i);
 			vte_terminal_set_cursor_shape(
 					VTE_TERMINAL(term->vte), sakura->config.cursor_type);
 		}
@@ -1084,7 +1084,7 @@ void sakura_copy(GtkWidget *widget, void *data)
 	Terminal *term;
 
 	page = gtk_notebook_get_current_page(sakura->main_window->notebook->gobj());
-	term = sakura_get_page_term(sakura, page);
+	term = sakura->get_page_term(page);
 
 	vte_terminal_copy_clipboard_format(VTE_TERMINAL(term->vte), VTE_FORMAT_TEXT);
 }
@@ -1096,7 +1096,7 @@ void sakura_paste(GtkWidget *widget, void *data)
 	Terminal *term;
 
 	page = gtk_notebook_get_current_page(sakura->main_window->notebook->gobj());
-	term = sakura_get_page_term(sakura, page);
+	term = sakura->get_page_term(page);
 
 	vte_terminal_paste_clipboard(VTE_TERMINAL(term->vte));
 }
@@ -1130,7 +1130,7 @@ void sakura_closebutton_clicked(GtkWidget *widget, void *data)
 	gint npages, response;
 
 	page = gtk_notebook_page_num(sakura->main_window->notebook->gobj(), hbox);
-	term = sakura_get_page_term(sakura, page);
+	term = sakura->get_page_term(page);
 	npages = gtk_notebook_get_n_pages(sakura->main_window->notebook->gobj());
 
 	/* Only write configuration to disk if it's the last tab */
@@ -1193,7 +1193,7 @@ void sakura_set_size()
 	gint min_width, natural_width;
 	gint page;
 
-	auto *term = sakura_get_page_term(sakura, 0);
+	auto *term = sakura->get_page_term(0);
 	int npages = sakura->main_window->notebook->get_n_pages();
 
 	/* Mayhaps an user resize happened. Check if row and columns have changed */
@@ -1231,7 +1231,7 @@ void sakura_set_size()
 	}
 
 	page = gtk_notebook_get_current_page(sakura->main_window->notebook->gobj());
-	term = sakura_get_page_term(sakura, page);
+	term = sakura->get_page_term(page);
 
 	gtk_widget_get_preferred_width(term->scrollbar, &min_width, &natural_width);
 	// SAY("SCROLLBAR min width %d natural width %d", min_width, natural_width);
@@ -1263,7 +1263,7 @@ void sakura_set_font()
 
 	/* Set the font for all tabs */
 	for (i = (n_pages - 1); i >= 0; i--) {
-		term = sakura_get_page_term(sakura, i);
+		term = sakura->get_page_term(i);
 		vte_terminal_set_font(VTE_TERMINAL(term->vte), sakura->config.font);
 	}
 }
@@ -1298,7 +1298,7 @@ static gint sakura_find_tab(VteTerminal *vte_term)
 	page = 0;
 
 	do {
-		term = sakura_get_page_term(sakura, page);
+		term = sakura->get_page_term(page);
 		if ((VteTerminal *)term->vte == vte_term) {
 			matched_page = page;
 		}
@@ -1313,7 +1313,7 @@ static void sakura_set_tab_label_text(const gchar *title, gint page)
 	Terminal *term;
 	gchar *chopped_title;
 
-	term = sakura_get_page_term(sakura, page);
+	term = sakura->get_page_term(page);
 
 	if ((title != NULL) && (g_strcmp0(title, "") != 0)) {
 		/* Chop to max size. TODO: Should it be configurable by the user? */
@@ -1335,7 +1335,7 @@ static void sakura_set_tab_label_text(const gchar *title, gint page)
 void sakura_spawn_callback(VteTerminal *vte, GPid pid, GError *error, gpointer user_data)
 {
 	auto *term = (Terminal *)user_data;
-	// term = sakura_get_page_term(sakura, page);
+	// term = sakura->get_page_term(page);
 	if (pid == -1) { /* Fork has failed */
 		SAY("Error: %s", error->message);
 	} else {
