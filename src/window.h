@@ -15,6 +15,7 @@ public:
 	bool on_focus_out(GdkEventFocus *event);
 	bool on_delete(GdkEventAny *event);
 	void on_resize();
+	void toggle_fullscreen();
 
 	void add_tab();
 
@@ -25,4 +26,5 @@ private:
 	const Config *m_config;
 	bool m_focused = true;                    /* For fading feature */
 	bool m_first_focus = true;                /* First time gtkwindow recieve focus when is created */
+	bool m_fullscreen = false;
 };

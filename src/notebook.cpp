@@ -66,7 +66,7 @@ void SakuraNotebook::move_tab(gint direction)
 {
 	gint page = get_current_page();
 	gint n_pages = get_n_pages();
-	auto *child = get_nth_page(page);
+	auto child = get_nth_page(page);
 
 	if (direction == FORWARD) {
 		if (page != n_pages - 1)
@@ -85,7 +85,7 @@ gint SakuraNotebook::find_tab(VteTerminal *vte_term)
 	gint page = 0;
 
 	do {
-		auto *term = sakura->get_page_term(page);
+		auto term = sakura->get_page_term(page);
 		if ((VteTerminal *)term->vte == vte_term) {
 			matched_page = page;
 		}

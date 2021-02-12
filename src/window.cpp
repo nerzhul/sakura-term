@@ -137,9 +137,20 @@ void SakuraWindow::on_resize()
 	}
 }
 
+void SakuraWindow::toggle_fullscreen()
+{
+	if (!m_fullscreen) {
+		fullscreen();
+	} else {
+		unfullscreen();
+	}
+
+	m_fullscreen = !m_fullscreen;
+}
+
 static void sakura_beep(GtkWidget *w, void *data)
 {
-	auto *obj = (Sakura *)data;
+	auto obj = (Sakura *)data;
 	obj->beep(w);
 }
 
@@ -148,8 +159,8 @@ void SakuraWindow::add_tab()
 	GtkWidget *close_button;
 	gchar *cwd = NULL;
 
-	auto *term = new Terminal();
-	auto *tab_label_hbox = new Gtk::Box(Gtk::ORIENTATION_HORIZONTAL, 2);
+	auto term = new Terminal();
+	auto tab_label_hbox = new Gtk::Box(Gtk::ORIENTATION_HORIZONTAL, 2);
 	tab_label_hbox->set_hexpand(true);
 	tab_label_hbox->pack_start(term->label, true, false, 0);
 
@@ -221,7 +232,7 @@ void SakuraWindow::add_tab()
 	g_signal_connect(G_OBJECT(term->vte), "window-title-changed",
 			G_CALLBACK(sakura_title_changed), NULL);
 	g_signal_connect_swapped(G_OBJECT(term->vte), "button-press-event",
-			G_CALLBACK(sakura_button_press), sakura->menu);
+			G_CALLBACK(sakura_button_press), sakura->menu->gobj());
 
 	/* Notebook signals */
 	if (sakura->config.show_closebutton) {

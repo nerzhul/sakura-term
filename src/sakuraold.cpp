@@ -125,8 +125,7 @@ gboolean sakura_button_press(
 
 	/* Right button: show the popup menu */
 	if (button_event->button == 3) {
-		GtkMenu *menu;
-		menu = GTK_MENU(widget);
+		GtkMenu *menu = GTK_MENU(widget);
 
 		if (sakura->current_match) {
 			/* Show the extra options in the menu */
@@ -136,22 +135,22 @@ gboolean sakura_button_press(
 			if (vte_terminal_event_check_regex_simple(VTE_TERMINAL(term->vte),
 					    (GdkEvent *)button_event, &sakura->mail_vteregexp, 1, 0,
 					    &matches)) {
-				gtk_widget_show(sakura->item_open_mail);
-				gtk_widget_hide(sakura->item_open_link);
+				sakura->item_open_mail->show();
+				sakura->item_open_link->hide();
 			} else {
-				gtk_widget_show(sakura->item_open_link);
-				gtk_widget_hide(sakura->item_open_mail);
+				sakura->item_open_link->show();
+				sakura->item_open_mail->hide();
 			}
-			gtk_widget_show(sakura->item_copy_link);
-			gtk_widget_show(sakura->open_link_separator);
+			sakura->item_copy_link->show();
+			sakura->open_link_separator->show();
 
 			g_free(matches);
 		} else {
 			/* Hide all the options */
-			gtk_widget_hide(sakura->item_open_mail);
-			gtk_widget_hide(sakura->item_open_link);
-			gtk_widget_hide(sakura->item_copy_link);
-			gtk_widget_hide(sakura->open_link_separator);
+			sakura->item_open_mail->hide();
+			sakura->item_open_link->hide();
+			sakura->item_copy_link->hide();
+			sakura->open_link_separator->hide();
 		}
 
 		gtk_menu_popup_at_pointer(menu, (GdkEvent *)button_event);
@@ -213,7 +212,7 @@ void sakura_decrease_font(GtkWidget *widget, void *data)
 
 void sakura_child_exited(GtkWidget *widget, void *data)
 {
-	//auto *obj = (Sakura *)data;
+	//auto obj = (Sakura *)data;
 	// Strangely the obj pointer is null here... use the globally defined pointed
 	// instead
 	sakura->on_child_exited(widget);
@@ -221,7 +220,7 @@ void sakura_child_exited(GtkWidget *widget, void *data)
 
 void sakura_eof(GtkWidget *widget, void *data)
 {
-	auto *obj = (Sakura *)data;
+	auto obj = (Sakura *)data;
 	obj->on_eof(widget);
 }
 
@@ -1106,10 +1105,10 @@ void sakura_new_tab(GtkWidget *widget, void *data)
 	window->add_tab();
 }
 
-void sakura_fullscreen(GtkWidget *widget, void *data)
+void sakura_fullscreen(GtkWidget *, void *data)
 {
-	auto *obj = (Sakura *)data;
-	obj->toggle_fullscreen(widget);
+	auto obj = (SakuraWindow *)data;
+	obj->toggle_fullscreen();
 }
 
 /* Callback for the tabs close buttons */
@@ -1160,7 +1159,7 @@ void sakura_conf_changed(GtkWidget *widget, void *data)
 
 void sakura_disable_numbered_tabswitch(GtkWidget *widget, void *data)
 {
-	auto *obj = (Sakura *)data;
+	auto obj = (Sakura *)data;
 	obj->toggle_numbered_tabswitch_option(widget);
 }
 
@@ -1186,7 +1185,7 @@ void sakura_set_size()
 	gint min_width, natural_width;
 	gint page;
 
-	auto *term = sakura->get_page_term(0);
+	auto term = sakura->get_page_term(0);
 	int npages = sakura->main_window->notebook->get_n_pages();
 
 	/* Mayhaps an user resize happened. Check if row and columns have changed */
@@ -1287,7 +1286,7 @@ static void sakura_set_tab_label_text(const gchar *title, gint page)
 /* Callback for vte_terminal_spawn_async */
 void sakura_spawn_callback(VteTerminal *vte, GPid pid, GError *error, gpointer user_data)
 {
-	auto *term = (Terminal *)user_data;
+	auto term = (Terminal *)user_data;
 	// term = sakura->get_page_term(page);
 	if (pid == -1) { /* Fork has failed */
 		SAY("Error: %s", error->message);
