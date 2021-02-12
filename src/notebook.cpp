@@ -1,5 +1,7 @@
 #include "notebook.h"
 #include "terminal.h"
+#include "sakura.h"
+#include "window.h"
 #include "sakuraold.h"
 
 SakuraNotebook::SakuraNotebook(const Config *cfg) :
@@ -93,4 +95,31 @@ gint SakuraNotebook::find_tab(VteTerminal *vte_term)
 	} while (page < n_pages);
 
 	return (matched_page);
+}
+
+void SakuraNotebook::show_scrollbar()
+{
+	sakura->keep_fc = 1;
+
+	gint n_pages = sakura->main_window->notebook->get_n_pages();
+	gint page = sakura->main_window->notebook->get_current_page();
+	auto term = sakura->get_page_term(page);
+
+	if (!g_key_file_get_boolean(sakura->cfg, cfg_group, "scrollbar", NULL)) {
+		sakura->config.show_scrollbar = true;
+		sakura_set_config_boolean("scrollbar", TRUE);
+	} else {
+		sakura->config.show_scrollbar = false;
+		sakura_set_config_boolean("scrollbar", FALSE);
+	}
+
+	/* Toggle/Untoggle the scrollbar for all tabs */
+	for (int i = (n_pages - 1); i >= 0; i--) {
+		term = sakura->get_page_term(i);
+		if (!sakura->config.show_scrollbar)
+			gtk_widget_hide(term->scrollbar);
+		else
+			gtk_widget_show(term->scrollbar);
+	}
+	sakura_set_size();
 }

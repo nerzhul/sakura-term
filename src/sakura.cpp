@@ -362,13 +362,15 @@ void Sakura::init_popup()
 
 	/* ... and finally assign callbacks to menuitems */
 	item_new_tab->signal_activate().connect(sigc::mem_fun(*main_window, &SakuraWindow::add_tab));
+
 	g_signal_connect(G_OBJECT(item_set_name->gobj()), "activate", G_CALLBACK(sakura_set_name_dialog),
 			NULL);
 	item_close_tab->signal_activate().connect(sigc::mem_fun(*this, &Sakura::close_tab));
 	g_signal_connect(G_OBJECT(item_select_font->gobj()), "activate", G_CALLBACK(sakura_font_dialog),
 			NULL);
-	g_signal_connect(G_OBJECT(item_copy->gobj()), "activate", G_CALLBACK(sakura_copy), NULL);
-	g_signal_connect(G_OBJECT(item_paste->gobj()), "activate", G_CALLBACK(sakura_paste), NULL);
+
+	item_copy->signal_activate().connect(sigc::mem_fun(*this, &Sakura::copy));
+	item_paste->signal_activate().connect(sigc::mem_fun(*this, &Sakura::paste));
 	g_signal_connect(G_OBJECT(item_select_colors->gobj()), "activate", G_CALLBACK(sakura_color_dialog),
 			NULL);
 
@@ -380,8 +382,8 @@ void Sakura::init_popup()
 			G_CALLBACK(sakura_less_questions), NULL);
 	g_signal_connect(G_OBJECT(item_show_close_button->gobj()), "activate",
 			G_CALLBACK(sakura_show_close_button), NULL);
-	g_signal_connect(G_OBJECT(item_toggle_scrollbar->gobj()), "activate",
-			G_CALLBACK(sakura_show_scrollbar), NULL);
+
+	item_toggle_scrollbar->signal_activate().connect(sigc::mem_fun(*main_window->notebook, &SakuraNotebook::show_scrollbar));
 	g_signal_connect(G_OBJECT(item_urgent_bell->gobj()), "activate", G_CALLBACK(sakura_urgent_bell),
 			NULL);
 	g_signal_connect(G_OBJECT(item_audible_bell->gobj()), "activate", G_CALLBACK(sakura_audible_bell),
@@ -472,6 +474,22 @@ static gboolean terminal_screen_image_draw_cb(GtkWidget *widget, cairo_t *cr, vo
 Terminal *Sakura::get_page_term(gint page_id)
 {
     return (Terminal *)g_object_get_qdata(G_OBJECT(main_window->notebook->get_nth_page(page_id)->gobj()), term_data_id);
+}
+
+void Sakura::copy()
+{
+	gint page = sakura->main_window->notebook->get_current_page();
+	auto term = sakura->get_page_term(page);
+
+	vte_terminal_copy_clipboard_format(VTE_TERMINAL(term->vte), VTE_FORMAT_TEXT);
+}
+
+void Sakura::paste()
+{
+	gint page = sakura->main_window->notebook->get_current_page();
+	auto term = sakura->get_page_term(page);
+
+	vte_terminal_paste_clipboard(VTE_TERMINAL(term->vte));
 }
 
 /* Set the terminal colors for all notebook tabs */
@@ -611,10 +629,10 @@ gboolean Sakura::on_key_press(GtkWidget *widget, GdkEventKey *event)
 	/* Copy/paste keybinding pressed */
 	if ((event->state & config.copy_accelerator) == config.copy_accelerator) {
 		if (keycode == sakura_tokeycode(config.keymap.copy_key)) {
-			sakura_copy(NULL, NULL);
+			sakura->copy();
 			return TRUE;
 		} else if (keycode == sakura_tokeycode(config.keymap.paste_key)) {
-			sakura_paste(NULL, NULL);
+			sakura->paste();
 			return TRUE;
 		}
 	}
@@ -622,7 +640,7 @@ gboolean Sakura::on_key_press(GtkWidget *widget, GdkEventKey *event)
 	/* Show scrollbar keybinding pressed */
 	if ((event->state & config.scrollbar_accelerator) == config.scrollbar_accelerator) {
 		if (keycode == sakura_tokeycode(config.keymap.scrollbar_key)) {
-			sakura_show_scrollbar(NULL, NULL);
+			main_window->notebook->show_scrollbar();
 			return TRUE;
 		}
 	}

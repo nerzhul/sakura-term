@@ -814,13 +814,13 @@ void sakura_open_mail(GtkWidget *widget, void *data)
 void sakura_show_first_tab(GtkWidget *widget, void *data)
 {
 	if (gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(widget))) {
-		gtk_notebook_set_show_tabs(sakura->main_window->notebook->gobj(), TRUE);
+		sakura->main_window->notebook->set_show_tabs(true);
 		sakura_set_config_string("show_always_first_tab", "Yes");
 		sakura->config.first_tab = true;
 	} else {
 		/* Only hide tabs if the notebook has one page */
 		if (sakura->main_window->notebook->get_n_pages() == 1) {
-			gtk_notebook_set_show_tabs(sakura->main_window->notebook->gobj(), FALSE);
+			sakura->main_window->notebook->set_show_tabs(false);
 		}
 		sakura_set_config_string("show_always_first_tab", "No");
 		sakura->config.first_tab = false;
@@ -859,38 +859,6 @@ void sakura_show_close_button(GtkWidget *widget, void *data)
 	} else {
 		sakura_set_config_boolean("closebutton", FALSE);
 	}
-}
-
-void sakura_show_scrollbar(GtkWidget *widget, void *data)
-{
-	gint page;
-	Terminal *term;
-	gint n_pages;
-	int i;
-
-	sakura->keep_fc = 1;
-
-	n_pages = sakura->main_window->notebook->get_n_pages();
-	page = sakura->main_window->notebook->get_current_page();
-	term = sakura->get_page_term(page);
-
-	if (!g_key_file_get_boolean(sakura->cfg, cfg_group, "scrollbar", NULL)) {
-		sakura->config.show_scrollbar = true;
-		sakura_set_config_boolean("scrollbar", TRUE);
-	} else {
-		sakura->config.show_scrollbar = false;
-		sakura_set_config_boolean("scrollbar", FALSE);
-	}
-
-	/* Toggle/Untoggle the scrollbar for all tabs */
-	for (i = (n_pages - 1); i >= 0; i--) {
-		term = sakura->get_page_term(i);
-		if (!sakura->config.show_scrollbar)
-			gtk_widget_hide(term->scrollbar);
-		else
-			gtk_widget_show(term->scrollbar);
-	}
-	sakura_set_size();
 }
 
 void sakura_urgent_bell(GtkWidget *widget, void *data)
@@ -1070,30 +1038,6 @@ void sakura_setname_entry_changed(GtkWidget *widget, void *data)
 		gtk_dialog_set_response_sensitive(
 				GTK_DIALOG(title_dialog), GTK_RESPONSE_ACCEPT, TRUE);
 	}
-}
-
-/* Parameters are never used */
-void sakura_copy(GtkWidget *widget, void *data)
-{
-	gint page;
-	Terminal *term;
-
-	page = sakura->main_window->notebook->get_current_page();
-	term = sakura->get_page_term(page);
-
-	vte_terminal_copy_clipboard_format(VTE_TERMINAL(term->vte), VTE_FORMAT_TEXT);
-}
-
-/* Parameters are never used */
-void sakura_paste(GtkWidget *widget, void *data)
-{
-	gint page;
-	Terminal *term;
-
-	page = sakura->main_window->notebook->get_current_page();
-	term = sakura->get_page_term(page);
-
-	vte_terminal_paste_clipboard(VTE_TERMINAL(term->vte));
 }
 
 void sakura_fullscreen(GtkWidget *, void *data)

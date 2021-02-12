@@ -16,6 +16,9 @@ public:
 	void destroy(GtkWidget *);
 	void init_popup();
 
+	void copy();
+	void paste();
+
 	gboolean on_key_press(GtkWidget *widget, GdkEventKey *event);
 	void on_child_exited(GtkWidget *widget);
 	void on_eof(GtkWidget *widget);

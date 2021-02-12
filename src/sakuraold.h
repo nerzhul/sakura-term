@@ -74,8 +74,6 @@ void sakura_fade_in();
 void sakura_fade_out();
 void sakura_set_size();
 void     sakura_config_done();
-void     sakura_copy (GtkWidget *, void *);
-void     sakura_paste (GtkWidget *, void *);
 // Callbacks
 void     sakura_increase_font (GtkWidget *, void *);
 void     sakura_decrease_font (GtkWidget *, void *);
@@ -84,7 +82,6 @@ void     sakura_conf_changed (GtkWidget *, void *);
 void     sakura_window_show_event (GtkWidget *, gpointer);
 //static gboolean sakura_notebook_focus_in (GtkWidget *, void *);
 
-void     sakura_show_scrollbar(GtkWidget *, void *);
 void     sakura_search_dialog (GtkWidget *, void *);
 void     sakura_fullscreen (GtkWidget *, void *);
 void     sakura_set_colorset (int);

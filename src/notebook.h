@@ -14,6 +14,7 @@ public:
 
 	gint find_tab(VteTerminal *term);
 	void move_tab(gint direction);
+	void show_scrollbar();
 private:
 
 	const Config *m_cfg = nullptr;
