@@ -2,6 +2,8 @@
 #include "sakuraold.h"
 #include <iostream>
 #include <libintl.h>
+#include <glib.h>
+#include <glib/gstdio.h>
 
 gchar *Terminal::tab_default_title = nullptr;
 
@@ -50,4 +52,44 @@ Terminal::~Terminal()
 void Terminal::free(Terminal *term)
 {
 	delete term;
+}
+
+/* Retrieve the cwd of the specified term page.
+ * Original function was from terminal-screen.c of gnome-terminal, copyright (C) 2001 Havoc
+ * Pennington Adapted by Hong Jen Yee, non-linux shit removed by David Gómez */
+char *Terminal::get_cwd()
+{
+	char *cwd = NULL;
+
+	if (pid >= 0) {
+		char *file, *buf;
+		struct stat sb;
+		int len;
+
+		file = g_strdup_printf("/proc/%d/cwd", pid);
+
+		if (g_stat(file, &sb) == -1) {
+			g_free(file);
+			return cwd;
+		}
+
+		buf = (char *)malloc(sb.st_size + 1);
+
+		if (buf == NULL) {
+			g_free(file);
+			return cwd;
+		}
+
+		len = readlink(file, buf, sb.st_size + 1);
+
+		if (len > 0 && buf[0] == '/') {
+			buf[len] = '\0';
+			cwd = g_strdup(buf);
+		}
+
+		g_free(buf);
+		g_free(file);
+	}
+
+	return cwd;
 }

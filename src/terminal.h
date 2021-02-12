@@ -15,6 +15,8 @@ public:
 	 */
 	static void free(Terminal *term);
 
+	char *get_cwd();
+
 	Gtk::Box hbox;
 	GtkWidget *vte;     /* Reference to VTE terminal */
 	GPid pid = 0;          /* pid of the forked process */

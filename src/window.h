@@ -21,7 +21,6 @@ public:
 
 	std::unique_ptr<SakuraNotebook> notebook;
 	bool resized = false;
-
 private:
 	const Config *m_config;
 	bool m_focused = true;                    /* For fading feature */

@@ -194,9 +194,8 @@ void SakuraWindow::add_tab()
 	/* Select the directory to use for the new tab */
 	int index = notebook->get_current_page();
 	if (index >= 0) {
-		Terminal *prev_term;
-		prev_term = sakura->get_page_term(index);
-		cwd = sakura_get_term_cwd(prev_term);
+		Terminal *prev_term = sakura->get_page_term(index);
+		cwd = prev_term->get_cwd();
 
 		term->colorset = prev_term->colorset;
 	}
