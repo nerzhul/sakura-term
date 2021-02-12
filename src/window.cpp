@@ -156,7 +156,7 @@ static void sakura_beep(GtkWidget *w, void *data)
 
 void SakuraWindow::add_tab()
 {
-	GtkWidget *close_button;
+	Gtk::Button *close_button;
 	gchar *cwd = NULL;
 
 	auto term = new Terminal();
@@ -166,17 +166,16 @@ void SakuraWindow::add_tab()
 
 	/* If the tab close button is enabled, create and add it to the tab */
 	if (sakura->config.show_closebutton) {
-		close_button = gtk_button_new();
+		close_button = new Gtk::Button();
 		/* Adding scroll-event to button, to propagate it to notebook (fix for scroll event
 		 * when pointer is above the button) */
-		gtk_widget_add_events(close_button, GDK_SCROLL_MASK);
-
-		gtk_widget_set_name(close_button, "closebutton");
-		gtk_button_set_relief(GTK_BUTTON(close_button), GTK_RELIEF_NONE);
+		close_button->add_events(Gdk::SCROLL_MASK);
+		close_button->set_name("closebutton");
+		close_button->set_relief(Gtk::RELIEF_NONE);
 
 		GtkWidget *image = gtk_image_new_from_icon_name("window-close", GTK_ICON_SIZE_MENU);
-		gtk_container_add(GTK_CONTAINER(close_button), image);
-		gtk_box_pack_start(GTK_BOX(tab_label_hbox->gobj()), close_button, FALSE, FALSE, 0);
+		gtk_container_add(GTK_CONTAINER(close_button->gobj()), image);
+		tab_label_hbox->pack_start(*close_button, Gtk::PACK_SHRINK);
 	}
 
 	if (sakura->config.tabs_on_bottom) {
@@ -235,7 +234,7 @@ void SakuraWindow::add_tab()
 
 	/* Notebook signals */
 	if (sakura->config.show_closebutton) {
-		g_signal_connect(G_OBJECT(close_button), "clicked",
+		g_signal_connect(G_OBJECT(close_button->gobj()), "clicked",
 				G_CALLBACK(sakura_closebutton_clicked), term->hbox.gobj());
 	}
 

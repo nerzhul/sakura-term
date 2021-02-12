@@ -195,10 +195,8 @@ void sakura_increase_font(GtkWidget *widget, void *data)
 
 void sakura_decrease_font(GtkWidget *widget, void *data)
 {
-	gint new_size;
-
 	/* Decrement font size one unit */
-	new_size = pango_font_description_get_size(sakura->config.font) - PANGO_SCALE;
+	gint new_size = pango_font_description_get_size(sakura->config.font) - PANGO_SCALE;
 
 	/* Set a minimal size */
 	if (new_size >= FONT_MINIMAL_SIZE) {
@@ -228,17 +226,13 @@ void sakura_eof(GtkWidget *widget, void *data)
  * titles */
 void sakura_title_changed(GtkWidget *widget, void *data)
 {
-	Terminal *term;
-	const char *title;
-	gint n_pages;
-	gint modified_page;
-	VteTerminal *vte_term = (VteTerminal *)widget;
+	auto vte_term = (VteTerminal *)widget;
 
-	modified_page = sakura->main_window->notebook->find_tab(vte_term);
-	n_pages = sakura->main_window->notebook->get_n_pages();
-	term = sakura->get_page_term(modified_page);
+	gint modified_page = sakura->main_window->notebook->find_tab(vte_term);
+	gint n_pages = sakura->main_window->notebook->get_n_pages();
+	auto term = sakura->get_page_term(modified_page);
 
-	title = vte_terminal_get_window_title(VTE_TERMINAL(term->vte));
+	const char *title = vte_terminal_get_window_title(VTE_TERMINAL(term->vte));
 
 	/* User set values overrides any other one, but title should be changed */
 	if (!term->label_set_byuser)
@@ -1157,10 +1151,9 @@ void sakura_set_font()
 
 static void sakura_set_tab_label_text(const gchar *title, gint page)
 {
-	Terminal *term;
 	gchar *chopped_title;
 
-	term = sakura->get_page_term(page);
+	auto term = sakura->get_page_term(page);
 
 	if ((title != NULL) && (g_strcmp0(title, "") != 0)) {
 		/* Chop to max size. TODO: Should it be configurable by the user? */
