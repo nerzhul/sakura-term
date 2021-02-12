@@ -105,7 +105,7 @@ gboolean sakura_button_press(
 	if (button_event->type != GDK_BUTTON_PRESS)
 		return FALSE;
 
-	page = gtk_notebook_get_current_page(sakura->main_window->notebook->gobj());
+	page = sakura->main_window->notebook->get_current_page();
 	term = sakura->get_page_term(page);
 
 	/* Find out if cursor it's over a matched expression...*/
@@ -168,7 +168,7 @@ gboolean sakura_button_press(
 //	Terminal *term;
 //	int index;
 //
-//	index = gtk_notebook_get_current_page(sakura->main_window->notebook->gobj());
+//	index = sakura->main_window->notebook->get_current_page();
 //	term = sakura->get_page_term(index);
 //
 //	/* If term is found stop event propagation */
@@ -334,7 +334,7 @@ void sakura_set_name_dialog(GtkWidget *widget, void *data)
 	gint page;
 	Terminal *term;
 
-	page = gtk_notebook_get_current_page(sakura->main_window->notebook->gobj());
+	page = sakura->main_window->notebook->get_current_page();
 	term = sakura->get_page_term(page);
 
 	input_dialog = gtk_dialog_new_with_buttons(_("Set tab name"),
@@ -396,7 +396,7 @@ void sakura_set_colorset(int cs)
 	if (cs < 0 || cs >= NUM_COLORSETS)
 		return;
 
-	page = gtk_notebook_get_current_page(sakura->main_window->notebook->gobj());
+	page = sakura->main_window->notebook->get_current_page();
 	term = sakura->get_page_term(page);
 	term->colorset = cs;
 
@@ -469,7 +469,7 @@ void sakura_color_dialog(GtkWidget *widget, void *data)
 	GdkRGBA temp_back[NUM_COLORSETS];
 	GdkRGBA temp_curs[NUM_COLORSETS];
 
-	page = gtk_notebook_get_current_page(sakura->main_window->notebook->gobj());
+	page = sakura->main_window->notebook->get_current_page();
 	term = sakura->get_page_term(page);
 
 	color_dialog = gtk_dialog_new_with_buttons(_("Select colors"),
@@ -614,7 +614,7 @@ void sakura_fade_out()
 	gint page;
 	Terminal *term;
 
-	page = gtk_notebook_get_current_page(sakura->main_window->notebook->gobj());
+	page = sakura->main_window->notebook->get_current_page();
 	term = sakura->get_page_term(page);
 
 	if (!sakura->faded) {
@@ -701,7 +701,7 @@ void sakura_search_dialog(GtkWidget *widget, void *data)
 	if (response == GTK_RESPONSE_ACCEPT) {
 		gint page;
 		Terminal *term;
-		page = gtk_notebook_get_current_page(sakura->main_window->notebook->gobj());
+		page = sakura->main_window->notebook->get_current_page();
 		term = sakura->get_page_term(page);
 		search(VTE_TERMINAL(term->vte), gtk_entry_get_text(GTK_ENTRY(entry)), 0);
 	}
@@ -908,7 +908,7 @@ void sakura_audible_bell(GtkWidget *widget, void *data)
 	gint page;
 	Terminal *term;
 
-	page = gtk_notebook_get_current_page(sakura->main_window->notebook->gobj());
+	page = sakura->main_window->notebook->get_current_page();
 	term = sakura->get_page_term(page);
 
 	if (gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(widget))) {
@@ -925,7 +925,7 @@ void sakura_blinking_cursor(GtkWidget *widget, void *data)
 	gint page;
 	Terminal *term;
 
-	page = gtk_notebook_get_current_page(sakura->main_window->notebook->gobj());
+	page = sakura->main_window->notebook->get_current_page();
 	term = sakura->get_page_term(page);
 
 	if (gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(widget))) {
@@ -939,11 +939,8 @@ void sakura_blinking_cursor(GtkWidget *widget, void *data)
 
 void sakura_allow_bold(GtkWidget *widget, void *data)
 {
-	gint page;
-	Terminal *term;
-
-	page = gtk_notebook_get_current_page(GTK_NOTEBOOK(sakura->main_window->notebook->gobj()));
-	term = sakura->get_page_term(page);
+	gint page = sakura->main_window->notebook->get_current_page();
+	auto term = sakura->get_page_term(page);
 
 	if (gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(widget))) {
 		vte_terminal_set_bold_is_bright(VTE_TERMINAL(term->vte), TRUE);
@@ -1081,7 +1078,7 @@ void sakura_copy(GtkWidget *widget, void *data)
 	gint page;
 	Terminal *term;
 
-	page = gtk_notebook_get_current_page(sakura->main_window->notebook->gobj());
+	page = sakura->main_window->notebook->get_current_page();
 	term = sakura->get_page_term(page);
 
 	vte_terminal_copy_clipboard_format(VTE_TERMINAL(term->vte), VTE_FORMAT_TEXT);
@@ -1093,16 +1090,10 @@ void sakura_paste(GtkWidget *widget, void *data)
 	gint page;
 	Terminal *term;
 
-	page = gtk_notebook_get_current_page(sakura->main_window->notebook->gobj());
+	page = sakura->main_window->notebook->get_current_page();
 	term = sakura->get_page_term(page);
 
 	vte_terminal_paste_clipboard(VTE_TERMINAL(term->vte));
-}
-
-void sakura_new_tab(GtkWidget *widget, void *data)
-{
-	SakuraWindow *window = static_cast<SakuraWindow *>(data);
-	window->add_tab();
 }
 
 void sakura_fullscreen(GtkWidget *, void *data)
@@ -1222,7 +1213,7 @@ void sakura_set_size()
 		sakura->width += /* (hb*2)+*/ (pad_x * 2);
 	}
 
-	page = gtk_notebook_get_current_page(sakura->main_window->notebook->gobj());
+	page = sakura->main_window->notebook->get_current_page();
 	term = sakura->get_page_term(page);
 
 	gtk_widget_get_preferred_width(term->scrollbar, &min_width, &natural_width);

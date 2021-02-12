@@ -93,7 +93,6 @@ void     sakura_set_colorset (int);
 void sakura_font_dialog(GtkWidget *, void *);
 void sakura_color_dialog(GtkWidget *, void *);
 void sakura_set_title_dialog(GtkWidget *, void *);
-void sakura_new_tab(GtkWidget *, void *);
 void sakura_open_url(GtkWidget *, void *);
 void sakura_show_first_tab(GtkWidget *widget, void *data);
 void sakura_tabs_on_bottom(GtkWidget *widget, void *data);
