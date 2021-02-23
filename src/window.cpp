@@ -101,7 +101,7 @@ bool SakuraWindow::on_focus_in(GdkEventFocus *event)
 		m_focused = true;
 
 		if (!m_first_focus && m_config->use_fading) {
-			sakura_fade_in();
+			sakura->fade_in();
 		}
 
 		sakura->set_colors();
@@ -120,7 +120,7 @@ bool SakuraWindow::on_focus_out(GdkEventFocus *event)
 		m_focused = false;
 
 		if (!m_first_focus && m_config->use_fading) {
-			sakura_fade_out();
+			sakura->fade_out();
 		}
 
 		sakura->set_colors();
@@ -248,7 +248,7 @@ void SakuraWindow::add_tab()
 		sakura_set_font();
 		sakura->set_colors();
 		/* Set size before showing the widgets but after setting the font */
-		sakura_set_size();
+		sakura->set_size();
 
 		gtk_widget_show_all(GTK_WIDGET(notebook->gobj()));
 		if (!sakura->config.show_scrollbar) {
@@ -372,7 +372,7 @@ void SakuraWindow::add_tab()
 
 		if (npages == 2) {
 			notebook->set_show_tabs(true);
-			sakura_set_size();
+			sakura->set_size();
 		}
 		/* Call set_current page after showing the widget: gtk ignores this
 		 * function in the window is not visible *sigh*. Gtk documentation

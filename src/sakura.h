@@ -30,6 +30,10 @@ public:
 
 	void set_colors();
 
+	void fade_in();
+	void fade_out();
+	void set_size();
+
 	Terminal *get_page_term(gint page_id);
 
 	std::unique_ptr<SakuraWindow> main_window;

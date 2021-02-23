@@ -60,7 +60,7 @@ void SakuraNotebook::on_page_removed_event(Gtk::Widget *, guint)
 	if (get_n_pages() == 1) {
 		/* If the first tab is disabled, window size changes and we need
 		 * to recalculate its size */
-		sakura_set_size();
+		sakura->set_size();
 	}
 }
 
@@ -121,5 +121,5 @@ void SakuraNotebook::show_scrollbar()
 		else
 			gtk_widget_show(term->scrollbar);
 	}
-	sakura_set_size();
+	sakura->set_size();
 }

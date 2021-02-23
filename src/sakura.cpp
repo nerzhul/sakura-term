@@ -14,6 +14,8 @@
 #include "terminal.h"
 #include "window.h"
 
+#define FADE_PERCENT 60
+
 static void sakura_on_key_press(GtkWidget *widget, GdkEventKey *event, gpointer data)
 {
 	auto obj = (Sakura *)data;
@@ -689,6 +691,111 @@ gboolean Sakura::on_key_press(GtkWidget *widget, GdkEventKey *event)
 		}
 	}
 	return FALSE;
+}
+
+void Sakura::fade_in()
+{
+	gint page = main_window->notebook->get_current_page();
+	auto term = get_page_term(page);
+
+	if (faded) {
+		faded = false;
+		GdkRGBA x = sakura->forecolors[term->colorset];
+		// SAY("fade in red %f to %f", x.red, x.red/FADE_PERCENT*100.0);
+		x.red = x.red / FADE_PERCENT * 100.0;
+		x.green = x.green / FADE_PERCENT * 100.0;
+		x.blue = x.blue / FADE_PERCENT * 100.0;
+		if ((x.red >= 0 && x.red <= 1.0) && (x.green >= 0 && x.green <= 1.0) &&
+				(x.blue >= 0 && x.blue <= 1.0)) {
+			forecolors[term->colorset] = x;
+		} else {
+			SAY("Forecolor value out of range");
+		}
+	}
+}
+
+void Sakura::fade_out()
+{
+	gint page = main_window->notebook->get_current_page();
+	auto term = get_page_term(page);
+
+	if (!faded) {
+		faded = true;
+		GdkRGBA x = forecolors[term->colorset];
+		// SAY("fade out red %f to %f", x.red, x.red/100.0*FADE_PERCENT);
+		x.red = x.red / 100.0 * FADE_PERCENT;
+		x.green = x.green / 100.0 * FADE_PERCENT;
+		x.blue = x.blue / 100.0 * FADE_PERCENT;
+		if ((x.red >= 0 && x.red <= 1.0) && (x.green >= 0 && x.green <= 1.0) &&
+				(x.blue >= 0 && x.blue <= 1.0)) {
+			forecolors[term->colorset] = x;
+		} else {
+			SAY("Forecolor value out of range");
+		}
+	}
+}
+
+void Sakura::set_size()
+{
+	auto term = get_page_term(0);
+	int npages = main_window->notebook->get_n_pages();
+
+	/* Mayhaps an user resize happened. Check if row and columns have changed */
+	if (main_window->resized) {
+		columns = vte_terminal_get_column_count(VTE_TERMINAL(term->vte));
+		rows = vte_terminal_get_row_count(VTE_TERMINAL(term->vte));
+		SAY("New columns %ld and rows %ld", columns, rows);
+		main_window->resized = false;
+	}
+
+	gtk_style_context_get_padding(gtk_widget_get_style_context(term->vte),
+			gtk_widget_get_state_flags(term->vte), &term->padding);
+	gint pad_x = term->padding.left + term->padding.right;
+	gint pad_y = term->padding.top + term->padding.bottom;
+	// SAY("padding x %d y %d", pad_x, pad_y);
+	gint char_width = vte_terminal_get_char_width(VTE_TERMINAL(term->vte));
+	gint char_height = vte_terminal_get_char_height(VTE_TERMINAL(term->vte));
+
+	width = pad_x + (char_width * columns);
+	height = pad_y + (char_height * rows);
+
+	if (npages >= 2 || config.first_tab) {
+
+		/* TODO: Yeah i know, this is utter shit. Remove this ugly hack and set geometry
+		 * hints*/
+		if (!config.show_scrollbar)
+			// height += min_height - 10;
+			height += 10;
+		else
+			// height += min_height - 47;
+			height += 47;
+
+		width += 8;
+		width += /* (hb*2)+*/ (pad_x * 2);
+	}
+
+	gint page = main_window->notebook->get_current_page();
+	term = get_page_term(page);
+
+	gint min_width, natural_width;
+	gtk_widget_get_preferred_width(term->scrollbar, &min_width, &natural_width);
+	// SAY("SCROLLBAR min width %d natural width %d", min_width, natural_width);
+	if (config.show_scrollbar) {
+		width += min_width;
+	}
+
+	/* GTK does not ignore resize for maximized windows on some systems,
+	so we do need check if it's maximized or not */
+	GdkWindow *gdk_window = gtk_widget_get_window(GTK_WIDGET(main_window->gobj()));
+	if (gdk_window != NULL) {
+		if (gdk_window_get_state(gdk_window) & GDK_WINDOW_STATE_MAXIMIZED) {
+			SAY("window is maximized, will not resize");
+			return;
+		}
+	}
+
+	main_window->resize(width, height);
+	SAY("Resized to %d %d", width, height);
 }
 
 void Sakura::on_child_exited(GtkWidget *widget)

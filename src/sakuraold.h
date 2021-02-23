@@ -70,9 +70,6 @@ static const gint FORWARD = 1;
 
 static const char cfg_group[] = "sakura";
 
-void sakura_fade_in();
-void sakura_fade_out();
-void sakura_set_size();
 void     sakura_config_done();
 // Callbacks
 void     sakura_increase_font (GtkWidget *, void *);

@@ -189,7 +189,7 @@ void sakura_increase_font(GtkWidget *widget, void *data)
 
 	pango_font_description_set_size(sakura->config.font, new_size);
 	sakura_set_font();
-	sakura_set_size();
+	sakura->set_size();
 	sakura_set_config_string("font", pango_font_description_to_string(sakura->config.font));
 }
 
@@ -202,7 +202,7 @@ void sakura_decrease_font(GtkWidget *widget, void *data)
 	if (new_size >= FONT_MINIMAL_SIZE) {
 		pango_font_description_set_size(sakura->config.font, new_size);
 		sakura_set_font();
-		sakura_set_size();
+		sakura->set_size();
 		sakura_set_config_string(
 				"font", pango_font_description_to_string(sakura->config.font));
 	}
@@ -293,7 +293,7 @@ void sakura_config_done()
 void sakura_window_show_event(GtkWidget *widget, gpointer data)
 {
 	// set size when the window is first shown
-	sakura_set_size();
+	sakura->set_size();
 }
 
 void sakura_font_dialog(GtkWidget *widget, void *data)
@@ -311,7 +311,7 @@ void sakura_font_dialog(GtkWidget *widget, void *data)
 		pango_font_description_free(sakura->config.font);
 		sakura->config.font = gtk_font_chooser_get_font_desc(GTK_FONT_CHOOSER(font_dialog));
 		sakura_set_font();
-		sakura_set_size();
+		sakura->set_size();
 		sakura_set_config_string(
 				"font", pango_font_description_to_string(sakura->config.font));
 	}
@@ -603,54 +603,6 @@ void sakura_color_dialog(GtkWidget *widget, void *data)
 	gtk_widget_destroy(color_dialog);
 }
 
-void sakura_fade_out()
-{
-	gint page;
-	Terminal *term;
-
-	page = sakura->main_window->notebook->get_current_page();
-	term = sakura->get_page_term(page);
-
-	if (!sakura->faded) {
-		sakura->faded = true;
-		GdkRGBA x = sakura->forecolors[term->colorset];
-		// SAY("fade out red %f to %f", x.red, x.red/100.0*FADE_PERCENT);
-		x.red = x.red / 100.0 * FADE_PERCENT;
-		x.green = x.green / 100.0 * FADE_PERCENT;
-		x.blue = x.blue / 100.0 * FADE_PERCENT;
-		if ((x.red >= 0 && x.red <= 1.0) && (x.green >= 0 && x.green <= 1.0) &&
-				(x.blue >= 0 && x.blue <= 1.0)) {
-			sakura->forecolors[term->colorset] = x;
-		} else {
-			SAY("Forecolor value out of range");
-		}
-	}
-}
-
-void sakura_fade_in()
-{
-	gint page;
-	Terminal *term;
-
-	page = sakura->main_window->notebook->get_current_page();
-	term = sakura->get_page_term(page);
-
-	if (sakura->faded) {
-		sakura->faded = false;
-		GdkRGBA x = sakura->forecolors[term->colorset];
-		// SAY("fade in red %f to %f", x.red, x.red/FADE_PERCENT*100.0);
-		x.red = x.red / FADE_PERCENT * 100.0;
-		x.green = x.green / FADE_PERCENT * 100.0;
-		x.blue = x.blue / FADE_PERCENT * 100.0;
-		if ((x.red >= 0 && x.red <= 1.0) && (x.green >= 0 && x.green <= 1.0) &&
-				(x.blue >= 0 && x.blue <= 1.0)) {
-			sakura->forecolors[term->colorset] = x;
-		} else {
-			SAY("Forecolor value out of range");
-		}
-	}
-}
-
 void sakura_search_dialog(GtkWidget *widget, void *data)
 {
 	GtkWidget *title_dialog, *title_header;
@@ -819,7 +771,7 @@ void sakura_show_first_tab(GtkWidget *widget, void *data)
 		sakura_set_config_string("show_always_first_tab", "No");
 		sakura->config.first_tab = false;
 	}
-	sakura_set_size();
+	sakura->set_size();
 }
 
 void sakura_tabs_on_bottom(GtkWidget *widget, void *data)
@@ -1060,91 +1012,20 @@ void sakura_use_fading(GtkWidget *widget, void *data)
 	} else {
 		sakura->config.use_fading = false;
 		sakura_set_config_boolean("use_fading", FALSE);
-		sakura_fade_in();
+		sakura->fade_in();
 		sakura->set_colors();
 	}
 }
 
 /******* Functions ********/
 
-void sakura_set_size()
-{
-	gint pad_x, pad_y;
-	gint char_width, char_height;
-	gint min_width, natural_width;
-	gint page;
-
-	auto term = sakura->get_page_term(0);
-	int npages = sakura->main_window->notebook->get_n_pages();
-
-	/* Mayhaps an user resize happened. Check if row and columns have changed */
-	if (sakura->main_window->resized) {
-		sakura->columns = vte_terminal_get_column_count(VTE_TERMINAL(term->vte));
-		sakura->rows = vte_terminal_get_row_count(VTE_TERMINAL(term->vte));
-		SAY("New columns %ld and rows %ld", sakura->columns, sakura->rows);
-		sakura->main_window->resized = false;
-	}
-
-	gtk_style_context_get_padding(gtk_widget_get_style_context(term->vte),
-			gtk_widget_get_state_flags(term->vte), &term->padding);
-	pad_x = term->padding.left + term->padding.right;
-	pad_y = term->padding.top + term->padding.bottom;
-	// SAY("padding x %d y %d", pad_x, pad_y);
-	char_width = vte_terminal_get_char_width(VTE_TERMINAL(term->vte));
-	char_height = vte_terminal_get_char_height(VTE_TERMINAL(term->vte));
-
-	sakura->width = pad_x + (char_width * sakura->columns);
-	sakura->height = pad_y + (char_height * sakura->rows);
-
-	if (npages >= 2 || sakura->config.first_tab) {
-
-		/* TODO: Yeah i know, this is utter shit. Remove this ugly hack and set geometry
-		 * hints*/
-		if (!sakura->config.show_scrollbar)
-			// sakura->height += min_height - 10;
-			sakura->height += 10;
-		else
-			// sakura->height += min_height - 47;
-			sakura->height += 47;
-
-		sakura->width += 8;
-		sakura->width += /* (hb*2)+*/ (pad_x * 2);
-	}
-
-	page = sakura->main_window->notebook->get_current_page();
-	term = sakura->get_page_term(page);
-
-	gtk_widget_get_preferred_width(term->scrollbar, &min_width, &natural_width);
-	// SAY("SCROLLBAR min width %d natural width %d", min_width, natural_width);
-	if (sakura->config.show_scrollbar) {
-		sakura->width += min_width;
-	}
-
-	/* GTK does not ignore resize for maximized windows on some systems,
-	so we do need check if it's maximized or not */
-	GdkWindow *gdk_window = gtk_widget_get_window(GTK_WIDGET(sakura->main_window->gobj()));
-	if (gdk_window != NULL) {
-		if (gdk_window_get_state(gdk_window) & GDK_WINDOW_STATE_MAXIMIZED) {
-			SAY("window is maximized, will not resize");
-			return;
-		}
-	}
-
-	gtk_window_resize(GTK_WINDOW(sakura->main_window->gobj()), sakura->width, sakura->height);
-	SAY("Resized to %d %d", sakura->width, sakura->height);
-}
-
 void sakura_set_font()
 {
-	gint n_pages;
-	Terminal *term;
-	int i;
-
-	n_pages = sakura->main_window->notebook->get_n_pages();
+	gint n_pages = sakura->main_window->notebook->get_n_pages();
 
 	/* Set the font for all tabs */
-	for (i = (n_pages - 1); i >= 0; i--) {
-		term = sakura->get_page_term(i);
+	for (int i = (n_pages - 1); i >= 0; i--) {
+		auto term = sakura->get_page_term(i);
 		vte_terminal_set_font(VTE_TERMINAL(term->vte), sakura->config.font);
 	}
 }
