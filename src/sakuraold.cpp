@@ -67,9 +67,6 @@
 
 #define ERROR_BUFFER_LENGTH 256
 
-/* Functions */
-static void sakura_set_tab_label_text(const gchar *, gint page);
-
 void search(VteTerminal *vte, const char *pattern, bool reverse)
 {
 	GError *error = NULL;
@@ -317,69 +314,6 @@ void sakura_font_dialog(GtkWidget *widget, void *data)
 	}
 
 	gtk_widget_destroy(font_dialog);
-}
-
-void sakura_set_name_dialog(GtkWidget *widget, void *data)
-{
-	GtkWidget *input_dialog, *input_header;
-	GtkWidget *entry, *label;
-	GtkWidget *name_hbox; /* We need this for correct spacing */
-	gint response;
-	gint page;
-	Terminal *term;
-
-	page = sakura->main_window->notebook->get_current_page();
-	term = sakura->get_page_term(page);
-
-	input_dialog = gtk_dialog_new_with_buttons(_("Set tab name"),
-			GTK_WINDOW(sakura->main_window->gobj()),
-			(GtkDialogFlags)(GTK_DIALOG_MODAL | GTK_DIALOG_USE_HEADER_BAR),
-			_("_Cancel"), GTK_RESPONSE_CANCEL, _("_Apply"), GTK_RESPONSE_ACCEPT, NULL);
-
-	/* Configure the new gtk header bar*/
-	input_header = gtk_dialog_get_header_bar(GTK_DIALOG(input_dialog));
-	gtk_header_bar_set_show_close_button(GTK_HEADER_BAR(input_header), FALSE);
-	gtk_dialog_set_default_response(GTK_DIALOG(input_dialog), GTK_RESPONSE_ACCEPT);
-
-	/* Set style */
-	gchar *css = g_strdup_printf(HIG_DIALOG_CSS);
-	sakura->provider->load_from_data(std::string(css));
-	GtkStyleContext *context = gtk_widget_get_style_context(input_dialog);
-
-	gtk_style_context_add_provider(context, GTK_STYLE_PROVIDER(sakura->provider->gobj()),
-			GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
-	g_free(css);
-
-	name_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
-	entry = gtk_entry_new();
-	label = gtk_label_new(_("New text"));
-	/* Set tab label as entry default text (when first tab is not displayed, get_tab_label_text
-	   returns a null value, so check accordingly */
-	auto text = sakura->main_window->notebook->get_tab_label_text(term->hbox);
-	if (text.empty()) {
-		gtk_entry_set_text(GTK_ENTRY(entry), text.c_str());
-	}
-	gtk_entry_set_activates_default(GTK_ENTRY(entry), TRUE);
-	gtk_box_pack_start(GTK_BOX(name_hbox), label, TRUE, TRUE, 12);
-	gtk_box_pack_start(GTK_BOX(name_hbox), entry, TRUE, TRUE, 12);
-	gtk_box_pack_start(GTK_BOX(gtk_dialog_get_content_area(GTK_DIALOG(input_dialog))),
-			name_hbox, FALSE, FALSE, 12);
-
-	/* Disable accept button until some text is entered */
-	g_signal_connect(G_OBJECT(entry), "changed", G_CALLBACK(sakura_setname_entry_changed),
-			input_dialog);
-	gtk_dialog_set_response_sensitive(GTK_DIALOG(input_dialog), GTK_RESPONSE_ACCEPT, FALSE);
-
-	gtk_widget_show_all(name_hbox);
-
-	response = gtk_dialog_run(GTK_DIALOG(input_dialog));
-
-	if (response == GTK_RESPONSE_ACCEPT) {
-		sakura_set_tab_label_text(gtk_entry_get_text(GTK_ENTRY(entry)), page);
-		term->label_set_byuser = true;
-	}
-
-	gtk_widget_destroy(input_dialog);
 }
 
 void sakura_set_colorset(int cs)
@@ -1030,7 +964,7 @@ void sakura_set_font()
 	}
 }
 
-static void sakura_set_tab_label_text(const gchar *title, gint page)
+void sakura_set_tab_label_text(const gchar *title, gint page)
 {
 	gchar *chopped_title;
 

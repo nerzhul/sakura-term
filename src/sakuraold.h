@@ -74,7 +74,7 @@ void     sakura_config_done();
 // Callbacks
 void     sakura_increase_font (GtkWidget *, void *);
 void     sakura_decrease_font (GtkWidget *, void *);
-void     sakura_set_name_dialog (GtkWidget *, void *);
+void sakura_set_tab_label_text(const gchar *, gint page);
 void     sakura_conf_changed (GtkWidget *, void *);
 void     sakura_window_show_event (GtkWidget *, gpointer);
 //static gboolean sakura_notebook_focus_in (GtkWidget *, void *);

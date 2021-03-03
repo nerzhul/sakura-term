@@ -34,6 +34,8 @@ public:
 	void fade_out();
 	void set_size();
 
+	void set_name_dialog();
+
 	Terminal *get_page_term(gint page_id);
 
 	std::unique_ptr<SakuraWindow> main_window;

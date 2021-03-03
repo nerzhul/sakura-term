@@ -15,6 +15,21 @@
 #include "window.h"
 
 #define FADE_PERCENT 60
+#define NOTEBOOK_CSS                                                                               \
+	"* {\n"                                                                                    \
+	"color : rgba(0,0,0,1.0);\n"                                                               \
+	"background-color : rgba(0,0,0,1.0);\n"                                                    \
+	"border-color : rgba(0,0,0,1.0);\n"                                                        \
+	"}"
+
+#define HIG_DIALOG_CSS                                                                             \
+	"* {\n"                                                                                    \
+	"-GtkDialog-action-area-border : 12;\n"                                                    \
+	"-GtkDialog-button-spacing : 12;\n"                                                        \
+	"}"
+
+#define HTTP_REGEXP "(ftp|http)s?://[^ \t\n\b()<>{}«»\\[\\]\'\"]+[^.]"
+#define MAIL_REGEXP "[^ \t\n\b]+@([^ \t\n\b]+\\.)+([a-zA-Z]{2,4})"
 
 static void sakura_on_key_press(GtkWidget *widget, GdkEventKey *event, gpointer data)
 {
@@ -43,16 +58,6 @@ void sanitize_working_directory()
 		}
 	}
 }
-
-#define NOTEBOOK_CSS                                                                               \
-	"* {\n"                                                                                    \
-	"color : rgba(0,0,0,1.0);\n"                                                               \
-	"background-color : rgba(0,0,0,1.0);\n"                                                    \
-	"border-color : rgba(0,0,0,1.0);\n"                                                        \
-	"}"
-
-#define HTTP_REGEXP "(ftp|http)s?://[^ \t\n\b()<>{}«»\\[\\]\'\"]+[^.]"
-#define MAIL_REGEXP "[^ \t\n\b]+@([^ \t\n\b]+\\.)+([a-zA-Z]{2,4})"
 
 Sakura::Sakura() : cfg(g_key_file_new()), provider(Gtk::CssProvider::create())
 {
@@ -364,9 +369,7 @@ void Sakura::init_popup()
 
 	/* ... and finally assign callbacks to menuitems */
 	item_new_tab->signal_activate().connect(sigc::mem_fun(*main_window, &SakuraWindow::add_tab));
-
-	g_signal_connect(G_OBJECT(item_set_name->gobj()), "activate", G_CALLBACK(sakura_set_name_dialog),
-			NULL);
+	item_set_name->signal_activate().connect(sigc::mem_fun(*this, &Sakura::set_name_dialog));
 	item_close_tab->signal_activate().connect(sigc::mem_fun(*this, &Sakura::close_tab));
 	g_signal_connect(G_OBJECT(item_select_font->gobj()), "activate", G_CALLBACK(sakura_font_dialog),
 			NULL);
@@ -492,6 +495,62 @@ void Sakura::paste()
 	auto term = sakura->get_page_term(page);
 
 	vte_terminal_paste_clipboard(VTE_TERMINAL(term->vte));
+}
+
+void Sakura::set_name_dialog()
+{
+	gint page = main_window->notebook->get_current_page();
+	auto term = get_page_term(page);
+
+	auto input_dialog = gtk_dialog_new_with_buttons(_("Set tab name"),
+			GTK_WINDOW(main_window->gobj()),
+			(GtkDialogFlags)(GTK_DIALOG_MODAL | GTK_DIALOG_USE_HEADER_BAR),
+			_("_Cancel"), GTK_RESPONSE_CANCEL, _("_Apply"), GTK_RESPONSE_ACCEPT, NULL);
+
+	/* Configure the new gtk header bar*/
+	auto input_header = gtk_dialog_get_header_bar(GTK_DIALOG(input_dialog));
+	gtk_header_bar_set_show_close_button(GTK_HEADER_BAR(input_header), FALSE);
+	gtk_dialog_set_default_response(GTK_DIALOG(input_dialog), GTK_RESPONSE_ACCEPT);
+
+	/* Set style */
+	gchar *css = g_strdup_printf(HIG_DIALOG_CSS);
+	provider->load_from_data(std::string(css));
+	GtkStyleContext *context = gtk_widget_get_style_context(input_dialog);
+
+	gtk_style_context_add_provider(context, GTK_STYLE_PROVIDER(provider->gobj()),
+			GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+	g_free(css);
+
+	auto name_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
+	auto entry = gtk_entry_new();
+	auto label = gtk_label_new(_("New text"));
+	/* Set tab label as entry default text (when first tab is not displayed, get_tab_label_text
+	   returns a null value, so check accordingly */
+	auto text = main_window->notebook->get_tab_label_text(term->hbox);
+	if (text.empty()) {
+		gtk_entry_set_text(GTK_ENTRY(entry), text.c_str());
+	}
+	gtk_entry_set_activates_default(GTK_ENTRY(entry), TRUE);
+	gtk_box_pack_start(GTK_BOX(name_hbox), label, TRUE, TRUE, 12);
+	gtk_box_pack_start(GTK_BOX(name_hbox), entry, TRUE, TRUE, 12);
+	gtk_box_pack_start(GTK_BOX(gtk_dialog_get_content_area(GTK_DIALOG(input_dialog))),
+			name_hbox, FALSE, FALSE, 12);
+
+	/* Disable accept button until some text is entered */
+	g_signal_connect(G_OBJECT(entry), "changed", G_CALLBACK(sakura_setname_entry_changed),
+			input_dialog);
+	gtk_dialog_set_response_sensitive(GTK_DIALOG(input_dialog), GTK_RESPONSE_ACCEPT, FALSE);
+
+	gtk_widget_show_all(name_hbox);
+
+	gint response = gtk_dialog_run(GTK_DIALOG(input_dialog));
+
+	if (response == GTK_RESPONSE_ACCEPT) {
+		sakura_set_tab_label_text(gtk_entry_get_text(GTK_ENTRY(entry)), page);
+		term->label_set_byuser = true;
+	}
+
+	gtk_widget_destroy(input_dialog);
 }
 
 /* Set the terminal colors for all notebook tabs */
@@ -650,7 +709,7 @@ gboolean Sakura::on_key_press(GtkWidget *widget, GdkEventKey *event)
 	/* Set tab name keybinding pressed */
 	if ((event->state & config.set_tab_name_accelerator) == config.set_tab_name_accelerator) {
 		if (keycode == sakura_tokeycode(config.keymap.set_tab_name_key)) {
-			sakura_set_name_dialog(NULL, NULL);
+			set_name_dialog();
 			return TRUE;
 		}
 	}
