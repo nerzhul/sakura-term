@@ -79,7 +79,7 @@ void     sakura_conf_changed (GtkWidget *, void *);
 void     sakura_window_show_event (GtkWidget *, gpointer);
 //static gboolean sakura_notebook_focus_in (GtkWidget *, void *);
 
-void     sakura_search_dialog (GtkWidget *, void *);
+void search(VteTerminal *vte, const char *pattern, bool reverse);
 void     sakura_fullscreen (GtkWidget *, void *);
 void     sakura_set_colorset (int);
 

@@ -28,6 +28,8 @@ public:
 	void del_tab(gint, bool exit_if_needed = false);
 	void toggle_numbered_tabswitch_option(GtkWidget *widget);
 
+	void show_search_dialog();
+
 	void set_colors();
 
 	void fade_in();

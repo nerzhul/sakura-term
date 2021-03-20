@@ -537,57 +537,6 @@ void sakura_color_dialog(GtkWidget *widget, void *data)
 	gtk_widget_destroy(color_dialog);
 }
 
-void sakura_search_dialog(GtkWidget *widget, void *data)
-{
-	GtkWidget *title_dialog, *title_header;
-	GtkWidget *entry, *label;
-	GtkWidget *title_hbox;
-	gint response;
-
-	title_dialog = gtk_dialog_new_with_buttons(_("Search"), GTK_WINDOW(sakura->main_window->gobj()),
-			(GtkDialogFlags)(GTK_DIALOG_MODAL | GTK_DIALOG_USE_HEADER_BAR),
-			_("_Cancel"), GTK_RESPONSE_CANCEL, _("_Apply"), GTK_RESPONSE_ACCEPT, NULL);
-
-	/* Configure the new gtk header bar*/
-	title_header = gtk_dialog_get_header_bar(GTK_DIALOG(title_dialog));
-	gtk_header_bar_set_show_close_button(GTK_HEADER_BAR(title_header), FALSE);
-	gtk_dialog_set_default_response(GTK_DIALOG(title_dialog), GTK_RESPONSE_ACCEPT);
-
-	/* Set style */
-	gchar *css = g_strdup_printf(HIG_DIALOG_CSS);
-	sakura->provider->load_from_data(std::string(css));
-	GtkStyleContext *context = gtk_widget_get_style_context(title_dialog);
-	gtk_style_context_add_provider(context, GTK_STYLE_PROVIDER(sakura->provider->gobj()),
-			GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
-	g_free(css);
-
-	entry = gtk_entry_new();
-	label = gtk_label_new(_("Search"));
-	title_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
-	gtk_entry_set_activates_default(GTK_ENTRY(entry), TRUE);
-	gtk_box_pack_start(GTK_BOX(title_hbox), label, TRUE, TRUE, 12);
-	gtk_box_pack_start(GTK_BOX(title_hbox), entry, TRUE, TRUE, 12);
-	gtk_box_pack_start(GTK_BOX(gtk_dialog_get_content_area(GTK_DIALOG(title_dialog))),
-			title_hbox, FALSE, FALSE, 12);
-
-	/* Disable accept button until some text is entered */
-	g_signal_connect(G_OBJECT(entry), "changed", G_CALLBACK(sakura_setname_entry_changed),
-			title_dialog);
-	gtk_dialog_set_response_sensitive(GTK_DIALOG(title_dialog), GTK_RESPONSE_ACCEPT, FALSE);
-
-	gtk_widget_show_all(title_hbox);
-
-	response = gtk_dialog_run(GTK_DIALOG(title_dialog));
-	if (response == GTK_RESPONSE_ACCEPT) {
-		gint page;
-		Terminal *term;
-		page = sakura->main_window->notebook->get_current_page();
-		term = sakura->get_page_term(page);
-		search(VTE_TERMINAL(term->vte), gtk_entry_get_text(GTK_ENTRY(entry)), 0);
-	}
-	gtk_widget_destroy(title_dialog);
-}
-
 void sakura_set_title_dialog(GtkWidget *widget, void *data)
 {
 	GtkWidget *title_dialog, *title_header;
@@ -864,19 +813,6 @@ void sakura_set_palette(GtkWidget *widget, void *data)
 		sakura->set_colors();
 
 		sakura_set_config_string("palette", palette);
-	}
-}
-
-void sakura_setname_entry_changed(GtkWidget *widget, void *data)
-{
-	GtkDialog *title_dialog = (GtkDialog *)data;
-
-	if (strcmp(gtk_entry_get_text(GTK_ENTRY(widget)), "") == 0) {
-		gtk_dialog_set_response_sensitive(
-				GTK_DIALOG(title_dialog), GTK_RESPONSE_ACCEPT, FALSE);
-	} else {
-		gtk_dialog_set_response_sensitive(
-				GTK_DIALOG(title_dialog), GTK_RESPONSE_ACCEPT, TRUE);
 	}
 }
 

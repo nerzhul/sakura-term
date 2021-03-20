@@ -196,6 +196,18 @@ static guint sakura_tokeycode(guint key)
 	return res;
 }
 
+
+void sakura_setname_entry_changed(GtkWidget *widget, void *data)
+{
+	Gtk::Dialog *title_dialog = (Gtk::Dialog *)data;
+
+	if (strcmp(gtk_entry_get_text(GTK_ENTRY(widget)), "") == 0) {
+		title_dialog->set_response_sensitive(Gtk::RESPONSE_ACCEPT, false);
+	} else {
+		title_dialog->set_response_sensitive(Gtk::RESPONSE_ACCEPT, true);
+	}
+}
+
 void Sakura::destroy(GtkWidget *)
 {
 	SAY("Destroying sakura");
@@ -502,55 +514,50 @@ void Sakura::set_name_dialog()
 	gint page = main_window->notebook->get_current_page();
 	auto term = get_page_term(page);
 
-	auto input_dialog = gtk_dialog_new_with_buttons(_("Set tab name"),
-			GTK_WINDOW(main_window->gobj()),
-			(GtkDialogFlags)(GTK_DIALOG_MODAL | GTK_DIALOG_USE_HEADER_BAR),
-			_("_Cancel"), GTK_RESPONSE_CANCEL, _("_Apply"), GTK_RESPONSE_ACCEPT, NULL);
+	auto input_dialog = Gtk::Dialog(_("Set tab name"), Gtk::DIALOG_MODAL | Gtk::DIALOG_USE_HEADER_BAR);
+	input_dialog.set_parent(*main_window);
+	input_dialog.add_button(_("_Cancel"), Gtk::RESPONSE_CANCEL);
+	input_dialog.add_button(_("_Apply"), Gtk::RESPONSE_ACCEPT);
 
 	/* Configure the new gtk header bar*/
-	auto input_header = gtk_dialog_get_header_bar(GTK_DIALOG(input_dialog));
-	gtk_header_bar_set_show_close_button(GTK_HEADER_BAR(input_header), FALSE);
-	gtk_dialog_set_default_response(GTK_DIALOG(input_dialog), GTK_RESPONSE_ACCEPT);
+	auto input_header = input_dialog.get_header_bar();
+	input_header->set_show_close_button(false);
+	input_dialog.set_default_response(Gtk::RESPONSE_ACCEPT);
 
 	/* Set style */
 	gchar *css = g_strdup_printf(HIG_DIALOG_CSS);
 	provider->load_from_data(std::string(css));
-	GtkStyleContext *context = gtk_widget_get_style_context(input_dialog);
-
-	gtk_style_context_add_provider(context, GTK_STYLE_PROVIDER(provider->gobj()),
-			GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+	auto context = input_dialog.get_style_context();
+	context->add_provider(provider, GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
 	g_free(css);
 
-	auto name_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
-	auto entry = gtk_entry_new();
-	auto label = gtk_label_new(_("New text"));
+	auto name_hbox = Gtk::Box(Gtk::ORIENTATION_HORIZONTAL, 0);
+	auto entry = Gtk::Entry();
+	auto label = Gtk::Label(_("New text"));
 	/* Set tab label as entry default text (when first tab is not displayed, get_tab_label_text
 	   returns a null value, so check accordingly */
 	auto text = main_window->notebook->get_tab_label_text(term->hbox);
 	if (text.empty()) {
-		gtk_entry_set_text(GTK_ENTRY(entry), text.c_str());
+		entry.set_text(text);
 	}
-	gtk_entry_set_activates_default(GTK_ENTRY(entry), TRUE);
-	gtk_box_pack_start(GTK_BOX(name_hbox), label, TRUE, TRUE, 12);
-	gtk_box_pack_start(GTK_BOX(name_hbox), entry, TRUE, TRUE, 12);
-	gtk_box_pack_start(GTK_BOX(gtk_dialog_get_content_area(GTK_DIALOG(input_dialog))),
-			name_hbox, FALSE, FALSE, 12);
+	entry.set_activates_default(true);
+	name_hbox.pack_start(label, true, true, 12);
+	name_hbox.pack_start(entry, true, true, 12);
+	input_dialog.get_content_area()->pack_start(name_hbox, false, false, 12);
 
 	/* Disable accept button until some text is entered */
-	g_signal_connect(G_OBJECT(entry), "changed", G_CALLBACK(sakura_setname_entry_changed),
-			input_dialog);
-	gtk_dialog_set_response_sensitive(GTK_DIALOG(input_dialog), GTK_RESPONSE_ACCEPT, FALSE);
+	//entry->signal_changed().connect(sigc::mem_fun(*entry, &Sakura::setname_entry_changed));
+	g_signal_connect(G_OBJECT(entry.gobj()), "changed", G_CALLBACK(sakura_setname_entry_changed),
+			&input_dialog);
 
-	gtk_widget_show_all(name_hbox);
+	input_dialog.set_response_sensitive(Gtk::RESPONSE_ACCEPT, false);
 
-	gint response = gtk_dialog_run(GTK_DIALOG(input_dialog));
+	name_hbox.show_all();
 
-	if (response == GTK_RESPONSE_ACCEPT) {
-		sakura_set_tab_label_text(gtk_entry_get_text(GTK_ENTRY(entry)), page);
+	if (input_dialog.run() == Gtk::RESPONSE_ACCEPT) {
+		sakura_set_tab_label_text(entry.get_text().c_str(), page);
 		term->label_set_byuser = true;
 	}
-
-	gtk_widget_destroy(input_dialog);
 }
 
 /* Set the terminal colors for all notebook tabs */
@@ -717,7 +724,7 @@ gboolean Sakura::on_key_press(GtkWidget *widget, GdkEventKey *event)
 	/* Search keybinding pressed */
 	if ((event->state & config.search_accelerator) == config.search_accelerator) {
 		if (keycode == sakura_tokeycode(config.keymap.search_key)) {
-			sakura_search_dialog(NULL, NULL);
+			show_search_dialog();
 			return TRUE;
 		}
 	}
@@ -999,6 +1006,48 @@ void Sakura::toggle_numbered_tabswitch_option(GtkWidget *widget)
 	} else {
 		config.disable_numbered_tabswitch = false;
 		sakura_set_config_boolean("disable_numbered_tabswitch", FALSE);
+	}
+}
+
+void Sakura::show_search_dialog()
+{
+	auto title_dialog = Gtk::Dialog(_("Search"), Gtk::DIALOG_MODAL | Gtk::DIALOG_USE_HEADER_BAR);
+	title_dialog.set_parent(*sakura->main_window);
+	title_dialog.add_button(_("_Cancel"), Gtk::RESPONSE_CANCEL);
+	title_dialog.add_button(_("_Apply"), Gtk::RESPONSE_ACCEPT);
+
+	/* Configure the new gtk header bar*/
+	auto title_header = title_dialog.get_header_bar();
+	title_header->set_show_close_button(false);
+	title_dialog.set_default_response(Gtk::RESPONSE_ACCEPT);
+
+	/* Set style */
+	gchar *css = g_strdup_printf(HIG_DIALOG_CSS);
+	sakura->provider->load_from_data(std::string(css));
+	auto context = title_dialog.get_style_context();
+	context->add_provider(sakura->provider, GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+	g_free(css);
+
+	auto entry = Gtk::Entry();
+	auto label = Gtk::Label(_("Search"));
+	auto title_hbox = Gtk::Box(Gtk::ORIENTATION_HORIZONTAL, 0);
+	entry.set_activates_default(true);
+	title_hbox.pack_start(label, true, true, 12);
+	title_hbox.pack_start(entry, true, true, 12);
+
+	title_dialog.get_content_area()->pack_start(title_hbox, false, false, 12);
+
+	/* Disable accept button until some text is entered */
+	g_signal_connect(entry.gobj(), "changed", G_CALLBACK(sakura_setname_entry_changed),
+			&title_dialog);
+	title_dialog.set_response_sensitive(Gtk::RESPONSE_ACCEPT, false);
+
+	title_hbox.show_all();
+
+	if (title_dialog.run() == Gtk::RESPONSE_ACCEPT) {
+		gint page = sakura->main_window->notebook->get_current_page();
+		auto term = sakura->get_page_term(page);
+		search(VTE_TERMINAL(term->vte), entry.get_text().c_str(), 0);
 	}
 }
 
