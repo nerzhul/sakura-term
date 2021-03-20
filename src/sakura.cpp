@@ -145,8 +145,6 @@ Sakura::Sakura() : cfg(g_key_file_new()), provider(Gtk::CssProvider::create())
 			G_CALLBACK(sakura_destroy_window), this);
 	g_signal_connect(G_OBJECT(main_window->gobj()), "key-press-event",
 			G_CALLBACK(sakura_on_key_press), this);
-	g_signal_connect(G_OBJECT(main_window->gobj()), "show",
-			G_CALLBACK(sakura_window_show_event), NULL);
 	// g_signal_connect(G_OBJECT(notebook), "focus-in-event",
 	// G_CALLBACK(sakura_notebook_focus_in), NULL);
 

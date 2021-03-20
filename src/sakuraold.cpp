@@ -285,12 +285,6 @@ void sakura_config_done()
 	free(cfgdata);
 }
 
-void sakura_window_show_event(GtkWidget *widget, gpointer data)
-{
-	// set size when the window is first shown
-	sakura->set_size();
-}
-
 void sakura_font_dialog(GtkWidget *widget, void *data)
 {
 	GtkWidget *font_dialog;

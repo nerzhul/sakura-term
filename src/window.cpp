@@ -43,6 +43,7 @@ SakuraWindow::SakuraWindow(Gtk::WindowType type, const Config *cfg) :
 	signal_focus_out_event().connect(sigc::mem_fun(*this, &SakuraWindow::on_focus_out));
 	signal_check_resize().connect(sigc::mem_fun(*this, &SakuraWindow::on_resize));
 	signal_delete_event().connect(sigc::mem_fun(*this, &SakuraWindow::on_delete));
+	signal_show().connect(sigc::mem_fun(*sakura, &Sakura::set_size));
 }
 
 SakuraWindow::~SakuraWindow()
@@ -250,7 +251,7 @@ void SakuraWindow::add_tab()
 		/* Set size before showing the widgets but after setting the font */
 		sakura->set_size();
 
-		gtk_widget_show_all(GTK_WIDGET(notebook->gobj()));
+		notebook->show_all();
 		if (!sakura->config.show_scrollbar) {
 			gtk_widget_hide(term->scrollbar);
 		}
