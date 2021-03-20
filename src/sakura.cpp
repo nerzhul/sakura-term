@@ -560,6 +560,17 @@ void Sakura::set_name_dialog()
 	}
 }
 
+void Sakura::set_font()
+{
+	gint n_pages = main_window->notebook->get_n_pages();
+
+	/* Set the font for all tabs */
+	for (int i = (n_pages - 1); i >= 0; i--) {
+		auto term = get_page_term(i);
+		vte_terminal_set_font(VTE_TERMINAL(term->vte), config.font);
+	}
+}
+
 /* Set the terminal colors for all notebook tabs */
 void Sakura::set_colors()
 {

@@ -104,7 +104,6 @@ void sakura_set_cursor(GtkWidget *widget, void *data);
 void sakura_set_palette(GtkWidget *widget, void *data);
 void sakura_open_mail(GtkWidget *widget, void *data);
 void sakura_copy_url(GtkWidget *widget, void *data);
-void sakura_set_font();
 /* Misc */
 void sakura_error(const char *, ...);
 

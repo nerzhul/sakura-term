@@ -37,6 +37,7 @@ public:
 	void set_size();
 
 	void set_name_dialog();
+	void set_font();
 
 	Terminal *get_page_term(gint page_id);
 

@@ -245,7 +245,7 @@ void SakuraWindow::add_tab()
 	if (npages == 1) {
 		notebook->set_show_tabs(sakura->config.first_tab);
 		notebook->set_show_border(false);
-		sakura_set_font();
+		sakura->set_font();
 		sakura->set_colors();
 		/* Set size before showing the widgets but after setting the font */
 		sakura->set_size();
@@ -362,7 +362,7 @@ void SakuraWindow::add_tab()
 		}
 		/* Not the first tab */
 	} else {
-		sakura_set_font();
+		sakura->set_font();
 		sakura->set_colors();
 		term->hbox.show_all();
 

@@ -179,13 +179,11 @@ gboolean sakura_button_press(
 
 void sakura_increase_font(GtkWidget *widget, void *data)
 {
-	gint new_size;
-
 	/* Increment font size one unit */
-	new_size = pango_font_description_get_size(sakura->config.font) + PANGO_SCALE;
+	gint new_size = pango_font_description_get_size(sakura->config.font) + PANGO_SCALE;
 
 	pango_font_description_set_size(sakura->config.font, new_size);
-	sakura_set_font();
+	sakura->set_font();
 	sakura->set_size();
 	sakura_set_config_string("font", pango_font_description_to_string(sakura->config.font));
 }
@@ -198,7 +196,7 @@ void sakura_decrease_font(GtkWidget *widget, void *data)
 	/* Set a minimal size */
 	if (new_size >= FONT_MINIMAL_SIZE) {
 		pango_font_description_set_size(sakura->config.font, new_size);
-		sakura_set_font();
+		sakura->set_font();
 		sakura->set_size();
 		sakura_set_config_string(
 				"font", pango_font_description_to_string(sakura->config.font));
@@ -307,7 +305,7 @@ void sakura_font_dialog(GtkWidget *widget, void *data)
 	if (response == GTK_RESPONSE_OK) {
 		pango_font_description_free(sakura->config.font);
 		sakura->config.font = gtk_font_chooser_get_font_desc(GTK_FONT_CHOOSER(font_dialog));
-		sakura_set_font();
+		sakura->set_font();
 		sakura->set_size();
 		sakura_set_config_string(
 				"font", pango_font_description_to_string(sakura->config.font));
@@ -888,17 +886,6 @@ void sakura_use_fading(GtkWidget *widget, void *data)
 }
 
 /******* Functions ********/
-
-void sakura_set_font()
-{
-	gint n_pages = sakura->main_window->notebook->get_n_pages();
-
-	/* Set the font for all tabs */
-	for (int i = (n_pages - 1); i >= 0; i--) {
-		auto term = sakura->get_page_term(i);
-		vte_terminal_set_font(VTE_TERMINAL(term->vte), sakura->config.font);
-	}
-}
 
 void sakura_set_tab_label_text(const gchar *title, gint page)
 {
