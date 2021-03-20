@@ -287,10 +287,9 @@ void sakura_config_done()
 
 void sakura_font_dialog(GtkWidget *widget, void *data)
 {
-	GtkWidget *font_dialog;
 	gint response;
 
-	font_dialog = gtk_font_chooser_dialog_new(
+	auto font_dialog = gtk_font_chooser_dialog_new(
 			_("Select font"), GTK_WINDOW(sakura->main_window->gobj()));
 	gtk_font_chooser_set_font_desc(GTK_FONT_CHOOSER(font_dialog), sakura->config.font);
 
@@ -306,23 +305,6 @@ void sakura_font_dialog(GtkWidget *widget, void *data)
 	}
 
 	gtk_widget_destroy(font_dialog);
-}
-
-void sakura_set_colorset(int cs)
-{
-	gint page;
-	Terminal *term;
-
-	if (cs < 0 || cs >= NUM_COLORSETS)
-		return;
-
-	page = sakura->main_window->notebook->get_current_page();
-	term = sakura->get_page_term(page);
-	term->colorset = cs;
-
-	sakura_set_config_integer("last_colorset", term->colorset + 1);
-
-	sakura->set_colors();
 }
 
 /* Callback from the color change dialog. Updates the contents of that

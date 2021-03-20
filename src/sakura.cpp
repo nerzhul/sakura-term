@@ -760,12 +760,26 @@ gboolean Sakura::on_key_press(GtkWidget *widget, GdkEventKey *event)
 		int i;
 		for (i = 0; i < NUM_COLORSETS; i++) {
 			if (keycode == sakura_tokeycode(config.keymap.set_colorset_keys[i])) {
-				sakura_set_colorset(i);
+				set_color_set(i);
 				return TRUE;
 			}
 		}
 	}
 	return FALSE;
+}
+
+void Sakura::set_color_set(int cs)
+{
+	if (cs < 0 || cs >= NUM_COLORSETS)
+		return;
+
+	auto page = main_window->notebook->get_current_page();
+	auto term = get_page_term(page);
+	term->colorset = cs;
+
+	sakura_set_config_integer("last_colorset", term->colorset + 1);
+
+	set_colors();
 }
 
 void Sakura::fade_in()

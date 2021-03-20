@@ -80,7 +80,6 @@ void     sakura_conf_changed (GtkWidget *, void *);
 
 void search(VteTerminal *vte, const char *pattern, bool reverse);
 void     sakura_fullscreen (GtkWidget *, void *);
-void     sakura_set_colorset (int);
 
 /* Menuitem callbacks */
 void sakura_font_dialog(GtkWidget *, void *);

@@ -65,4 +65,7 @@ public:
 	VteRegex *http_vteregexp, *mail_vteregexp;
 	char *argv[3];
 	Config config;
+private:
+	void set_color_set(int cs);
+
 };
