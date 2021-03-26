@@ -68,4 +68,6 @@ public:
 private:
 	void set_color_set(int cs);
 
+	void show_font_dialog();
+
 };

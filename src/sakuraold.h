@@ -82,7 +82,6 @@ void search(VteTerminal *vte, const char *pattern, bool reverse);
 void     sakura_fullscreen (GtkWidget *, void *);
 
 /* Menuitem callbacks */
-void sakura_font_dialog(GtkWidget *, void *);
 void sakura_color_dialog(GtkWidget *, void *);
 void sakura_set_title_dialog(GtkWidget *, void *);
 void sakura_open_url(GtkWidget *, void *);

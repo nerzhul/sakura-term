@@ -111,7 +111,7 @@ Sakura::Sakura() : cfg(g_key_file_new()), provider(Gtk::CssProvider::create())
 	}
 
 	if (option_font) {
-		config.font = pango_font_description_from_string(option_font);
+		config.font = Pango::FontDescription(Glib::ustring(option_font));
 	}
 
 	if (option_colorset && option_colorset > 0 && option_colorset <= NUM_COLORSETS) {
@@ -211,8 +211,6 @@ void Sakura::destroy(GtkWidget *)
 	SAY("Destroying sakura");
 
 	g_key_file_free(cfg);
-
-	pango_font_description_free(config.font);
 
 	gtk_main_quit();
 }
@@ -381,8 +379,7 @@ void Sakura::init_popup()
 	item_new_tab->signal_activate().connect(sigc::mem_fun(*main_window, &SakuraWindow::add_tab));
 	item_set_name->signal_activate().connect(sigc::mem_fun(*this, &Sakura::set_name_dialog));
 	item_close_tab->signal_activate().connect(sigc::mem_fun(*this, &Sakura::close_tab));
-	g_signal_connect(G_OBJECT(item_select_font->gobj()), "activate", G_CALLBACK(sakura_font_dialog),
-			NULL);
+	item_select_font->signal_activate().connect(sigc::mem_fun(*this, &Sakura::show_font_dialog));
 
 	item_copy->signal_activate().connect(sigc::mem_fun(*this, &Sakura::copy));
 	item_paste->signal_activate().connect(sigc::mem_fun(*this, &Sakura::paste));
@@ -565,7 +562,7 @@ void Sakura::set_font()
 	/* Set the font for all tabs */
 	for (int i = (n_pages - 1); i >= 0; i--) {
 		auto term = get_page_term(i);
-		vte_terminal_set_font(VTE_TERMINAL(term->vte), config.font);
+		vte_terminal_set_font(VTE_TERMINAL(term->vte), config.font.gobj());
 	}
 }
 
@@ -780,6 +777,22 @@ void Sakura::set_color_set(int cs)
 	sakura_set_config_integer("last_colorset", term->colorset + 1);
 
 	set_colors();
+}
+
+
+void Sakura::show_font_dialog()
+{
+	Gtk::FontChooserDialog font_dialog(_("Select font"));
+	font_dialog.set_parent(*sakura->main_window.get());
+	font_dialog.set_font_desc(sakura->config.font);
+
+	if (font_dialog.run() == Gtk::RESPONSE_OK) {
+		sakura->config.font = font_dialog.get_font_desc();
+		sakura->set_font();
+		sakura->set_size();
+		sakura_set_config_string(
+				"font", sakura->config.font.to_string().c_str());
+	}
 }
 
 void Sakura::fade_in()

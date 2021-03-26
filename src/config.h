@@ -5,6 +5,7 @@
 #include <pango/pango.h>
 #include <vte/vte.h>
 #include <yaml-cpp/node/node.h>
+#include <gtkmm.h>
 #include "palettes.h"
 
 #define NUM_COLORSETS 6
@@ -41,7 +42,7 @@ public:
 	void monitor();
 
 	// @TODO make that private
-	PangoFontDescription *font = nullptr;
+	Pango::FontDescription font;
 	std::string palette_str = "solarized_dark";
 	const GdkRGBA *palette = solarized_dark_palette;
 

@@ -180,26 +180,26 @@ gboolean sakura_button_press(
 void sakura_increase_font(GtkWidget *widget, void *data)
 {
 	/* Increment font size one unit */
-	gint new_size = pango_font_description_get_size(sakura->config.font) + PANGO_SCALE;
+	gint new_size = sakura->config.font.get_size() + PANGO_SCALE;
 
-	pango_font_description_set_size(sakura->config.font, new_size);
+	sakura->config.font.set_size(new_size);
 	sakura->set_font();
 	sakura->set_size();
-	sakura_set_config_string("font", pango_font_description_to_string(sakura->config.font));
+	sakura_set_config_string("font", sakura->config.font.to_string().c_str());
 }
 
 void sakura_decrease_font(GtkWidget *widget, void *data)
 {
 	/* Decrement font size one unit */
-	gint new_size = pango_font_description_get_size(sakura->config.font) - PANGO_SCALE;
+	gint new_size = sakura->config.font.get_size() - PANGO_SCALE;
 
 	/* Set a minimal size */
 	if (new_size >= FONT_MINIMAL_SIZE) {
-		pango_font_description_set_size(sakura->config.font, new_size);
+		sakura->config.font.set_size(new_size);
 		sakura->set_font();
 		sakura->set_size();
 		sakura_set_config_string(
-				"font", pango_font_description_to_string(sakura->config.font));
+				"font", sakura->config.font.to_string().c_str());
 	}
 }
 
@@ -283,28 +283,6 @@ void sakura_config_done()
 	}
 
 	free(cfgdata);
-}
-
-void sakura_font_dialog(GtkWidget *widget, void *data)
-{
-	gint response;
-
-	auto font_dialog = gtk_font_chooser_dialog_new(
-			_("Select font"), GTK_WINDOW(sakura->main_window->gobj()));
-	gtk_font_chooser_set_font_desc(GTK_FONT_CHOOSER(font_dialog), sakura->config.font);
-
-	response = gtk_dialog_run(GTK_DIALOG(font_dialog));
-
-	if (response == GTK_RESPONSE_OK) {
-		pango_font_description_free(sakura->config.font);
-		sakura->config.font = gtk_font_chooser_get_font_desc(GTK_FONT_CHOOSER(font_dialog));
-		sakura->set_font();
-		sakura->set_size();
-		sakura_set_config_string(
-				"font", pango_font_description_to_string(sakura->config.font));
-	}
-
-	gtk_widget_destroy(font_dialog);
 }
 
 /* Callback from the color change dialog. Updates the contents of that

@@ -37,7 +37,7 @@ Config::Config()
 	}
 	g_free(configdir);
 
-	font = pango_font_description_from_string(DEFAULT_FONT);
+	font = Pango::FontDescription(Glib::ustring(DEFAULT_FONT));
 
 	std::cout << "Configuration file set to " << m_file << std::endl;
 }
@@ -47,12 +47,6 @@ Config::~Config()
 	if (m_monitored_file) {
 		g_object_unref(m_monitored_file);
 	}
-
-	if (font) {
-		// it seems invalid to free with that method (reported by valgrind)
-		// pango_font_description_free(font);
-	}
-
 }
 
 void Config::write()
@@ -81,11 +75,8 @@ bool Config::read()
 		}
 
 		if (config["font"]) {
-			if (font) {
-				pango_font_description_free(font);
-			}
-			font = pango_font_description_from_string(
-					config["font"].as<std::string>().c_str());
+			font = Pango::FontDescription(Glib::ustring(
+					config["font"].as<std::string>().c_str()));
 		}
 
 		if (config["show_always_first_tab"]) {
