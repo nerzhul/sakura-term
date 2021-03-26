@@ -445,13 +445,12 @@ void Sakura::init_popup()
 static gboolean terminal_screen_image_draw_cb(GtkWidget *widget, cairo_t *cr, void *userdata)
 {
 	auto obj = (Terminal *)userdata;
-	GdkRectangle target_rect;
-	GtkAllocation alloc;
-	cairo_surface_t *child_surface;
-	cairo_t *child_cr;
 
 	if (!obj->bg_image)
 		return FALSE;
+
+	GdkRectangle target_rect;
+	GtkAllocation alloc;
 
 	gtk_widget_get_allocation(widget, &alloc);
 
@@ -460,8 +459,8 @@ static gboolean terminal_screen_image_draw_cb(GtkWidget *widget, cairo_t *cr, vo
 	target_rect.width = alloc.width;
 	target_rect.height = alloc.height;
 
-	child_surface = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, alloc.width, alloc.height);
-	child_cr = cairo_create(child_surface);
+	cairo_surface_t *child_surface = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, alloc.width, alloc.height);
+	cairo_t *child_cr = cairo_create(child_surface);
 
 	g_signal_handler_block(widget, obj->bg_image_callback_id);
 	gtk_widget_draw(widget, child_cr);
@@ -490,16 +489,16 @@ Terminal *Sakura::get_page_term(gint page_id)
 
 void Sakura::copy()
 {
-	gint page = sakura->main_window->notebook->get_current_page();
-	auto term = sakura->get_page_term(page);
+	gint page = main_window->notebook->get_current_page();
+	auto term = get_page_term(page);
 
 	vte_terminal_copy_clipboard_format(VTE_TERMINAL(term->vte), VTE_FORMAT_TEXT);
 }
 
 void Sakura::paste()
 {
-	gint page = sakura->main_window->notebook->get_current_page();
-	auto term = sakura->get_page_term(page);
+	gint page = main_window->notebook->get_current_page();
+	auto term = get_page_term(page);
 
 	vte_terminal_paste_clipboard(VTE_TERMINAL(term->vte));
 }
