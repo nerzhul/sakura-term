@@ -87,7 +87,7 @@ gint SakuraNotebook::find_tab(VteTerminal *vte_term)
 	gint page = 0;
 
 	do {
-		auto term = sakura->get_page_term(page);
+		auto term = get_tab_term(page);
 		if ((VteTerminal *)term->vte == vte_term) {
 			matched_page = page;
 		}
@@ -101,9 +101,8 @@ void SakuraNotebook::show_scrollbar()
 {
 	sakura->keep_fc = 1;
 
-	gint n_pages = sakura->main_window->notebook->get_n_pages();
-	gint page = sakura->main_window->notebook->get_current_page();
-	auto term = sakura->get_page_term(page);
+	gint n_pages = get_n_pages();
+	auto term = get_tab_term(get_current_page());
 
 	if (!g_key_file_get_boolean(sakura->cfg, cfg_group, "scrollbar", NULL)) {
 		sakura->config.show_scrollbar = true;
@@ -115,11 +114,21 @@ void SakuraNotebook::show_scrollbar()
 
 	/* Toggle/Untoggle the scrollbar for all tabs */
 	for (int i = (n_pages - 1); i >= 0; i--) {
-		term = sakura->get_page_term(i);
+		term = get_tab_term(i);
 		if (!sakura->config.show_scrollbar)
 			gtk_widget_hide(term->scrollbar);
 		else
 			gtk_widget_show(term->scrollbar);
 	}
 	sakura->set_size();
+}
+
+Terminal *SakuraNotebook::get_tab_term(gint page_id)
+{
+    return (Terminal *)g_object_get_qdata(G_OBJECT(get_nth_page(page_id)->gobj()), term_data_id);
+}
+
+Terminal *SakuraNotebook::get_current_tab_term()
+{
+	return get_tab_term(get_current_page());
 }

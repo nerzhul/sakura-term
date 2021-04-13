@@ -482,31 +482,22 @@ static gboolean terminal_screen_image_draw_cb(GtkWidget *widget, cairo_t *cr, vo
 	return TRUE;
 }
 
-Terminal *Sakura::get_page_term(gint page_id)
-{
-    return (Terminal *)g_object_get_qdata(G_OBJECT(main_window->notebook->get_nth_page(page_id)->gobj()), term_data_id);
-}
-
 void Sakura::copy()
 {
-	gint page = main_window->notebook->get_current_page();
-	auto term = get_page_term(page);
-
+	auto term = main_window->notebook->get_current_tab_term();
 	vte_terminal_copy_clipboard_format(VTE_TERMINAL(term->vte), VTE_FORMAT_TEXT);
 }
 
 void Sakura::paste()
 {
-	gint page = main_window->notebook->get_current_page();
-	auto term = get_page_term(page);
-
+	auto term = main_window->notebook->get_current_tab_term();
 	vte_terminal_paste_clipboard(VTE_TERMINAL(term->vte));
 }
 
 void Sakura::set_name_dialog()
 {
 	gint page = main_window->notebook->get_current_page();
-	auto term = get_page_term(page);
+	auto term = main_window->notebook->get_tab_term(page);
 
 	auto input_dialog = Gtk::Dialog(_("Set tab name"), Gtk::DIALOG_MODAL | Gtk::DIALOG_USE_HEADER_BAR);
 	input_dialog.set_parent(*main_window);
@@ -560,7 +551,7 @@ void Sakura::set_font()
 
 	/* Set the font for all tabs */
 	for (int i = (n_pages - 1); i >= 0; i--) {
-		auto term = get_page_term(i);
+		auto term = main_window->notebook->get_tab_term(i);
 		vte_terminal_set_font(VTE_TERMINAL(term->vte), config.font.gobj());
 	}
 }
@@ -573,7 +564,7 @@ void Sakura::set_colors()
 	Terminal *term;
 
 	for (i = (n_pages - 1); i >= 0; i--) {
-		term = get_page_term(i);
+		term = main_window->notebook->get_tab_term(i);
 
 		if (!config.get_background_image().empty()) {
 			if (!term->bg_image_callback_id) {
@@ -769,8 +760,7 @@ void Sakura::set_color_set(int cs)
 	if (cs < 0 || cs >= NUM_COLORSETS)
 		return;
 
-	auto page = main_window->notebook->get_current_page();
-	auto term = get_page_term(page);
+	auto term = main_window->notebook->get_current_tab_term();
 	term->colorset = cs;
 
 	sakura_set_config_integer("last_colorset", term->colorset + 1);
@@ -796,8 +786,7 @@ void Sakura::show_font_dialog()
 
 void Sakura::fade_in()
 {
-	gint page = main_window->notebook->get_current_page();
-	auto term = get_page_term(page);
+	auto term = main_window->notebook->get_current_tab_term();
 
 	if (faded) {
 		faded = false;
@@ -817,8 +806,7 @@ void Sakura::fade_in()
 
 void Sakura::fade_out()
 {
-	gint page = main_window->notebook->get_current_page();
-	auto term = get_page_term(page);
+	auto term = main_window->notebook->get_current_tab_term();
 
 	if (!faded) {
 		faded = true;
@@ -838,7 +826,7 @@ void Sakura::fade_out()
 
 void Sakura::set_size()
 {
-	auto term = get_page_term(0);
+	auto term = main_window->notebook->get_tab_term(0);
 	int npages = main_window->notebook->get_n_pages();
 
 	/* Mayhaps an user resize happened. Check if row and columns have changed */
@@ -875,8 +863,7 @@ void Sakura::set_size()
 		width += /* (hb*2)+*/ (pad_x * 2);
 	}
 
-	gint page = main_window->notebook->get_current_page();
-	term = get_page_term(page);
+	term = main_window->notebook->get_current_tab_term();
 
 	gint min_width, natural_width;
 	gtk_widget_get_preferred_width(term->scrollbar, &min_width, &natural_width);
@@ -904,7 +891,7 @@ void Sakura::on_child_exited(GtkWidget *widget)
 	gint page = gtk_notebook_page_num(
 			main_window->notebook->gobj(), gtk_widget_get_parent(widget));
 	gint npages = main_window->notebook->get_n_pages();
-	auto term = get_page_term(page);
+	auto term = main_window->notebook->get_tab_term(page);
 
 	/* Only write configuration to disk if it's the last tab */
 	if (npages == 1) {
@@ -939,7 +926,7 @@ void Sakura::on_eof(GtkWidget *widget)
 	   child-exited/eof signals */
 	if (main_window->notebook->get_current_page() == 0) {
 
-		auto term = get_page_term(0);
+		auto term = main_window->notebook->get_tab_term(0);
 
 		if (option_hold == TRUE) {
 			SAY("hold option has been activated");
@@ -959,14 +946,9 @@ void Sakura::on_eof(GtkWidget *widget)
 
 void Sakura::close_tab()
 {
-	pid_t pgid;
-	GtkWidget *dialog;
-	gint response;
-	Terminal *term;
-
 	gint page = main_window->notebook->get_current_page();
 	gint npages = main_window->notebook->get_n_pages();
-	term = get_page_term(page);
+	auto term = main_window->notebook->get_tab_term(page);
 
 	/* Only write configuration to disk if it's the last tab */
 	if (npages == 1) {
@@ -975,15 +957,15 @@ void Sakura::close_tab()
 
 	/* Check if there are running processes for this tab. Use tcgetpgrp to compare to the shell
 	 * PGID */
-	pgid = tcgetpgrp(vte_pty_get_fd(vte_terminal_get_pty(VTE_TERMINAL(term->vte))));
+	auto pgid = tcgetpgrp(vte_pty_get_fd(vte_terminal_get_pty(VTE_TERMINAL(term->vte))));
 
 	if ((pgid != -1) && (pgid != term->pid) && (!config.less_questions)) {
-		dialog = gtk_message_dialog_new(main_window->gobj(), GTK_DIALOG_MODAL,
+		auto dialog = gtk_message_dialog_new(main_window->gobj(), GTK_DIALOG_MODAL,
 				GTK_MESSAGE_QUESTION, GTK_BUTTONS_YES_NO,
 				_("There is a running process in this terminal.\n\nDo you really "
 				  "want to close it?"));
 
-		response = gtk_dialog_run(GTK_DIALOG(dialog));
+		auto response = gtk_dialog_run(GTK_DIALOG(dialog));
 		gtk_widget_destroy(dialog);
 
 		if (response == GTK_RESPONSE_YES) {
@@ -996,19 +978,19 @@ void Sakura::close_tab()
 /* Delete the notebook tab passed as a parameter */
 void Sakura::del_tab(gint page, bool exit_if_needed)
 {
-	auto term = get_page_term(page);
+	auto term = main_window->notebook->get_tab_term(page);
 	gint npages = main_window->notebook->get_n_pages();
 
 	/* When there's only one tab use the shell title, if provided */
 	if (npages == 2) {
-		term = get_page_term(0);
+		term = main_window->notebook->get_tab_term(0);
 		const char *title = vte_terminal_get_window_title(VTE_TERMINAL(term->vte));
 		if (title) {
 			main_window->set_title(title);
 		}
 	}
 
-	term = get_page_term(page);
+	term = main_window->notebook->get_tab_term(page);
 
 	/* Do the first tab checks BEFORE deleting the tab, to ensure correct
 	 * sizes are calculated when the tab is deleted */
@@ -1022,8 +1004,7 @@ void Sakura::del_tab(gint page, bool exit_if_needed)
 
 	/* Find the next page, if it exists, and grab focus */
 	if (main_window->notebook->get_n_pages() > 0) {
-		page = main_window->notebook->get_current_page();
-		term = get_page_term(page);
+		term = main_window->notebook->get_current_tab_term();
 		gtk_widget_grab_focus(term->vte);
 	}
 
@@ -1080,8 +1061,7 @@ void Sakura::show_search_dialog()
 	title_hbox.show_all();
 
 	if (title_dialog.run() == Gtk::RESPONSE_ACCEPT) {
-		gint page = sakura->main_window->notebook->get_current_page();
-		auto term = sakura->get_page_term(page);
+		auto term = main_window->notebook->get_current_tab_term();
 		search(VTE_TERMINAL(term->vte), entry.get_text().c_str(), 0);
 	}
 }

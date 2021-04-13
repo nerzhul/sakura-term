@@ -17,7 +17,7 @@
 	"}"
 
 SakuraWindow::SakuraWindow(Gtk::WindowType type, const Config *cfg) :
-		Gtk::Window(type), m_config(cfg), notebook(new SakuraNotebook(cfg))
+		Gtk::Window(type), notebook(new SakuraNotebook(cfg)), m_config(cfg)
 {
 	set_title("sakura++");
 
@@ -58,7 +58,7 @@ bool SakuraWindow::on_delete(GdkEventAny *event)
 		/* Check for each tab if there are running processes. Use tcgetpgrp to compare to
 		 * the shell PGID */
 		for (gint i = 0; i < npages; i++) {
-			Terminal *term = sakura->get_page_term(i);
+			Terminal *term = sakura->main_window->notebook->get_tab_term(i);
 			pid_t pgid = tcgetpgrp(vte_pty_get_fd(
 					vte_terminal_get_pty(VTE_TERMINAL(term->vte))));
 
@@ -194,7 +194,7 @@ void SakuraWindow::add_tab()
 	/* Select the directory to use for the new tab */
 	int index = notebook->get_current_page();
 	if (index >= 0) {
-		Terminal *prev_term = sakura->get_page_term(index);
+		Terminal *prev_term = sakura->main_window->notebook->get_tab_term(index);
 		cwd = prev_term->get_cwd();
 
 		term->colorset = prev_term->colorset;

@@ -39,16 +39,14 @@ public:
 	void set_name_dialog();
 	void set_font();
 
-	Terminal *get_page_term(gint page_id);
-
 	std::unique_ptr<SakuraWindow> main_window;
 	Gtk::Menu *menu;
 	GdkRGBA forecolors[NUM_COLORSETS];
 	GdkRGBA backcolors[NUM_COLORSETS];
 	GdkRGBA curscolors[NUM_COLORSETS];
 	char *current_match;
-	guint width;
-	guint height;
+	int width;
+	int height;
 	glong columns = DEFAULT_COLUMNS;
 	glong rows = DEFAULT_ROWS;
 	gint label_count = 1;

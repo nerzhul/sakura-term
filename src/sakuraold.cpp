@@ -96,14 +96,11 @@ void search(VteTerminal *vte, const char *pattern, bool reverse)
 gboolean sakura_button_press(
 		GtkWidget *widget, GdkEventButton *button_event, gpointer user_data)
 {
-	Terminal *term;
-	gint page, tag;
-
 	if (button_event->type != GDK_BUTTON_PRESS)
 		return FALSE;
 
-	page = sakura->main_window->notebook->get_current_page();
-	term = sakura->get_page_term(page);
+	gint tag;
+	auto term = sakura->main_window->notebook->get_current_tab_term();
 
 	/* Find out if cursor it's over a matched expression...*/
 	sakura->current_match = vte_terminal_match_check_event(
@@ -225,7 +222,7 @@ void sakura_title_changed(GtkWidget *widget, void *data)
 
 	gint modified_page = sakura->main_window->notebook->find_tab(vte_term);
 	gint n_pages = sakura->main_window->notebook->get_n_pages();
-	auto term = sakura->get_page_term(modified_page);
+	auto term = sakura->main_window->notebook->get_tab_term(modified_page);
 
 	const char *title = vte_terminal_get_window_title(VTE_TERMINAL(term->vte));
 
@@ -340,8 +337,7 @@ void sakura_color_dialog(GtkWidget *widget, void *data)
 	GdkRGBA temp_back[NUM_COLORSETS];
 	GdkRGBA temp_curs[NUM_COLORSETS];
 
-	auto page = sakura->main_window->notebook->get_current_page();
-	auto term = sakura->get_page_term(page);
+	auto term = sakura->main_window->notebook->get_current_tab_term();
 
 	auto color_dialog = gtk_dialog_new_with_buttons(_("Select colors"),
 			GTK_WINDOW(sakura->main_window->gobj()),
@@ -637,11 +633,7 @@ void sakura_urgent_bell(GtkWidget *widget, void *data)
 
 void sakura_audible_bell(GtkWidget *widget, void *data)
 {
-	gint page;
-	Terminal *term;
-
-	page = sakura->main_window->notebook->get_current_page();
-	term = sakura->get_page_term(page);
+	auto term = sakura->main_window->notebook->get_current_tab_term();
 
 	if (gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(widget))) {
 		vte_terminal_set_audible_bell(VTE_TERMINAL(term->vte), TRUE);
@@ -654,11 +646,7 @@ void sakura_audible_bell(GtkWidget *widget, void *data)
 
 void sakura_blinking_cursor(GtkWidget *widget, void *data)
 {
-	gint page;
-	Terminal *term;
-
-	page = sakura->main_window->notebook->get_current_page();
-	term = sakura->get_page_term(page);
+	auto term = sakura->main_window->notebook->get_current_tab_term();
 
 	if (gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(widget))) {
 		vte_terminal_set_cursor_blink_mode(VTE_TERMINAL(term->vte), VTE_CURSOR_BLINK_ON);
@@ -671,8 +659,7 @@ void sakura_blinking_cursor(GtkWidget *widget, void *data)
 
 void sakura_allow_bold(GtkWidget *widget, void *data)
 {
-	gint page = sakura->main_window->notebook->get_current_page();
-	auto term = sakura->get_page_term(page);
+	auto term = sakura->main_window->notebook->get_current_tab_term();
 
 	if (gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(widget))) {
 		vte_terminal_set_bold_is_bright(VTE_TERMINAL(term->vte), TRUE);
@@ -697,11 +684,8 @@ void sakura_stop_tab_cycling_at_end_tabs(GtkWidget *widget, void *data)
 
 void sakura_set_cursor(GtkWidget *widget, void *data)
 {
-	Terminal *term;
-	int n_pages, i;
-
 	char *cursor_string = (char *)data;
-	n_pages = sakura->main_window->notebook->get_n_pages();
+	auto n_pages = sakura->main_window->notebook->get_n_pages();
 
 	if (gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(widget))) {
 
@@ -713,8 +697,8 @@ void sakura_set_cursor(GtkWidget *widget, void *data)
 			sakura->config.cursor_type = VTE_CURSOR_SHAPE_IBEAM;
 		}
 
-		for (i = (n_pages - 1); i >= 0; i--) {
-			term = sakura->get_page_term(i);
+		for (int i = (n_pages - 1); i >= 0; i--) {
+			auto term = sakura->main_window->notebook->get_tab_term(i);
 			vte_terminal_set_cursor_shape(
 					VTE_TERMINAL(term->vte), sakura->config.cursor_type);
 		}
@@ -760,33 +744,27 @@ void sakura_fullscreen(GtkWidget *, void *data)
 /* Callback for the tabs close buttons */
 void sakura_closebutton_clicked(GtkWidget *widget, void *data)
 {
-	gint page;
 	GtkWidget *hbox = (GtkWidget *)data;
-	Terminal *term;
-	pid_t pgid;
-	GtkWidget *dialog;
-	gint npages, response;
 
-	page = gtk_notebook_page_num(sakura->main_window->notebook->gobj(), hbox);
-	term = sakura->get_page_term(page);
-	npages = sakura->main_window->notebook->get_n_pages();
+	auto page = gtk_notebook_page_num(sakura->main_window->notebook->gobj(), hbox);
+	auto term = sakura->main_window->notebook->get_tab_term(page);
 
 	/* Only write configuration to disk if it's the last tab */
-	if (npages == 1) {
+	if (sakura->main_window->notebook->get_n_pages() == 1) {
 		sakura_config_done();
 	}
 
 	/* Check if there are running processes for this tab. Use tcgetpgrp to compare to the shell
 	 * PGID */
-	pgid = tcgetpgrp(vte_pty_get_fd(vte_terminal_get_pty(VTE_TERMINAL(term->vte))));
+	auto pgid = tcgetpgrp(vte_pty_get_fd(vte_terminal_get_pty(VTE_TERMINAL(term->vte))));
 
 	if ((pgid != -1) && (pgid != term->pid) && (!sakura->config.less_questions)) {
-		dialog = gtk_message_dialog_new(GTK_WINDOW(sakura->main_window->gobj()), GTK_DIALOG_MODAL,
+		auto dialog = gtk_message_dialog_new(GTK_WINDOW(sakura->main_window->gobj()), GTK_DIALOG_MODAL,
 				GTK_MESSAGE_QUESTION, GTK_BUTTONS_YES_NO,
 				_("There is a running process in this terminal.\n\nDo you really "
 				  "want to close it?"));
 
-		response = gtk_dialog_run(GTK_DIALOG(dialog));
+		auto response = gtk_dialog_run(GTK_DIALOG(dialog));
 		gtk_widget_destroy(dialog);
 
 		if (response == GTK_RESPONSE_YES) {
@@ -826,23 +804,20 @@ void sakura_use_fading(GtkWidget *widget, void *data)
 
 void sakura_set_tab_label_text(const gchar *title, gint page)
 {
-	gchar *chopped_title;
-
-	auto term = sakura->get_page_term(page);
-
+	auto term = sakura->main_window->notebook->get_tab_term(page);
 	if ((title != NULL) && (g_strcmp0(title, "") != 0)) {
 		/* Chop to max size. TODO: Should it be configurable by the user? */
-		chopped_title = g_strndup(title, TAB_MAX_SIZE);
+		auto chopped_title = g_strndup(title, TAB_MAX_SIZE);
 		/* Honor the minimum tab label size */
 		while (strlen(chopped_title) < TAB_MIN_SIZE) {
 			char *old_ptr = chopped_title;
 			chopped_title = g_strconcat(chopped_title, " ", NULL);
 			free(old_ptr);
 		}
-		gtk_label_set_text(GTK_LABEL(term->label.gobj()), chopped_title);
+		term->label.set_text(chopped_title);
 		free(chopped_title);
 	} else { /* Use the default values */
-		gtk_label_set_text(GTK_LABEL(term->label.gobj()), term->label_text);
+		term->label.set_text(term->label_text);
 	}
 }
 
@@ -860,7 +835,6 @@ void sakura_spawn_callback(VteTerminal *vte, GPid pid, GError *error, gpointer u
 
 void sakura_error(const char *format, ...)
 {
-	GtkWidget *dialog;
 	va_list args;
 	char *buff;
 
@@ -869,7 +843,7 @@ void sakura_error(const char *format, ...)
 	vsnprintf(buff, sizeof(char) * ERROR_BUFFER_LENGTH, format, args);
 	va_end(args);
 
-	dialog = gtk_message_dialog_new(GTK_WINDOW(sakura->main_window->gobj()),
+	auto dialog = gtk_message_dialog_new(GTK_WINDOW(sakura->main_window->gobj()),
 			GTK_DIALOG_DESTROY_WITH_PARENT, GTK_MESSAGE_ERROR, GTK_BUTTONS_CLOSE, "%s",
 			buff);
 	gtk_window_set_title(GTK_WINDOW(dialog), _("Error message"));

@@ -3,6 +3,8 @@
 #include <gtkmm.h>
 #include "config.h"
 
+class Terminal;
+
 class SakuraNotebook : public Gtk::Notebook
 {
 public:
@@ -14,6 +16,8 @@ public:
 
 	gint find_tab(VteTerminal *term);
 	void move_tab(gint direction);
+	Terminal *get_tab_term(gint page_id);
+	Terminal *get_current_tab_term();
 	void show_scrollbar();
 private:
 
