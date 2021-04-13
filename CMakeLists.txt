@@ -64,6 +64,8 @@ link_directories(
 	${X11_LIBRARY_DIRS}
 )
 
+add_compile_options(-Wall)
+
 add_executable(sakura
 	src/config.cpp
 	src/main.cpp
