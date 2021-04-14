@@ -222,9 +222,9 @@ void SakuraWindow::add_tab()
 	/* vte signals */
 	g_signal_connect(G_OBJECT(term->vte), "bell", G_CALLBACK(sakura_beep), sakura);
 	g_signal_connect(G_OBJECT(term->vte), "increase-font-size",
-			G_CALLBACK(sakura_increase_font), NULL);
+			G_CALLBACK(&Sakura::increase_font), NULL);
 	g_signal_connect(G_OBJECT(term->vte), "decrease-font-size",
-			G_CALLBACK(sakura_decrease_font), NULL);
+			G_CALLBACK(&Sakura::decrease_font), NULL);
 	g_signal_connect(G_OBJECT(term->vte), "child-exited", G_CALLBACK(sakura_child_exited),
 			sakura);
 	g_signal_connect(G_OBJECT(term->vte), "eof", G_CALLBACK(sakura_eof), sakura);

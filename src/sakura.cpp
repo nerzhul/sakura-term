@@ -14,6 +14,7 @@
 #include "terminal.h"
 #include "window.h"
 
+#define FONT_MINIMAL_SIZE (PANGO_SCALE * 6)
 #define FADE_PERCENT 60
 #define NOTEBOOK_CSS                                                                               \
 	"* {\n"                                                                                    \
@@ -35,12 +36,6 @@ static void sakura_on_key_press(GtkWidget *widget, GdkEventKey *event, gpointer 
 {
 	auto obj = (Sakura *)data;
 	obj->on_key_press(widget, event);
-}
-
-static void sakura_destroy_window(GtkWidget *widget, void *data)
-{
-	auto obj = (Sakura *)data;
-	obj->destroy(widget);
 }
 
 /* This function is used to fix bug #1393939 */
@@ -141,8 +136,7 @@ Sakura::Sakura() : cfg(g_key_file_new()), provider(Gtk::CssProvider::create())
 
 	init_popup();
 
-	g_signal_connect(G_OBJECT(main_window->gobj()), "destroy",
-			G_CALLBACK(sakura_destroy_window), this);
+	main_window->signal_delete_event().connect(sigc::mem_fun(*this, &Sakura::destroy));
 	g_signal_connect(G_OBJECT(main_window->gobj()), "key-press-event",
 			G_CALLBACK(sakura_on_key_press), this);
 	// g_signal_connect(G_OBJECT(notebook), "focus-in-event",
@@ -206,13 +200,14 @@ void sakura_setname_entry_changed(GtkWidget *widget, void *data)
 	}
 }
 
-void Sakura::destroy(GtkWidget *)
+bool Sakura::destroy(GdkEventAny*)
 {
 	SAY("Destroying sakura");
 
 	g_key_file_free(cfg);
 
 	gtk_main_quit();
+	return true;
 }
 
 void Sakura::init_popup()
@@ -728,10 +723,10 @@ gboolean Sakura::on_key_press(GtkWidget *widget, GdkEventKey *event)
 	/* Increase/decrease font size keybinding pressed */
 	if ((event->state & config.font_size_accelerator) == config.font_size_accelerator) {
 		if (keycode == sakura_tokeycode(config.keymap.increase_font_size_key)) {
-			sakura_increase_font(NULL, NULL);
+			sakura->increase_font(NULL, NULL);
 			return TRUE;
 		} else if (keycode == sakura_tokeycode(config.keymap.decrease_font_size_key)) {
-			sakura_decrease_font(NULL, NULL);
+			sakura->decrease_font(NULL, NULL);
 			return TRUE;
 		}
 	}
@@ -753,6 +748,32 @@ gboolean Sakura::on_key_press(GtkWidget *widget, GdkEventKey *event)
 		}
 	}
 	return FALSE;
+}
+
+void Sakura::increase_font(GtkWidget *widget, void *data)
+{
+	/* Increment font size one unit */
+	gint new_size = sakura->config.font.get_size() + PANGO_SCALE;
+
+	sakura->config.font.set_size(new_size);
+	sakura->set_font();
+	sakura->set_size();
+	sakura_set_config_string("font", sakura->config.font.to_string().c_str());
+}
+
+void Sakura::decrease_font(GtkWidget *widget, void *data)
+{
+	/* Decrement font size one unit */
+	gint new_size = sakura->config.font.get_size() - PANGO_SCALE;
+
+	/* Set a minimal size */
+	if (new_size >= FONT_MINIMAL_SIZE) {
+		sakura->config.font.set_size(new_size);
+		sakura->set_font();
+		sakura->set_size();
+		sakura_set_config_string(
+				"font", sakura->config.font.to_string().c_str());
+	}
 }
 
 void Sakura::set_color_set(int cs)
@@ -891,7 +912,6 @@ void Sakura::on_child_exited(GtkWidget *widget)
 	gint page = gtk_notebook_page_num(
 			main_window->notebook->gobj(), gtk_widget_get_parent(widget));
 	gint npages = main_window->notebook->get_n_pages();
-	auto term = main_window->notebook->get_tab_term(page);
 
 	/* Only write configuration to disk if it's the last tab */
 	if (npages == 1) {
@@ -902,6 +922,13 @@ void Sakura::on_child_exited(GtkWidget *widget)
 		SAY("hold option has been activated");
 		return;
 	}
+
+	// No more pages, we can just exit
+	if (npages == 0) {
+		return;
+	}
+
+	auto term = main_window->notebook->get_tab_term(page);
 
 	/* Child should be automatically reaped because we don't use G_SPAWN_DO_NOT_REAP_CHILD flag
 	 */

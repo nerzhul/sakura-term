@@ -60,7 +60,6 @@
 	"-GtkDialog-button-spacing : 12;\n"                                                        \
 	"}"
 
-#define FONT_MINIMAL_SIZE (PANGO_SCALE * 6)
 #define TAB_MAX_SIZE 40
 #define TAB_MIN_SIZE 6
 #define FADE_PERCENT 60
@@ -173,32 +172,6 @@ gboolean sakura_button_press(
 //
 //	return FALSE;
 //}
-
-void sakura_increase_font(GtkWidget *widget, void *data)
-{
-	/* Increment font size one unit */
-	gint new_size = sakura->config.font.get_size() + PANGO_SCALE;
-
-	sakura->config.font.set_size(new_size);
-	sakura->set_font();
-	sakura->set_size();
-	sakura_set_config_string("font", sakura->config.font.to_string().c_str());
-}
-
-void sakura_decrease_font(GtkWidget *widget, void *data)
-{
-	/* Decrement font size one unit */
-	gint new_size = sakura->config.font.get_size() - PANGO_SCALE;
-
-	/* Set a minimal size */
-	if (new_size >= FONT_MINIMAL_SIZE) {
-		sakura->config.font.set_size(new_size);
-		sakura->set_font();
-		sakura->set_size();
-		sakura_set_config_string(
-				"font", sakura->config.font.to_string().c_str());
-	}
-}
 
 void sakura_child_exited(GtkWidget *widget, void *data)
 {

@@ -72,8 +72,6 @@ static const char cfg_group[] = "sakura";
 
 void     sakura_config_done();
 // Callbacks
-void     sakura_increase_font (GtkWidget *, void *);
-void     sakura_decrease_font (GtkWidget *, void *);
 void sakura_set_tab_label_text(const gchar *, gint page);
 void     sakura_conf_changed (GtkWidget *, void *);
 //static gboolean sakura_notebook_focus_in (GtkWidget *, void *);
