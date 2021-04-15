@@ -210,10 +210,42 @@ bool Sakura::destroy(GdkEventAny*)
 	return true;
 }
 
+
+void Sakura::open_url()
+{
+	GError *error = NULL;
+
+	SAY("Opening %s", current_match);
+
+	gchar *browser = g_strdup(g_getenv("BROWSER"));
+
+	if (!browser) {
+		if (!(browser = g_find_program_in_path("xdg-open"))) {
+			/* TODO: Legacy for systems without xdg-open. This should be removed */
+			browser = g_strdup("firefox");
+		}
+	}
+
+	gchar *argv[] = {browser, current_match, NULL};
+	if (!g_spawn_async(".", argv, NULL, G_SPAWN_SEARCH_PATH, NULL, NULL, NULL, &error)) {
+		sakura_error("Couldn't exec \"%s %s\": %s", browser, current_match,
+				error->message);
+		g_error_free(error);
+	}
+
+	g_free(browser);
+}
+
+void Sakura::copy_url()
+{
+	auto clip = gtk_clipboard_get(GDK_SELECTION_CLIPBOARD);
+	gtk_clipboard_set_text(clip, current_match, -1);
+	clip = gtk_clipboard_get(GDK_SELECTION_PRIMARY);
+	gtk_clipboard_set_text(clip, current_match, -1);
+}
+
 void Sakura::init_popup()
 {
-	GtkWidget *options_menu, *other_options_menu, *cursor_menu, *palette_menu;
-
 	item_open_mail = new Gtk::MenuItem(_("Open mail"));
 	item_open_link = new Gtk::MenuItem(_("Open link"));
 	item_copy_link = new Gtk::MenuItem(_("Copy link"));
@@ -328,10 +360,10 @@ void Sakura::init_popup()
 	menu->append(*separator2);
 	menu->append(*item_options);
 
-	options_menu = gtk_menu_new();
-	other_options_menu = gtk_menu_new();
-	cursor_menu = gtk_menu_new();
-	palette_menu = gtk_menu_new();
+	auto options_menu = gtk_menu_new();
+	auto other_options_menu = gtk_menu_new();
+	auto cursor_menu = gtk_menu_new();
+	auto palette_menu = gtk_menu_new();
 
 	gtk_menu_shell_append(GTK_MENU_SHELL(options_menu), (GtkWidget*)item_set_title->gobj());
 	gtk_menu_shell_append(GTK_MENU_SHELL(options_menu), (GtkWidget*)item_select_colors->gobj());
@@ -403,10 +435,10 @@ void Sakura::init_popup()
 			G_CALLBACK(sakura_stop_tab_cycling_at_end_tabs), NULL);
 	g_signal_connect(G_OBJECT(item_disable_numbered_tabswitch->gobj()), "activate",
 			G_CALLBACK(sakura_disable_numbered_tabswitch), sakura);
+
 	g_signal_connect(
 			G_OBJECT(item_use_fading->gobj()), "activate", G_CALLBACK(sakura_use_fading), NULL);
-	g_signal_connect(G_OBJECT(item_set_title->gobj()), "activate", G_CALLBACK(sakura_set_title_dialog),
-			NULL);
+	item_set_title->signal_activate().connect(sigc::mem_fun(*this, &Sakura::open_title_dialog));
 	g_signal_connect(G_OBJECT(item_cursor_block), "activate", G_CALLBACK(sakura_set_cursor),
 			(gpointer) "block");
 	g_signal_connect(G_OBJECT(item_cursor_underline), "activate", G_CALLBACK(sakura_set_cursor),
@@ -428,13 +460,73 @@ void Sakura::init_popup()
 	g_signal_connect(G_OBJECT(item_palette_solarized_light), "activate",
 			G_CALLBACK(sakura_set_palette), (gpointer) "solarized_light");
 
-	g_signal_connect(G_OBJECT(item_open_mail->gobj()), "activate", G_CALLBACK(sakura_open_mail), NULL);
-	g_signal_connect(G_OBJECT(item_open_link->gobj()), "activate", G_CALLBACK(sakura_open_url), NULL);
-	g_signal_connect(G_OBJECT(item_copy_link->gobj()), "activate", G_CALLBACK(sakura_copy_url), NULL);
-	g_signal_connect(
-			G_OBJECT(item_fullscreen->gobj()), "activate", G_CALLBACK(sakura_fullscreen), main_window.get());
+	item_open_mail->signal_activate().connect(sigc::mem_fun(*this, &Sakura::open_mail));
+	item_open_link->signal_activate().connect(sigc::mem_fun(*this, &Sakura::open_url));
+	item_copy_link->signal_activate().connect(sigc::mem_fun(*this, &Sakura::copy_url));
+	item_fullscreen->signal_activate().connect(sigc::mem_fun(main_window.get(), &SakuraWindow::toggle_fullscreen));
 
 	menu->show_all();
+}
+
+void Sakura::open_mail()
+{
+	gchar *program = NULL;
+
+	if ((program = g_find_program_in_path("xdg-email"))) {
+		gchar *argv[] = {program, sakura->current_match, NULL};
+		GError *error = NULL;
+		if (!g_spawn_async(".", argv, NULL, G_SPAWN_SEARCH_PATH, NULL, NULL, NULL,
+				    &error)) {
+			sakura_error("Couldn't exec \"%s %s\": %s", program, sakura->current_match,
+					error->message);
+		}
+		g_free(program);
+	}
+}
+
+void Sakura::open_title_dialog()
+{
+	auto title_dialog = gtk_dialog_new_with_buttons(_("Set window title"),
+			GTK_WINDOW(main_window->gobj()),
+			(GtkDialogFlags)(GTK_DIALOG_MODAL | GTK_DIALOG_USE_HEADER_BAR),
+			_("_Cancel"), GTK_RESPONSE_CANCEL, _("_Apply"), GTK_RESPONSE_ACCEPT, NULL);
+
+	/* Configure the new gtk header bar*/
+	auto title_header = gtk_dialog_get_header_bar(GTK_DIALOG(title_dialog));
+	gtk_header_bar_set_show_close_button(GTK_HEADER_BAR(title_header), FALSE);
+	gtk_dialog_set_default_response(GTK_DIALOG(title_dialog), GTK_RESPONSE_ACCEPT);
+
+	/* Set style */
+	gchar *css = g_strdup_printf(HIG_DIALOG_CSS);
+	provider->load_from_data(std::string(css));
+	GtkStyleContext *context = gtk_widget_get_style_context(title_dialog);
+	gtk_style_context_add_provider(context, GTK_STYLE_PROVIDER(provider->gobj()),
+			GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+	g_free(css);
+
+	auto entry = gtk_entry_new();
+	auto label = gtk_label_new(_("New window title"));
+	auto title_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
+	/* Set window label as entry default text */
+	gtk_entry_set_text(GTK_ENTRY(entry), gtk_window_get_title(GTK_WINDOW(main_window->gobj())));
+	gtk_entry_set_activates_default(GTK_ENTRY(entry), TRUE);
+	gtk_box_pack_start(GTK_BOX(title_hbox), label, TRUE, TRUE, 12);
+	gtk_box_pack_start(GTK_BOX(title_hbox), entry, TRUE, TRUE, 12);
+	gtk_box_pack_start(GTK_BOX(gtk_dialog_get_content_area(GTK_DIALOG(title_dialog))),
+			title_hbox, FALSE, FALSE, 12);
+
+	/* Disable accept button until some text is entered */
+	g_signal_connect(G_OBJECT(entry), "changed", G_CALLBACK(sakura_setname_entry_changed),
+			title_dialog);
+	gtk_dialog_set_response_sensitive(GTK_DIALOG(title_dialog), GTK_RESPONSE_ACCEPT, FALSE);
+
+	gtk_widget_show_all(title_hbox);
+
+	if (gtk_dialog_run(GTK_DIALOG(title_dialog)) == GTK_RESPONSE_ACCEPT) {
+		/* Bug #257391 shadow reachs here too... */
+		main_window->set_title(gtk_entry_get_text(GTK_ENTRY(entry)));
+	}
+	gtk_widget_destroy(title_dialog);
 }
 
 static gboolean terminal_screen_image_draw_cb(GtkWidget *widget, cairo_t *cr, void *userdata)

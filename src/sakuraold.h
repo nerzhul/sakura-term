@@ -81,8 +81,6 @@ void     sakura_fullscreen (GtkWidget *, void *);
 
 /* Menuitem callbacks */
 void sakura_color_dialog(GtkWidget *, void *);
-void sakura_set_title_dialog(GtkWidget *, void *);
-void sakura_open_url(GtkWidget *, void *);
 void sakura_show_first_tab(GtkWidget *widget, void *data);
 void sakura_tabs_on_bottom(GtkWidget *widget, void *data);
 void sakura_less_questions(GtkWidget *widget, void *data);
@@ -97,8 +95,6 @@ void sakura_allow_bold(GtkWidget *widget, void *data);
 void sakura_stop_tab_cycling_at_end_tabs(GtkWidget *widget, void *data);
 void sakura_set_cursor(GtkWidget *widget, void *data);
 void sakura_set_palette(GtkWidget *widget, void *data);
-void sakura_open_mail(GtkWidget *widget, void *data);
-void sakura_copy_url(GtkWidget *widget, void *data);
 /* Misc */
 void sakura_error(const char *, ...);
 

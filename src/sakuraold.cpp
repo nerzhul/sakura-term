@@ -111,7 +111,7 @@ gboolean sakura_button_press(
 					sakura->config.open_url_accelerator) &&
 			sakura->current_match) {
 
-		sakura_open_url(NULL, NULL);
+		sakura->open_url();
 
 		return TRUE;
 	}
@@ -445,103 +445,6 @@ void sakura_color_dialog(GtkWidget *widget, void *data)
 	}
 
 	gtk_widget_destroy(color_dialog);
-}
-
-void sakura_set_title_dialog(GtkWidget *widget, void *data)
-{
-	auto title_dialog = gtk_dialog_new_with_buttons(_("Set window title"),
-			GTK_WINDOW(sakura->main_window->gobj()),
-			(GtkDialogFlags)(GTK_DIALOG_MODAL | GTK_DIALOG_USE_HEADER_BAR),
-			_("_Cancel"), GTK_RESPONSE_CANCEL, _("_Apply"), GTK_RESPONSE_ACCEPT, NULL);
-
-	/* Configure the new gtk header bar*/
-	auto title_header = gtk_dialog_get_header_bar(GTK_DIALOG(title_dialog));
-	gtk_header_bar_set_show_close_button(GTK_HEADER_BAR(title_header), FALSE);
-	gtk_dialog_set_default_response(GTK_DIALOG(title_dialog), GTK_RESPONSE_ACCEPT);
-
-	/* Set style */
-	gchar *css = g_strdup_printf(HIG_DIALOG_CSS);
-	sakura->provider->load_from_data(std::string(css));
-	GtkStyleContext *context = gtk_widget_get_style_context(title_dialog);
-	gtk_style_context_add_provider(context, GTK_STYLE_PROVIDER(sakura->provider->gobj()),
-			GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
-	g_free(css);
-
-	auto entry = gtk_entry_new();
-	auto label = gtk_label_new(_("New window title"));
-	auto title_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
-	/* Set window label as entry default text */
-	gtk_entry_set_text(GTK_ENTRY(entry), gtk_window_get_title(GTK_WINDOW(sakura->main_window->gobj())));
-	gtk_entry_set_activates_default(GTK_ENTRY(entry), TRUE);
-	gtk_box_pack_start(GTK_BOX(title_hbox), label, TRUE, TRUE, 12);
-	gtk_box_pack_start(GTK_BOX(title_hbox), entry, TRUE, TRUE, 12);
-	gtk_box_pack_start(GTK_BOX(gtk_dialog_get_content_area(GTK_DIALOG(title_dialog))),
-			title_hbox, FALSE, FALSE, 12);
-
-	/* Disable accept button until some text is entered */
-	g_signal_connect(G_OBJECT(entry), "changed", G_CALLBACK(sakura_setname_entry_changed),
-			title_dialog);
-	gtk_dialog_set_response_sensitive(GTK_DIALOG(title_dialog), GTK_RESPONSE_ACCEPT, FALSE);
-
-	gtk_widget_show_all(title_hbox);
-
-	if (gtk_dialog_run(GTK_DIALOG(title_dialog)) == GTK_RESPONSE_ACCEPT) {
-		/* Bug #257391 shadow reachs here too... */
-		sakura->main_window->set_title(gtk_entry_get_text(GTK_ENTRY(entry)));
-	}
-	gtk_widget_destroy(title_dialog);
-}
-
-void sakura_copy_url(GtkWidget *widget, void *data)
-{
-	GtkClipboard *clip;
-
-	clip = gtk_clipboard_get(GDK_SELECTION_CLIPBOARD);
-	gtk_clipboard_set_text(clip, sakura->current_match, -1);
-	clip = gtk_clipboard_get(GDK_SELECTION_PRIMARY);
-	gtk_clipboard_set_text(clip, sakura->current_match, -1);
-}
-
-void sakura_open_url(GtkWidget *widget, void *data)
-{
-	GError *error = NULL;
-	gchar *browser = NULL;
-
-	SAY("Opening %s", sakura->current_match);
-
-	browser = g_strdup(g_getenv("BROWSER"));
-
-	if (!browser) {
-		if (!(browser = g_find_program_in_path("xdg-open"))) {
-			/* TODO: Legacy for systems without xdg-open. This should be removed */
-			browser = g_strdup("firefox");
-		}
-	}
-
-	gchar *argv[] = {browser, sakura->current_match, NULL};
-	if (!g_spawn_async(".", argv, NULL, G_SPAWN_SEARCH_PATH, NULL, NULL, NULL, &error)) {
-		sakura_error("Couldn't exec \"%s %s\": %s", browser, sakura->current_match,
-				error->message);
-		g_error_free(error);
-	}
-
-	g_free(browser);
-}
-
-void sakura_open_mail(GtkWidget *widget, void *data)
-{
-	gchar *program = NULL;
-
-	if ((program = g_find_program_in_path("xdg-email"))) {
-		gchar *argv[] = {program, sakura->current_match, NULL};
-		GError *error = NULL;
-		if (!g_spawn_async(".", argv, NULL, G_SPAWN_SEARCH_PATH, NULL, NULL, NULL,
-				    &error)) {
-			sakura_error("Couldn't exec \"%s %s\": %s", program, sakura->current_match,
-					error->message);
-		}
-		g_free(program);
-	}
 }
 
 void sakura_show_first_tab(GtkWidget *widget, void *data)
