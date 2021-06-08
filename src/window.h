@@ -1,9 +1,9 @@
 #pragma once
 
 #include <gtkmm.h>
+#include "notebook.h"
 
 class Config;
-class SakuraNotebook;
 
 class SakuraWindow : public Gtk::Window
 {
@@ -19,11 +19,12 @@ public:
 
 	void add_tab();
 
-	std::unique_ptr<SakuraNotebook> notebook;
+	SakuraNotebook notebook;
 	bool resized = false;
+
 private:
 	const Config *m_config;
-	bool m_focused = true;                    /* For fading feature */
-	bool m_first_focus = true;                /* First time gtkwindow recieve focus when is created */
+	bool m_focused = true;	   /* For fading feature */
+	bool m_first_focus = true; /* First time gtkwindow recieve focus when is created */
 	bool m_fullscreen = false;
 };

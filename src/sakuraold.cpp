@@ -99,7 +99,7 @@ gboolean sakura_button_press(
 		return FALSE;
 
 	gint tag;
-	auto term = sakura->main_window->notebook->get_current_tab_term();
+	auto term = sakura->main_window->notebook.get_current_tab_term();
 
 	/* Find out if cursor it's over a matched expression...*/
 	sakura->current_match = vte_terminal_match_check_event(
@@ -193,9 +193,9 @@ void sakura_title_changed(GtkWidget *widget, void *data)
 {
 	auto vte_term = (VteTerminal *)widget;
 
-	gint modified_page = sakura->main_window->notebook->find_tab(vte_term);
-	gint n_pages = sakura->main_window->notebook->get_n_pages();
-	auto term = sakura->main_window->notebook->get_tab_term(modified_page);
+	gint modified_page = sakura->main_window->notebook.find_tab(vte_term);
+	gint n_pages = sakura->main_window->notebook.get_n_pages();
+	auto term = sakura->main_window->notebook.get_tab_term(modified_page);
 
 	const char *title = vte_terminal_get_window_title(VTE_TERMINAL(term->vte));
 
@@ -310,7 +310,7 @@ void sakura_color_dialog(GtkWidget *widget, void *data)
 	GdkRGBA temp_back[NUM_COLORSETS];
 	GdkRGBA temp_curs[NUM_COLORSETS];
 
-	auto term = sakura->main_window->notebook->get_current_tab_term();
+	auto term = sakura->main_window->notebook.get_current_tab_term();
 
 	auto color_dialog = gtk_dialog_new_with_buttons(_("Select colors"),
 			GTK_WINDOW(sakura->main_window->gobj()),
@@ -450,13 +450,13 @@ void sakura_color_dialog(GtkWidget *widget, void *data)
 void sakura_show_first_tab(GtkWidget *widget, void *data)
 {
 	if (gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(widget))) {
-		sakura->main_window->notebook->set_show_tabs(true);
+		sakura->main_window->notebook.set_show_tabs(true);
 		sakura_set_config_string("show_always_first_tab", "Yes");
 		sakura->config.first_tab = true;
 	} else {
 		/* Only hide tabs if the notebook has one page */
-		if (sakura->main_window->notebook->get_n_pages() == 1) {
-			sakura->main_window->notebook->set_show_tabs(false);
+		if (sakura->main_window->notebook.get_n_pages() == 1) {
+			sakura->main_window->notebook.set_show_tabs(false);
 		}
 		sakura_set_config_string("show_always_first_tab", "No");
 		sakura->config.first_tab = false;
@@ -468,10 +468,10 @@ void sakura_tabs_on_bottom(GtkWidget *widget, void *data)
 {
 
 	if (gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(widget))) {
-		gtk_notebook_set_tab_pos(sakura->main_window->notebook->gobj(), GTK_POS_BOTTOM);
+		gtk_notebook_set_tab_pos(sakura->main_window->notebook.gobj(), GTK_POS_BOTTOM);
 		sakura_set_config_boolean("tabs_on_bottom", TRUE);
 	} else {
-		gtk_notebook_set_tab_pos(sakura->main_window->notebook->gobj(), GTK_POS_TOP);
+		gtk_notebook_set_tab_pos(sakura->main_window->notebook.gobj(), GTK_POS_TOP);
 		sakura_set_config_boolean("tabs_on_bottom", FALSE);
 	}
 }
@@ -509,7 +509,7 @@ void sakura_urgent_bell(GtkWidget *widget, void *data)
 
 void sakura_audible_bell(GtkWidget *widget, void *data)
 {
-	auto term = sakura->main_window->notebook->get_current_tab_term();
+	auto term = sakura->main_window->notebook.get_current_tab_term();
 
 	if (gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(widget))) {
 		vte_terminal_set_audible_bell(VTE_TERMINAL(term->vte), TRUE);
@@ -522,7 +522,7 @@ void sakura_audible_bell(GtkWidget *widget, void *data)
 
 void sakura_blinking_cursor(GtkWidget *widget, void *data)
 {
-	auto term = sakura->main_window->notebook->get_current_tab_term();
+	auto term = sakura->main_window->notebook.get_current_tab_term();
 
 	if (gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(widget))) {
 		vte_terminal_set_cursor_blink_mode(VTE_TERMINAL(term->vte), VTE_CURSOR_BLINK_ON);
@@ -535,7 +535,7 @@ void sakura_blinking_cursor(GtkWidget *widget, void *data)
 
 void sakura_allow_bold(GtkWidget *widget, void *data)
 {
-	auto term = sakura->main_window->notebook->get_current_tab_term();
+	auto term = sakura->main_window->notebook.get_current_tab_term();
 
 	if (gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(widget))) {
 		vte_terminal_set_bold_is_bright(VTE_TERMINAL(term->vte), TRUE);
@@ -561,7 +561,7 @@ void sakura_stop_tab_cycling_at_end_tabs(GtkWidget *widget, void *data)
 void sakura_set_cursor(GtkWidget *widget, void *data)
 {
 	char *cursor_string = (char *)data;
-	auto n_pages = sakura->main_window->notebook->get_n_pages();
+	auto n_pages = sakura->main_window->notebook.get_n_pages();
 
 	if (gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(widget))) {
 
@@ -574,7 +574,7 @@ void sakura_set_cursor(GtkWidget *widget, void *data)
 		}
 
 		for (int i = (n_pages - 1); i >= 0; i--) {
-			auto term = sakura->main_window->notebook->get_tab_term(i);
+			auto term = sakura->main_window->notebook.get_tab_term(i);
 			vte_terminal_set_cursor_shape(
 					VTE_TERMINAL(term->vte), sakura->config.cursor_type);
 		}
@@ -622,11 +622,11 @@ void sakura_closebutton_clicked(GtkWidget *widget, void *data)
 {
 	GtkWidget *hbox = (GtkWidget *)data;
 
-	auto page = gtk_notebook_page_num(sakura->main_window->notebook->gobj(), hbox);
-	auto term = sakura->main_window->notebook->get_tab_term(page);
+	auto page = gtk_notebook_page_num((*sakura->main_window).notebook.gobj(), hbox);
+	auto term = sakura->main_window->notebook.get_tab_term(page);
 
 	/* Only write configuration to disk if it's the last tab */
-	if (sakura->main_window->notebook->get_n_pages() == 1) {
+	if (sakura->main_window->notebook.get_n_pages() == 1) {
 		sakura_config_done();
 	}
 
@@ -680,7 +680,7 @@ void sakura_use_fading(GtkWidget *widget, void *data)
 
 void sakura_set_tab_label_text(const gchar *title, gint page)
 {
-	auto term = sakura->main_window->notebook->get_tab_term(page);
+	auto term = sakura->main_window->notebook.get_tab_term(page);
 	if ((title != NULL) && (g_strcmp0(title, "") != 0)) {
 		/* Chop to max size. TODO: Should it be configurable by the user? */
 		auto chopped_title = g_strndup(title, TAB_MAX_SIZE);

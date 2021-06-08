@@ -1,0 +1,23 @@
+{
+	"configurations": [
+		{
+			"name": "Linux",
+			"includePath": [
+				"${workspaceFolder}/**",
+				"/usr/include/**",
+				"/usr/include/vte-2.91/**",
+				"/usr/include/gtk-3.0/**",
+				"/usr/include/gtkmm-3.0/**",
+				"/usr/lib/glib-2.0/include/**",
+				"/usr/lib/glibmm-2.4/include/**",
+				"/usr/lib/gtkmm-3.0/include/**"
+			],
+			"defines": [],
+			"compilerPath": "/usr/bin/clang",
+			"cStandard": "c17",
+			"cppStandard": "c++14",
+			"intelliSenseMode": "linux-clang-x64"
+		}
+	],
+	"version": 4
+}

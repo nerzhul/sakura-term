@@ -17,7 +17,7 @@
 	"}"
 
 SakuraWindow::SakuraWindow(Gtk::WindowType type, const Config *cfg) :
-		Gtk::Window(type), notebook(new SakuraNotebook(cfg)), m_config(cfg)
+		Gtk::Window(type), notebook(cfg), m_config(cfg)
 {
 	set_title("sakura++");
 
@@ -37,7 +37,7 @@ SakuraWindow::SakuraWindow(Gtk::WindowType type, const Config *cfg) :
 	}
 	set_icon_from_file(std::string(icon_path));
 
-	add(*notebook);
+	add(notebook);
 
 	signal_focus_in_event().connect(sigc::mem_fun(*this, &SakuraWindow::on_focus_in));
 	signal_focus_out_event().connect(sigc::mem_fun(*this, &SakuraWindow::on_focus_out));
@@ -53,12 +53,12 @@ SakuraWindow::~SakuraWindow()
 bool SakuraWindow::on_delete(GdkEventAny *event)
 {
 	if (!sakura->config.less_questions) {
-		gint npages = notebook->get_n_pages();
+		gint npages = notebook.get_n_pages();
 
 		/* Check for each tab if there are running processes. Use tcgetpgrp to compare to
 		 * the shell PGID */
 		for (gint i = 0; i < npages; i++) {
-			Terminal *term = sakura->main_window->notebook->get_tab_term(i);
+			Terminal *term = sakura->main_window->notebook.get_tab_term(i);
 			pid_t pgid = tcgetpgrp(vte_pty_get_fd(
 					vte_terminal_get_pty(VTE_TERMINAL(term->vte))));
 
@@ -180,7 +180,7 @@ void SakuraWindow::add_tab()
 	}
 
 	if (sakura->config.tabs_on_bottom) {
-		notebook->set_tab_pos(Gtk::POS_BOTTOM);
+		notebook.set_tab_pos(Gtk::POS_BOTTOM);
 	}
 
 	/* Set tab title style */
@@ -192,9 +192,9 @@ void SakuraWindow::add_tab()
 	tab_label_hbox->show_all();
 
 	/* Select the directory to use for the new tab */
-	int index = notebook->get_current_page();
+	int index = notebook.get_current_page();
 	if (index >= 0) {
-		Terminal *prev_term = sakura->main_window->notebook->get_tab_term(index);
+		Terminal *prev_term = sakura->main_window->notebook.get_tab_term(index);
 		cwd = prev_term->get_cwd();
 
 		term->colorset = prev_term->colorset;
@@ -205,18 +205,18 @@ void SakuraWindow::add_tab()
 	/* Keep values when adding tabs */
 	sakura->keep_fc = true;
 
-	if ((index = notebook->append_page(term->hbox, *tab_label_hbox)) == -1) {
+	if ((index = notebook.append_page(term->hbox, *tab_label_hbox)) == -1) {
 		sakura_error("Cannot create a new tab");
 		exit(1);
 	}
 
-	notebook->set_tab_reorderable(term->hbox);
+	notebook.set_tab_reorderable(term->hbox);
 	// TODO: Set group id to support detached tabs
 	// gtk_notebook_set_tab_detachable(notebook->gobj(), term->hbox, TRUE);
 
 
 	g_object_set_qdata_full(
-			G_OBJECT(notebook->get_nth_page(index)->gobj()),
+			G_OBJECT(notebook.get_nth_page(index)->gobj()),
 			term_data_id, term, (GDestroyNotify)Terminal::free);
 
 	/* vte signals */
@@ -242,16 +242,16 @@ void SakuraWindow::add_tab()
 	/* Since vte-2.91 env is properly overwritten */
 	char *command_env[2] = {const_cast<char *>("TERM=xterm-256color"), nullptr};
 	/* First tab */
-	int npages = notebook->get_n_pages();
+	int npages = notebook.get_n_pages();
 	if (npages == 1) {
-		notebook->set_show_tabs(sakura->config.first_tab);
-		notebook->set_show_border(false);
+		notebook.set_show_tabs(sakura->config.first_tab);
+		notebook.set_show_border(false);
 		sakura->set_font();
 		sakura->set_colors();
 		/* Set size before showing the widgets but after setting the font */
 		sakura->set_size();
 
-		notebook->show_all();
+		notebook.show_all();
 		if (!sakura->config.show_scrollbar) {
 			gtk_widget_hide(term->scrollbar);
 		}
@@ -372,13 +372,13 @@ void SakuraWindow::add_tab()
 		}
 
 		if (npages == 2) {
-			notebook->set_show_tabs(true);
+			notebook.set_show_tabs(true);
 			sakura->set_size();
 		}
 		/* Call set_current page after showing the widget: gtk ignores this
 		 * function in the window is not visible *sigh*. Gtk documentation
 		 * says this is for "historical" reasons. Me arse */
-		notebook->set_current_page(index);
+		notebook.set_current_page(index);
 		vte_terminal_spawn_async(VTE_TERMINAL(term->vte), VTE_PTY_NO_HELPER, cwd,
 				sakura->argv, command_env,
 				(GSpawnFlags)(G_SPAWN_SEARCH_PATH | G_SPAWN_FILE_AND_ARGV_ZERO),
