@@ -644,10 +644,10 @@ void sakura_closebutton_clicked(GtkWidget *widget, void *data)
 		gtk_widget_destroy(dialog);
 
 		if (response == GTK_RESPONSE_YES) {
-			sakura->del_tab(page, true);
+			sakura->main_window->notebook.del_tab(page, true);
 		}
 	} else { /* No processes, hell with tab */
-		sakura->del_tab(page, true);
+		sakura->main_window->notebook.del_tab(page, true);
 	}
 }
 

@@ -34,7 +34,6 @@ public:
 
 	void beep(GtkWidget *);
 	void close_tab();
-	void del_tab(gint, bool exit_if_needed = false);
 	void toggle_numbered_tabswitch_option(GtkWidget *widget);
 
 	void show_search_dialog();

@@ -899,9 +899,9 @@ void Sakura::show_font_dialog()
 
 void Sakura::fade_in()
 {
-	auto term = main_window->notebook.get_current_tab_term();
-
 	if (faded) {
+		auto term = main_window->notebook.get_current_tab_term();
+
 		faded = false;
 		GdkRGBA x = sakura->forecolors[term->colorset];
 		// SAY("fade in red %f to %f", x.red, x.red/FADE_PERCENT*100.0);
@@ -919,9 +919,9 @@ void Sakura::fade_in()
 
 void Sakura::fade_out()
 {
-	auto term = main_window->notebook.get_current_tab_term();
-
 	if (!faded) {
+		auto term = main_window->notebook.get_current_tab_term();
+
 		faded = true;
 		GdkRGBA x = forecolors[term->colorset];
 		// SAY("fade out red %f to %f", x.red, x.red/100.0*FADE_PERCENT);
@@ -1026,7 +1026,7 @@ void Sakura::on_child_exited(GtkWidget *widget)
 	 */
 	g_spawn_close_pid(term->pid);
 
-	del_tab(page, true);
+	main_window->notebook.del_tab(page, true);
 }
 
 void Sakura::on_eof(GtkWidget *widget)
@@ -1059,78 +1059,13 @@ void Sakura::on_eof(GtkWidget *widget)
 		 * G_SPAWN_DO_NOT_REAP_CHILD flag */
 		g_spawn_close_pid(term->pid);
 
-		del_tab(0, true);
+		main_window->notebook.del_tab(0, true);
 	}
 }
 
 void Sakura::close_tab()
 {
-	gint page = main_window->notebook.get_current_page();
-	gint npages = main_window->notebook.get_n_pages();
-	auto term = main_window->notebook.get_tab_term(page);
-
-	/* Only write configuration to disk if it's the last tab */
-	if (npages == 1) {
-		sakura_config_done();
-	}
-
-	/* Check if there are running processes for this tab. Use tcgetpgrp to compare to the shell
-	 * PGID */
-	auto pgid = tcgetpgrp(vte_pty_get_fd(vte_terminal_get_pty(VTE_TERMINAL(term->vte))));
-
-	if ((pgid != -1) && (pgid != term->pid) && (!config.less_questions)) {
-		auto dialog = gtk_message_dialog_new(main_window->gobj(), GTK_DIALOG_MODAL,
-				GTK_MESSAGE_QUESTION, GTK_BUTTONS_YES_NO,
-				_("There is a running process in this terminal.\n\nDo you really "
-				  "want to close it?"));
-
-		auto response = gtk_dialog_run(GTK_DIALOG(dialog));
-		gtk_widget_destroy(dialog);
-
-		if (response == GTK_RESPONSE_YES) {
-			del_tab(page, true);
-		}
-	} else {
-		del_tab(page, true);
-	}
-}
-/* Delete the notebook tab passed as a parameter */
-void Sakura::del_tab(gint page, bool exit_if_needed)
-{
-	auto term = main_window->notebook.get_tab_term(page);
-	gint npages = main_window->notebook.get_n_pages();
-
-	/* When there's only one tab use the shell title, if provided */
-	if (npages == 2) {
-		term = main_window->notebook.get_tab_term(0);
-		const char *title = vte_terminal_get_window_title(VTE_TERMINAL(term->vte));
-		if (title) {
-			main_window->set_title(title);
-		}
-	}
-
-	term = main_window->notebook.get_tab_term(page);
-
-	/* Do the first tab checks BEFORE deleting the tab, to ensure correct
-	 * sizes are calculated when the tab is deleted */
-	if (npages == 2) {
-		main_window->notebook.set_show_tabs(config.first_tab);
-		sakura->keep_fc = true;
-	}
-
-	term->hbox.hide();
-	main_window->notebook.remove_page(page);
-
-	/* Find the next page, if it exists, and grab focus */
-	if (main_window->notebook.get_n_pages() > 0) {
-		term = main_window->notebook.get_current_tab_term();
-		gtk_widget_grab_focus(term->vte);
-	}
-
-	if (exit_if_needed) {
-		if (main_window->notebook.get_n_pages() == 0)
-			destroy(nullptr);
-	}
+	main_window->notebook.close_tab();
 }
 
 void Sakura::toggle_numbered_tabswitch_option(GtkWidget *widget)

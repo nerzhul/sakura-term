@@ -5,6 +5,7 @@
 #include <gtkmm.h>
 #include <X11/Xlib.h>
 #include <gdk/gdk.h>
+#include <gtk/gtk.h>
 #include <gdk/gdkx.h>
 #include "window.h"
 #include "sakuraold.h"
@@ -214,10 +215,8 @@ void SakuraWindow::add_tab()
 	// TODO: Set group id to support detached tabs
 	// gtk_notebook_set_tab_detachable(notebook->gobj(), term->hbox, TRUE);
 
-
-	g_object_set_qdata_full(
-			G_OBJECT(notebook.get_nth_page(index)->gobj()),
-			term_data_id, term, (GDestroyNotify)Terminal::free);
+	g_object_set_qdata_full(G_OBJECT(notebook.get_nth_page(index)->gobj()), term_data_id, term,
+			(GDestroyNotify)Terminal::free);
 
 	/* vte signals */
 	g_signal_connect(G_OBJECT(term->vte), "bell", G_CALLBACK(sakura_beep), sakura);

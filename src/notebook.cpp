@@ -1,11 +1,11 @@
 #include "notebook.h"
+#include "gettext.h"
 #include "terminal.h"
 #include "sakura.h"
 #include "window.h"
 #include "sakuraold.h"
 
-SakuraNotebook::SakuraNotebook(const Config *cfg) :
-	m_cfg(cfg)
+SakuraNotebook::SakuraNotebook(const Config *cfg) : m_cfg(cfg)
 {
 	set_scrollable(cfg->scrollable_tabs);
 
@@ -20,7 +20,7 @@ SakuraNotebook::~SakuraNotebook()
 {
 	/* Delete all existing tabs */
 	while (get_n_pages() >= 1) {
-		sakura->del_tab(-1);
+		del_tab(-1);
 	}
 }
 
@@ -30,26 +30,26 @@ bool SakuraNotebook::on_scroll_event(GdkEventScroll *scroll)
 	int npages = get_n_pages();
 
 	switch (scroll->direction) {
-		case GDK_SCROLL_DOWN: {
-			if (m_cfg->stop_tab_cycling_at_end_tabs == 1) {
-				set_current_page(--page >= 0 ? page : 0);
-			} else {
-				set_current_page(--page >= 0 ? page : npages - 1);
-			}
-			break;
+	case GDK_SCROLL_DOWN: {
+		if (m_cfg->stop_tab_cycling_at_end_tabs == 1) {
+			set_current_page(--page >= 0 ? page : 0);
+		} else {
+			set_current_page(--page >= 0 ? page : npages - 1);
 		}
-		case GDK_SCROLL_UP: {
-			if (m_cfg->stop_tab_cycling_at_end_tabs == 1) {
-				set_current_page(++page < npages ? page : npages - 1);
-			} else {
-				set_current_page(++page < npages ? page : 0);
-			}
-			break;
+		break;
+	}
+	case GDK_SCROLL_UP: {
+		if (m_cfg->stop_tab_cycling_at_end_tabs == 1) {
+			set_current_page(++page < npages ? page : npages - 1);
+		} else {
+			set_current_page(++page < npages ? page : 0);
 		}
-		case GDK_SCROLL_LEFT:
-		case GDK_SCROLL_RIGHT:
-		case GDK_SCROLL_SMOOTH:
-			break;
+		break;
+	}
+	case GDK_SCROLL_LEFT:
+	case GDK_SCROLL_RIGHT:
+	case GDK_SCROLL_SMOOTH:
+		break;
 	}
 
 	return false;
@@ -123,9 +123,81 @@ void SakuraNotebook::show_scrollbar()
 	sakura->set_size();
 }
 
+void SakuraNotebook::close_tab()
+{
+	gint page = get_current_page();
+	gint npages = get_n_pages();
+	auto term = get_tab_term(page);
+
+	/* Only write configuration to disk if it's the last tab */
+	if (npages == 1) {
+		sakura_config_done();
+	}
+
+	/* Check if there are running processes for this tab. Use tcgetpgrp to compare to the shell
+	 * PGID */
+	auto pgid = tcgetpgrp(vte_pty_get_fd(vte_terminal_get_pty(VTE_TERMINAL(term->vte))));
+
+	if ((pgid != -1) && (pgid != term->pid) && (!sakura->config.less_questions)) {
+		auto dialog = gtk_message_dialog_new(sakura->main_window->gobj(), GTK_DIALOG_MODAL,
+				GTK_MESSAGE_QUESTION, GTK_BUTTONS_YES_NO,
+				_("There is a running process in this terminal.\n\nDo you really "
+				  "want to close it?"));
+
+		auto response = gtk_dialog_run(GTK_DIALOG(dialog));
+		gtk_widget_destroy(dialog);
+
+		if (response == GTK_RESPONSE_YES) {
+			del_tab(page, true);
+		}
+	} else {
+		del_tab(page, true);
+	}
+}
+
+/* Delete the notebook tab passed as a parameter */
+void SakuraNotebook::del_tab(gint page, bool exit_if_needed)
+{
+	auto term = get_tab_term(page);
+	gint npages = get_n_pages();
+
+	/* When there's only one tab use the shell title, if provided */
+	if (npages == 2) {
+		term = get_tab_term(0);
+		const char *title = vte_terminal_get_window_title(VTE_TERMINAL(term->vte));
+		if (title) {
+			sakura->main_window->set_title(title);
+		}
+	}
+
+	term = get_tab_term(page);
+
+	/* Do the first tab checks BEFORE deleting the tab, to ensure correct
+	 * sizes are calculated when the tab is deleted */
+	if (npages == 2) {
+		set_show_tabs(sakura->config.first_tab);
+		sakura->keep_fc = true;
+	}
+
+	term->hbox.hide();
+	remove_page(page);
+
+	/* Find the next page, if it exists, and grab focus */
+	if (get_n_pages() > 0) {
+		term = get_current_tab_term();
+		gtk_widget_grab_focus(term->vte);
+	}
+
+	if (exit_if_needed) {
+		if (get_n_pages() == 0)
+			sakura->destroy(nullptr);
+	}
+}
+
 Terminal *SakuraNotebook::get_tab_term(gint page_id)
 {
-    return (Terminal *)g_object_get_qdata(G_OBJECT(get_nth_page(page_id)->gobj()), term_data_id);
+	return (Terminal *)g_object_get_qdata(
+			G_OBJECT(get_nth_page(page_id)->gobj()), term_data_id);
 }
 
 Terminal *SakuraNotebook::get_current_tab_term()

@@ -16,10 +16,13 @@ public:
 
 	gint find_tab(VteTerminal *term);
 	void move_tab(gint direction);
+	void close_tab();
+	void del_tab(gint page, bool exit_if_needed = false);
+
 	Terminal *get_tab_term(gint page_id);
 	Terminal *get_current_tab_term();
 	void show_scrollbar();
-private:
 
+private:
 	const Config *m_cfg = nullptr;
 };
