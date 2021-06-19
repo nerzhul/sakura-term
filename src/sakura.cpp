@@ -144,7 +144,7 @@ Sakura::Sakura() : cfg(g_key_file_new()), provider(Gtk::CssProvider::create())
 
 	/* Add initial tabs (1 by default) */
 	for (int i = 0; i < option_ntabs; i++) {
-		main_window->add_tab();
+		main_window->notebook.add_tab();
 	}
 
 	sanitize_working_directory();
@@ -403,9 +403,9 @@ void Sakura::init_popup()
 	gtk_menu_item_set_submenu(GTK_MENU_ITEM(item_palette->gobj()), palette_menu);
 
 	/* ... and finally assign callbacks to menuitems */
-	item_new_tab->signal_activate().connect(sigc::mem_fun(*main_window, &SakuraWindow::add_tab));
+	item_new_tab->signal_activate().connect(sigc::mem_fun(&main_window->notebook, &SakuraNotebook::add_tab));
 	item_set_name->signal_activate().connect(sigc::mem_fun(*this, &Sakura::set_name_dialog));
-	item_close_tab->signal_activate().connect(sigc::mem_fun(*this, &Sakura::close_tab));
+	item_close_tab->signal_activate().connect(sigc::mem_fun(&main_window->notebook, &SakuraNotebook::close_tab));
 	item_select_font->signal_activate().connect(sigc::mem_fun(*this, &Sakura::show_font_dialog));
 
 	item_copy->signal_activate().connect(sigc::mem_fun(*this, &Sakura::copy));
@@ -699,13 +699,13 @@ gboolean Sakura::on_key_press(GtkWidget *widget, GdkEventKey *event)
 	/* Add/delete tab keybinding pressed */
 	if ((event->state & config.add_tab_accelerator) == config.add_tab_accelerator &&
 			keycode == sakura_tokeycode(config.keymap.add_tab_key)) {
-		main_window->add_tab();
+		main_window->notebook.add_tab();
 		return TRUE;
 	} else if ((event->state & sakura->config.del_tab_accelerator) ==
 					config.del_tab_accelerator &&
 			keycode == sakura_tokeycode(config.keymap.del_tab_key)) {
 		/* Delete current tab */
-		close_tab();
+		main_window->notebook.close_tab();
 		return TRUE;
 	}
 
@@ -1061,11 +1061,6 @@ void Sakura::on_eof(GtkWidget *widget)
 
 		main_window->notebook.del_tab(0, true);
 	}
-}
-
-void Sakura::close_tab()
-{
-	main_window->notebook.close_tab();
 }
 
 void Sakura::toggle_numbered_tabswitch_option(GtkWidget *widget)

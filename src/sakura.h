@@ -33,7 +33,6 @@ public:
 	void on_eof(GtkWidget *widget);
 
 	void beep(GtkWidget *);
-	void close_tab();
 	void toggle_numbered_tabswitch_option(GtkWidget *widget);
 
 	void show_search_dialog();

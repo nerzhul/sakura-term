@@ -154,25 +154,6 @@ gboolean sakura_button_press(
 	return FALSE;
 }
 
-/* Handler for notebook focus-in-event */
-// static gboolean
-// sakura_notebook_focus_in(GtkWidget *widget, void *data)
-//{
-//	Terminal *term;
-//	int index;
-//
-//	index = sakura->main_window->notebook->get_current_page();
-//	term = sakura->get_page_term(index);
-//
-//	/* If term is found stop event propagation */
-//	if(term != NULL) {
-//		gtk_widget_grab_focus(term->vte);
-//		return TRUE;
-//	}
-//
-//	return FALSE;
-//}
-
 void sakura_child_exited(GtkWidget *widget, void *data)
 {
 	//auto obj = (Sakura *)data;

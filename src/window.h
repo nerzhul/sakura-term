@@ -17,8 +17,6 @@ public:
 	void on_resize();
 	void toggle_fullscreen();
 
-	void add_tab();
-
 	SakuraNotebook notebook;
 	bool resized = false;
 

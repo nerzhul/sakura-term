@@ -14,6 +14,7 @@ public:
 	bool on_scroll_event(GdkEventScroll *scroll);
 	void on_page_removed_event(Gtk::Widget *, guint);
 
+	void add_tab();
 	gint find_tab(VteTerminal *term);
 	void move_tab(gint direction);
 	void close_tab();
