@@ -33,7 +33,11 @@ SakuraWindow::SakuraWindow(Gtk::WindowType type, const Config *cfg) :
 	}
 	set_icon_from_file(std::string(icon_path));
 
-	add(notebook);
+	m_box = Gtk::Box(Gtk::ORIENTATION_VERTICAL, 0);
+	m_box.pack_start(notebook, Gtk::PACK_EXPAND_WIDGET);
+	m_box.set_hexpand(true);
+	m_box.show_all();
+	add(m_box);
 
 	signal_focus_in_event().connect(sigc::mem_fun(*this, &SakuraWindow::on_focus_in));
 	signal_focus_out_event().connect(sigc::mem_fun(*this, &SakuraWindow::on_focus_out));

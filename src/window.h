@@ -21,6 +21,7 @@ public:
 	bool resized = false;
 
 private:
+	Gtk::Box m_box;
 	const Config *m_config;
 	bool m_focused = true;	   /* For fading feature */
 	bool m_first_focus = true; /* First time gtkwindow recieve focus when is created */
