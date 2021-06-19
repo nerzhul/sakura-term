@@ -66,6 +66,40 @@
 
 #define ERROR_BUFFER_LENGTH 256
 
+GOptionEntry entries[] = {{"version", 'v', 0, G_OPTION_ARG_NONE, &option_version,
+					  N_("Print version number"), NULL},
+		{"font", 'f', 0, G_OPTION_ARG_STRING, &option_font,
+				N_("Select initial terminal font"), NULL},
+		{"ntabs", 'n', 0, G_OPTION_ARG_INT, &option_ntabs,
+				N_("Select initial number of tabs"), NULL},
+		{"working-directory", 'd', 0, G_OPTION_ARG_STRING, &option_workdir,
+				N_("Set working directory"), NULL},
+		{"execute", 'x', 0, G_OPTION_ARG_STRING, &option_execute, N_("Execute command"),
+				NULL},
+		{"xterm-execute", 'e', 0, G_OPTION_ARG_NONE, &option_xterm_execute,
+				N_("Execute command (last option in the command line)"), NULL},
+		{G_OPTION_REMAINING, 0, 0, G_OPTION_ARG_STRING_ARRAY, &option_xterm_args, NULL,
+				NULL},
+		{"login", 'l', 0, G_OPTION_ARG_NONE, &option_login, N_("Login shell"), NULL},
+		{"title", 't', 0, G_OPTION_ARG_STRING, &option_title, N_("Set window title"), NULL},
+		{"icon", 'i', 0, G_OPTION_ARG_STRING, &option_icon, N_("Set window icon"), NULL},
+		{"xterm-title", 'T', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_STRING, &option_title, NULL,
+				NULL},
+		{"columns", 'c', 0, G_OPTION_ARG_INT, &option_columns, N_("Set columns number"),
+				NULL},
+		{"rows", 'r', 0, G_OPTION_ARG_INT, &option_rows, N_("Set rows number"), NULL},
+		{"hold", 'h', 0, G_OPTION_ARG_NONE, &option_hold,
+				N_("Hold window after execute command"), NULL},
+		{"maximize", 'm', 0, G_OPTION_ARG_NONE, &option_maximize, N_("Maximize window"),
+				NULL},
+		{"fullscreen", 's', 0, G_OPTION_ARG_NONE, &option_fullscreen, N_("Fullscreen mode"),
+				NULL},
+		{"config-file", 0, 0, G_OPTION_ARG_FILENAME, &option_config_file,
+				N_("Use alternate configuration file"), NULL},
+		{"colorset", 0, 0, G_OPTION_ARG_INT, &option_colorset,
+				N_("Select initial colorset"), NULL},
+		{NULL}};
+
 void search(VteTerminal *vte, const char *pattern, bool reverse)
 {
 	GError *error = NULL;
@@ -92,8 +126,7 @@ void search(VteTerminal *vte, const char *pattern, bool reverse)
 	}
 }
 
-gboolean sakura_button_press(
-		GtkWidget *widget, GdkEventButton *button_event, gpointer user_data)
+gboolean sakura_button_press(GtkWidget *widget, GdkEventButton *button_event, gpointer user_data)
 {
 	if (button_event->type != GDK_BUTTON_PRESS)
 		return FALSE;
@@ -156,7 +189,7 @@ gboolean sakura_button_press(
 
 void sakura_child_exited(GtkWidget *widget, void *data)
 {
-	//auto obj = (Sakura *)data;
+	// auto obj = (Sakura *)data;
 	// Strangely the obj pointer is null here... use the globally defined pointed
 	// instead
 	sakura->on_child_exited(widget);
@@ -616,8 +649,8 @@ void sakura_closebutton_clicked(GtkWidget *widget, void *data)
 	auto pgid = tcgetpgrp(vte_pty_get_fd(vte_terminal_get_pty(VTE_TERMINAL(term->vte))));
 
 	if ((pgid != -1) && (pgid != term->pid) && (!sakura->config.less_questions)) {
-		auto dialog = gtk_message_dialog_new(GTK_WINDOW(sakura->main_window->gobj()), GTK_DIALOG_MODAL,
-				GTK_MESSAGE_QUESTION, GTK_BUTTONS_YES_NO,
+		auto dialog = gtk_message_dialog_new(GTK_WINDOW(sakura->main_window->gobj()),
+				GTK_DIALOG_MODAL, GTK_MESSAGE_QUESTION, GTK_BUTTONS_YES_NO,
 				_("There is a running process in this terminal.\n\nDo you really "
 				  "want to close it?"));
 
